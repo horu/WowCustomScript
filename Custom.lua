@@ -2,30 +2,25 @@
 
 --lib
 
-function has_buffs(unit, buff_str, b_fun)
-  if not unit then unit = "player" end
-  if not buff_str then buff_str = "" end
-  if not b_fun then b_fun = UnitBuff end
+-- error_disabler
+local error_disabler = {}
+function error_disabler.off(self)
+  self.error = UIErrorsFrame.AddMessage
+  UIErrorsFrame.AddMessage = function() end
+end
 
-  for i=1, 100 do
-    local buff = b_fun(unit, i)
-    if not buff then break end
-
-    -- print(buff)
-    if string.find(buff, buff_str) then
-      return true
-    end
+function error_disabler.on(self)
+  if self.error then
+    UIErrorsFrame.AddMessage = self.error
   end
 end
 
-function has_debuffs(unit, debuff_str)
-  return has_buffs(unit, debuff_str, UnitDebuff)
+local function to_table(value)
+  if type(value) ~= "table" then
+    return { value }
+  end
+  return value
 end
-
-local function ToString(value, depth, itlimit, short)
-  return pfUI.api.ToString(value, depth, itlimit, short)
-end
-
 
 local function fmod(v, d)
 
@@ -47,53 +42,25 @@ end
 
 
 
-
-
-
-
--- party
-
-function buff_party()
-  local size = GetNumPartyMembers()
-  for i=1, size do
-    local target = "party"..i
-  end
-end
-
-
-
-
-
-
-
-
---main
--- error_disabler
-local error_disabler = {}
-function error_disabler.off(self)
-  self.error = UIErrorsFrame.AddMessage
-  UIErrorsFrame.AddMessage = function() end
-end
-
-function error_disabler.on(self)
-  if self.error then
-    UIErrorsFrame.AddMessage = self.error
-  end
-end
-
-
-
-
-
 -- target
-local t_fr = UnitIsFriend
-local t_en = UnitIsEnemy
-local t_ex = UnitExists
-local t_de = UnitIsDead
-local t_pl = UnitIsPlayer
+local t_friend = UnitIsFriend
+local t_enemy = UnitIsEnemy
+local t_exists = UnitExists
+local t_dead = UnitIsDead
+local t_player = UnitIsPlayer
+local t_close = "t_close"
+local t_attackable = "t_attackable"
 
-local function CheckTarget(c1, c2, c3, c4, c5, c6)
+local function check_target(c1, c2, c3, c4, c5, c6)
   local check_list = { c1, c2, c3, c4, c5, c6 }
+
+  if c1 == t_close then
+    return CheckInteractDistance("target", 2);
+  end
+
+  if c1 == t_attackable then
+    return check_target(t_exists) and not check_target(t_friend) and not check_target(t_dead)
+  end
 
   for _, check in pairs(check_list) do
     if check("target", "player") then
@@ -102,9 +69,6 @@ local function CheckTarget(c1, c2, c3, c4, c5, c6)
   end
 end
 
-local check_target = CheckTarget
-
-
 
 
 
@@ -112,10 +76,6 @@ local check_target = CheckTarget
 -- common
 local function get_hp_level() -- 0-1
   return UnitHealth("player")/UnitHealthMax("player")
-end
-
-local function is_close()
-  return CheckInteractDistance("target", 2);
 end
 
 local function in_combat()
@@ -130,23 +90,14 @@ local function is_in_party()
   return GetNumPartyMembers() ~= 0
 end
 
--- is fight taget
-local function is_f_target()
-  return check_target(t_ex) and not check_target(t_fr) and not check_target(t_de)
-end
-
-local function force_table(value)
-  if type(value) ~= "table" then
-    return { value }
-  end
-  return value
-end
-
 -- auto_attack
 local function auto_attack()
+  if not check_target(t_exists) then
+    TargetNearestEnemy()
+  end
   if not in_combat() then
     AttackTarget()
-  elseif check_target(t_fr) then
+  elseif check_target(t_friend) then
     AssistUnit("target")
   end
 end
@@ -174,30 +125,46 @@ local c_BM = "Blessing of Might"
 local c_bless_list = { c_BW, c_BM }
 
 
-local function find_buff(check_list)
-  for i, check in pairs(force_table(check_list)) do
-    if FindBuff(check) then
+local function find_buff(check_list, unit)
+  for i, check in pairs(to_table(check_list)) do
+    if FindBuff(check, unit) then
       return i, check
     end
   end
 end
 
--- rebuff
-local function rebuff(buff, check1)
-  if not check_target(t_pl) and check_target(t_fr) then
+local function rebuff(buff, check)
+  if not check_target(t_player) and check_target(t_friend) then
     return
   end
 
-  local check_list = { buff, check1 }
-  if type(check1) == "table" then
-    check_list = check1
-  end
-
-  if find_buff(check_list) then
+  if find_buff(check or buff) then
     return
   end
 
   cast(buff)
+  return true
+end
+
+local function rebuff_target(buff, check, unit)
+  if not UnitExists(unit) or not UnitIsConnected(unit) or UnitIsDead(unit) or not CheckInteractDistance(unit, 4) then
+    return
+  end
+
+  if find_buff(check or buff, unit) then
+    return
+  end
+
+  TargetUnit(unit)
+
+  if UnitIsUnit(unit, "target") then
+    -- SpellTargetUnit
+    print("BUFF: ".. buff .. " FOR ".. unit)
+    cast(buff)
+  end
+
+  TargetLastTarget()
+  auto_attack()
   return true
 end
 
@@ -207,13 +174,13 @@ local function create_buff_saver(list)
 
   function buff_saver.add_list(self, list)
     for _, buff in pairs(list) do
-      table.insert(buff_saver.list, buff)
+      table.insert(self.list, buff)
     end
   end
 
   function buff_saver.get_buff(self, av_list)
     local i = find_buff(self.list)
-    if i then
+    if i and i ~= 1 then
       local last_buff = self.list[i]
       -- print(last_buff)
       table.remove(self.list, i)
@@ -238,6 +205,82 @@ local function create_buff_saver(list)
   return buff_saver
 end
 
+function has_buffs(unit, buff_str, b_fun)
+  if not unit then unit = "player" end
+  if not buff_str then buff_str = "" end
+  if not b_fun then b_fun = UnitBuff end
+
+  for i=1, 100 do
+    local buff = b_fun(unit, i)
+    if not buff then break end
+
+    -- print(buff)
+    if string.find(buff, buff_str) then
+      return true
+    end
+  end
+end
+
+function has_debuffs(unit, debuff_str)
+  return has_buffs(unit, debuff_str, UnitDebuff)
+end
+
+local function ToString(value, depth, itlimit, short)
+  return pfUI.api.ToString(value, depth, itlimit, short)
+end
+
+
+
+
+
+
+
+
+-- party
+
+local function rebuff_party_member(unit)
+  local buffs = {
+    WARRIOR = c_BM,
+    PALADIN = c_BM,
+    HUNTER = c_BM,
+    ROGUE = c_BM,
+
+    DRUID = c_BW,
+    PRIEST = c_BW,
+    MAGE = c_BW,
+    WARLOCK = c_BW,
+  }
+
+  local _, class = UnitClass(unit)
+
+  local buff = buffs[class]
+  if not buff then
+    print("BUFF NOT FOUND FOR "..class)
+    buff = c_BM
+  end
+  rebuff_target(buff, nil, unit)
+end
+
+local function buff_party()
+  if in_combat() then return end
+
+  local size = GetNumPartyMembers()
+  for i=1, size do
+    local unit = "party"..i
+    rebuff_party_member(unit)
+  end
+end
+
+
+
+
+
+
+
+
+--main
+
+
 -- rebuff_fight
 local aura_saver = create_buff_saver(c_aura_list)
 local bless_saver = create_buff_saver(c_bless_list)
@@ -247,6 +290,7 @@ local function rebuff_fight(aura_list)
   rebuff(bless_saver:get_buff())
   if is_in_party() then
     rebuff(c_BRF)
+    buff_party()
   end
 end
 
@@ -271,14 +315,12 @@ local c_SJ = "Seal of Justice"
 local c_SL = "Seal of Light"
 local c_seal_list = { c_SR, c_SC, c_SJ, c_SL }
 
--- buff_seal
 local function buff_seal(buff, check)
-  if is_f_target() then
+  if check_target(t_attackable) then
     return rebuff(buff, check)
   end
 end
 
--- seal_and_cast
 local function seal_and_cast(buff, cast_list, buff_check)
   if buff_seal(buff, buff_check) then
     return
@@ -300,7 +342,7 @@ local c_CHS = "Holy Strike"
 local c_CE = "Exorcism"
 
 local function get_cast_list(cast_list)
-  cast_list = force_table(cast_list)
+  cast_list = to_table(cast_list)
 
   local target = UnitCreatureType("target")
   if target == "Demon" or target == "Undead" then
@@ -367,11 +409,11 @@ end
 function attack_2()
   attack_wr(function()
     rebuff_fight(c_f_aura_list)
-    if not is_close() then
+    if not check_target(t_close) then
       return
     end
 
-    seal_and_cast(c_SC, cc_CCS, c_SR)
+    seal_and_cast(c_SC, cc_CCS, {c_SC, c_SR})
   end)
 end
 
@@ -379,7 +421,7 @@ end
 function attack_heal()
   attack_wr(function()
     rebuff_fight(c_d_aura_list)
-    if not is_close() then
+    if not check_target(t_close) then
       return
     end
 
