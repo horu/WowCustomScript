@@ -118,7 +118,7 @@ local c_RA = "Retribution Aura"
 local c_SRA = "Shadow Resistance Aura"
 local c_aura_list = { c_CA, c_SA, c_DA, c_RA, c_SRA }
 local c_f_aura_list = { c_SA, c_DA, c_RA, c_SRA }
-local c_d_aura_list = { c_DA, c_SRA }
+local c_d_aura_list = { c_DA, c_SRA, c_RA }
 
 local c_BW = "Blessing of Wisdom"
 local c_BM = "Blessing of Might"
@@ -147,7 +147,11 @@ local function rebuff(buff, check)
 end
 
 local function rebuff_target(buff, check, unit)
-  if not UnitExists(unit) or not UnitIsConnected(unit) or UnitIsDead(unit) or not CheckInteractDistance(unit, 4) then
+  if not UnitExists(unit) or
+          not UnitIsConnected(unit) or
+          UnitIsDead(unit) or
+          not CheckInteractDistance(unit, 4) or
+          not UnitIsVisible(unit) then
     return
   end
 
@@ -253,7 +257,7 @@ local function rebuff_party_member(unit)
 
   local _, class = UnitClass(unit)
 
-  local buff = buffs[class]
+  local buff = class and buffs[class] or c_BM
   if not buff then
     print("BUFF NOT FOUND FOR "..class)
     buff = c_BM
@@ -268,6 +272,8 @@ local function buff_party()
   for i=1, size do
     local unit = "party"..i
     rebuff_party_member(unit)
+    local pet = "partypet"..i
+    rebuff_party_member(pet)
   end
 end
 
