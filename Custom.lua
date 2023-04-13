@@ -109,22 +109,22 @@ end
 
 
 -- buffs
-local buff_RF = "Righteous Fury"
+local buff_Righteous = "Righteous Fury"
 
-local aura_CA = "Concentration Aura"
-local aura_DA = "Devotion Aura"
-local aura_SA = "Sanctity Aura"
-local aura_RA = "Retribution Aura"
-local aura_SRA = "Shadow Resistance Aura"
-local aura_FRA = "Frost Resistance Aura"
-local aura_list_all = { aura_CA, aura_SA, aura_DA, aura_RA, aura_SRA, aura_FRA }
-local aura_list_att =          { aura_SA, aura_DA, aura_RA, aura_SRA, aura_FRA }
-local aura_list_def =                   { aura_DA, aura_RA, aura_SRA, aura_FRA }
+local aura_Concentration = "Concentration Aura"
+local aura_Devotion = "Devotion Aura"
+local aura_Sanctity = "Sanctity Aura"
+local aura_Retribution = "Retribution Aura"
+local aura_Shadow = "Shadow Resistance Aura"
+local aura_Frost = "Frost Resistance Aura"
+local aura_list_all = { aura_Concentration, aura_Sanctity, aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost }
+local aura_list_att =                     { aura_Sanctity, aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost }
+local aura_list_def =                                    { aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost }
 
-local bless_BW = "Blessing of Wisdom"
-local bless_BM = "Blessing of Might"
-local bless_BS = "Blessing of Salvation"
-local bless_list_all = { bless_BW, bless_BM, bless_BS }
+local bless_Wisdom = "Blessing of Wisdom"
+local bless_Might = "Blessing of Might"
+local bless_Salvation = "Blessing of Salvation"
+local bless_list_all = { bless_Wisdom, bless_Might, bless_Salvation }
 
 
 local function find_buff(check_list, unit)
@@ -246,23 +246,23 @@ end
 
 local function rebuff_party_member(unit)
   local buffs = {
-    WARRIOR = bless_BM,
-    PALADIN = bless_BM,
-    HUNTER = bless_BM,
-    ROGUE = bless_BM,
+    WARRIOR = bless_Might,
+    PALADIN = bless_Might,
+    HUNTER = bless_Might,
+    ROGUE = bless_Might,
 
-    DRUID = bless_BW,
-    PRIEST = bless_BW,
-    MAGE = bless_BW,
-    WARLOCK = bless_BW,
+    DRUID = bless_Wisdom,
+    PRIEST = bless_Wisdom,
+    MAGE = bless_Wisdom,
+    WARLOCK = bless_Wisdom,
   }
 
   local _, class = UnitClass(unit)
 
-  local buff = class and buffs[class] or bless_BM
+  local buff = class and buffs[class] or bless_Might
   if not buff then
     print("BUFF NOT FOUND FOR "..class)
-    buff = bless_BM
+    buff = bless_Might
   end
   rebuff_target(buff, nil, unit)
 end
@@ -297,7 +297,7 @@ local function rebuff_fight(aura_list)
   rebuff(aura_saver:get_buff(aura_list))
   rebuff(bless_saver:get_buff())
   if is_in_party() then
-    rebuff(buff_RF)
+    rebuff(buff_Righteous)
     buff_party()
   end
 end
@@ -305,7 +305,7 @@ end
 -- rebuff_heal
 local function rebuff_heal()
   if in_aggro() or in_combat() then
-    rebuff(aura_CA)
+    rebuff(aura_Concentration)
   end
 end
 
@@ -317,11 +317,11 @@ end
 
 -- SEAL
 
-local seal_SR = "Seal of Righteousness"
-local seal_SC = "Seal of the Crusader"
-local seal_SJ = "Seal of Justice"
-local seal_SL = "Seal of Light"
-local seal_list_all = { seal_SR, seal_SC, seal_SJ, seal_SL }
+local seal_Righteousness = "Seal of Righteousness"
+local seal_Crusader = "Seal of the Crusader"
+local seal_Justice = "Seal of Justice"
+local seal_Light = "Seal of Light"
+local seal_list_all = { seal_Righteousness, seal_Crusader, seal_Justice, seal_Light }
 
 local function buff_seal(buff, check)
   if check_target(t_attackable) then
@@ -344,17 +344,17 @@ end
 
 -- CAST
 
-local cast_CS = "Crusader Strike"
-local cast_J = "Judgement"
-local cast_HS = "Holy Strike"
-local cast_E = "Exorcism"
+local cast_CrusaderStrike = "Crusader Strike"
+local cast_Judgement = "Judgement"
+local cast_HolyStrike = "Holy Strike"
+local cast_Exorcism = "Exorcism"
 
-local function get_cast_list(cast_list)
+local function build_cast_list(cast_list)
   cast_list = to_table(cast_list)
 
   local target = UnitCreatureType("target")
   if target == "Demon" or target == "Undead" then
-    table.insert(cast_list, 1, cast_E)
+    table.insert(cast_list, 1, cast_Exorcism)
   end
   return cast_list
 end
@@ -375,14 +375,14 @@ end
 -- PUBLIC
 function attack_rush()
   attack_wr(function()
-    local req_aura = { aura_SA }
+    local req_aura = { aura_Sanctity }
     rebuff_fight(req_aura)
     if not find_buff(req_aura) then
       return
     end
 
-    seal_and_cast(seal_SR, cast_HS)
-    seal_and_cast(seal_SR, get_cast_list({ cast_J, cast_CS }))
+    seal_and_cast(seal_Righteousness, cast_HolyStrike)
+    seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
   end)
 end
 
@@ -392,23 +392,23 @@ function attack_mid()
   attack_wr(function()
     rebuff_fight(aura_list_att)
 
-    if find_buff(seal_SL) then
-      cast(cast_J)
+    if find_buff(seal_Light) then
+      cast(cast_Judgement)
       return
     end
 
     --if not has_debuffs("target", "Spell_Holy_HealingAura") then
-      --if find_buff(seal_SR) then
-     --   cast(cast_J)
+      --if find_buff(seal_Righteousness) then
+     --   cast(cast_Judgement)
       --  return
     --  end
 
-      --seal_and_cast(seal_SL, cast_J)
+      --seal_and_cast(seal_Light, cast_Judgement)
       --return
     --end
 
-    seal_and_cast(seal_SR, cast_HS)
-    seal_and_cast(seal_SR, get_cast_list({ cast_CS }))
+    seal_and_cast(seal_Righteousness, cast_HolyStrike)
+    seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
   end)
 end
 
@@ -421,12 +421,12 @@ function attack_fast()
       return
     end
 
-    if find_buff(seal_SL) then
-      cast(cast_J)
+    if find_buff(seal_Light) then
+      cast(cast_Judgement)
       return
     end
 
-    seal_and_cast(seal_SC, cast_CS, {seal_SC, seal_SR})
+    seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
   end)
 end
 
@@ -438,18 +438,18 @@ function attack_def()
       return
     end
 
-    if find_buff(seal_SR) then
-      cast(cast_J)
+    if find_buff(seal_Righteousness) then
+      cast(cast_Judgement)
       return
     end
 
     if not has_debuffs("target", "Spell_Holy_HealingAura") then
-      seal_and_cast(seal_SL, cast_J)
+      seal_and_cast(seal_Light, cast_Judgement)
       return
     end
 
-    seal_and_cast(seal_SL, cast_HS)
-    -- seal_and_cast(seal_SL, get_cast_list({ }))
+    seal_and_cast(seal_Light, cast_HolyStrike)
+    -- seal_and_cast(seal_Light, build_cast_list({ }))
   end)
 end
 
