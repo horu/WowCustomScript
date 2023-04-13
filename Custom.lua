@@ -109,20 +109,22 @@ end
 
 
 -- buffs
-local c_BRF = "Righteous Fury"
+local buff_RF = "Righteous Fury"
 
-local c_CA = "Concentration Aura"
-local c_DA = "Devotion Aura"
-local c_SA = "Sanctity Aura"
-local c_RA = "Retribution Aura"
-local c_SRA = "Shadow Resistance Aura"
-local c_aura_list = { c_CA, c_SA, c_DA, c_RA, c_SRA }
-local c_f_aura_list = { c_SA, c_DA, c_RA, c_SRA }
-local c_d_aura_list = { c_DA, c_SRA, c_RA }
+local aura_CA = "Concentration Aura"
+local aura_DA = "Devotion Aura"
+local aura_SA = "Sanctity Aura"
+local aura_RA = "Retribution Aura"
+local aura_SRA = "Shadow Resistance Aura"
+local aura_FRA = "Frost Resistance Aura"
+local aura_list_all = { aura_CA, aura_SA, aura_DA, aura_RA, aura_SRA, aura_FRA }
+local aura_list_att =          { aura_SA, aura_DA, aura_RA, aura_SRA, aura_FRA }
+local aura_list_def =                   { aura_DA, aura_RA, aura_SRA, aura_FRA }
 
-local c_BW = "Blessing of Wisdom"
-local c_BM = "Blessing of Might"
-local c_bless_list = { c_BW, c_BM }
+local bless_BW = "Blessing of Wisdom"
+local bless_BM = "Blessing of Might"
+local bless_BS = "Blessing of Salvation"
+local bless_list_all = { bless_BW, bless_BM, bless_BS }
 
 
 local function find_buff(check_list, unit)
@@ -244,23 +246,23 @@ end
 
 local function rebuff_party_member(unit)
   local buffs = {
-    WARRIOR = c_BM,
-    PALADIN = c_BM,
-    HUNTER = c_BM,
-    ROGUE = c_BM,
+    WARRIOR = bless_BM,
+    PALADIN = bless_BM,
+    HUNTER = bless_BM,
+    ROGUE = bless_BM,
 
-    DRUID = c_BW,
-    PRIEST = c_BW,
-    MAGE = c_BW,
-    WARLOCK = c_BW,
+    DRUID = bless_BW,
+    PRIEST = bless_BW,
+    MAGE = bless_BW,
+    WARLOCK = bless_BW,
   }
 
   local _, class = UnitClass(unit)
 
-  local buff = class and buffs[class] or c_BM
+  local buff = class and buffs[class] or bless_BM
   if not buff then
     print("BUFF NOT FOUND FOR "..class)
-    buff = c_BM
+    buff = bless_BM
   end
   rebuff_target(buff, nil, unit)
 end
@@ -288,14 +290,14 @@ end
 
 
 -- rebuff_fight
-local aura_saver = create_buff_saver(c_aura_list)
-local bless_saver = create_buff_saver(c_bless_list)
+local aura_saver = create_buff_saver(aura_list_all)
+local bless_saver = create_buff_saver(bless_list_all)
 local function rebuff_fight(aura_list)
   -- rebuff last bless/aura
   rebuff(aura_saver:get_buff(aura_list))
   rebuff(bless_saver:get_buff())
   if is_in_party() then
-    rebuff(c_BRF)
+    rebuff(buff_RF)
     buff_party()
   end
 end
@@ -303,7 +305,7 @@ end
 -- rebuff_heal
 local function rebuff_heal()
   if in_aggro() or in_combat() then
-    rebuff(c_CA)
+    rebuff(aura_CA)
   end
 end
 
@@ -315,11 +317,11 @@ end
 
 -- SEAL
 
-local c_SR = "Seal of Righteousness"
-local c_SC = "Seal of the Crusader"
-local c_SJ = "Seal of Justice"
-local c_SL = "Seal of Light"
-local c_seal_list = { c_SR, c_SC, c_SJ, c_SL }
+local seal_SR = "Seal of Righteousness"
+local seal_SC = "Seal of the Crusader"
+local seal_SJ = "Seal of Justice"
+local seal_SL = "Seal of Light"
+local seal_list_all = { seal_SR, seal_SC, seal_SJ, seal_SL }
 
 local function buff_seal(buff, check)
   if check_target(t_attackable) then
@@ -342,17 +344,17 @@ end
 
 -- CAST
 
-local c_CCS = "Crusader Strike"
-local c_CJ = "Judgement"
-local c_CHS = "Holy Strike"
-local c_CE = "Exorcism"
+local cast_CS = "Crusader Strike"
+local cast_J = "Judgement"
+local cast_HS = "Holy Strike"
+local cast_E = "Exorcism"
 
 local function get_cast_list(cast_list)
   cast_list = to_table(cast_list)
 
   local target = UnitCreatureType("target")
   if target == "Demon" or target == "Undead" then
-    table.insert(cast_list, 1, c_CE)
+    table.insert(cast_list, 1, cast_E)
   end
   return cast_list
 end
@@ -371,85 +373,90 @@ end
 
 
 -- PUBLIC
-function attack_4()
+function attack_rush()
   attack_wr(function()
-    local req_aura = { c_SA }
+    local req_aura = { aura_SA }
     rebuff_fight(req_aura)
     if not find_buff(req_aura) then
       return
     end
 
-    seal_and_cast(c_SR, c_CHS)
-    seal_and_cast(c_SR, get_cast_list({ c_CJ, c_CCS }))
+    seal_and_cast(seal_SR, cast_HS)
+    seal_and_cast(seal_SR, get_cast_list({ cast_J, cast_CS }))
   end)
 end
 
 
 
-function attack_3()
+function attack_mid()
   attack_wr(function()
-    rebuff_fight(c_f_aura_list)
+    rebuff_fight(aura_list_att)
 
-    if find_buff(c_SL) then
-      cast(c_CJ)
+    if find_buff(seal_SL) then
+      cast(cast_J)
       return
     end
 
     --if not has_debuffs("target", "Spell_Holy_HealingAura") then
-      --if find_buff(c_SR) then
-     --   cast(c_CJ)
+      --if find_buff(seal_SR) then
+     --   cast(cast_J)
       --  return
     --  end
 
-      --seal_and_cast(c_SL, c_CJ)
+      --seal_and_cast(seal_SL, cast_J)
       --return
     --end
 
-    seal_and_cast(c_SR, c_CHS)
-    seal_and_cast(c_SR, get_cast_list({ c_CCS }))
+    seal_and_cast(seal_SR, cast_HS)
+    seal_and_cast(seal_SR, get_cast_list({ cast_CS }))
   end)
 end
 
 
 
-function attack_2()
+function attack_fast()
   attack_wr(function()
-    rebuff_fight(c_f_aura_list)
+    rebuff_fight(aura_list_att)
     if not check_target(t_close) then
       return
     end
 
-    seal_and_cast(c_SC, cc_CCS, {c_SC, c_SR})
+    if find_buff(seal_SL) then
+      cast(cast_J)
+      return
+    end
+
+    seal_and_cast(seal_SC, cast_CS, {seal_SC, seal_SR})
   end)
 end
 
 
-function attack_heal()
+function attack_def()
   attack_wr(function()
-    rebuff_fight(c_d_aura_list)
+    rebuff_fight(aura_list_def)
     if not check_target(t_close) then
       return
     end
 
-    if find_buff(c_SR) then
-      cast(c_CJ)
+    if find_buff(seal_SR) then
+      cast(cast_J)
       return
     end
 
     if not has_debuffs("target", "Spell_Holy_HealingAura") then
-      seal_and_cast(c_SL, c_CJ)
+      seal_and_cast(seal_SL, cast_J)
       return
     end
 
-    seal_and_cast(c_SL, c_CHS)
-    -- seal_and_cast(c_SL, get_cast_list({ }))
+    seal_and_cast(seal_SL, cast_HS)
+    -- seal_and_cast(seal_SL, get_cast_list({ }))
   end)
 end
 
 
-function attack_1()
+function attack_null()
   attack_wr(function()
-    rebuff_fight(c_f_aura_list)
+    rebuff_fight(aura_list_att)
   end)
 end
 
