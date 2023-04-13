@@ -51,19 +51,17 @@ local t_player = UnitIsPlayer
 local t_close = "t_close"
 local t_attackable = "t_attackable"
 
-local function check_target(c1, c2, c3, c4, c5, c6)
-  local check_list = { c1, c2, c3, c4, c5, c6 }
-
-  if c1 == t_close then
-    return CheckInteractDistance("target", 2);
-  end
-
-  if c1 == t_attackable then
-    return check_target(t_exists) and not check_target(t_friend) and not check_target(t_dead)
-  end
+-- check condition by OR
+local function check_target(c1, c2, c3)
+  local check_list = { c1, c2, c3 }
 
   for _, check in pairs(check_list) do
-    if check("target", "player") then
+
+    if check == t_close then
+      if CheckInteractDistance("target", 2) then return true end
+    elseif check == t_attackable then
+      if check_target(t_exists) and not check_target(t_friend) and not check_target(t_dead) then return true end
+    elseif check("target", "player") then
       return true
     end
   end
@@ -135,13 +133,14 @@ local function find_buff(check_list, unit)
   end
 end
 
-local function rebuff(buff, check)
-  if not check_target(t_player) and check_target(t_friend) then
+-- return nil if rebuff no need
+local function rebuff(buff, custom_buff_check_list)
+  if find_buff(custom_buff_check_list or buff) then
     return
   end
 
-  if find_buff(check or buff) then
-    return
+  if not check_target(t_player) and check_target(t_friend) then
+    return true
   end
 
   cast(buff)
@@ -149,16 +148,16 @@ local function rebuff(buff, check)
 end
 
 local function rebuff_target(buff, check, unit)
+  if find_buff(check or buff, unit) then
+    return
+  end
+
   if not UnitExists(unit) or
           not UnitIsConnected(unit) or
           UnitIsDead(unit) or
           not CheckInteractDistance(unit, 4) or
           not UnitIsVisible(unit) then
-    return
-  end
-
-  if find_buff(check or buff, unit) then
-    return
+    return true
   end
 
   TargetUnit(unit)
@@ -211,7 +210,7 @@ local function create_buff_saver(list)
   return buff_saver
 end
 
-function has_buffs(unit, buff_str, b_fun)
+local function has_buffs(unit, buff_str, b_fun)
   if not unit then unit = "player" end
   if not buff_str then buff_str = "" end
   if not b_fun then b_fun = UnitBuff end
@@ -227,7 +226,7 @@ function has_buffs(unit, buff_str, b_fun)
   end
 end
 
-function has_debuffs(unit, debuff_str)
+local function has_debuffs(unit, debuff_str)
   return has_buffs(unit, debuff_str, UnitDebuff)
 end
 
@@ -289,10 +288,9 @@ end
 --main
 
 
--- rebuff_fight
 local aura_saver = create_buff_saver(aura_list_all)
 local bless_saver = create_buff_saver(bless_list_all)
-local function rebuff_fight(aura_list)
+local function rebuff_attack(aura_list)
   -- rebuff last bless/aura
   rebuff(aura_saver:get_buff(aura_list))
   rebuff(bless_saver:get_buff())
@@ -302,7 +300,6 @@ local function rebuff_fight(aura_list)
   end
 end
 
--- rebuff_heal
 local function rebuff_heal()
   if in_aggro() or in_combat() then
     rebuff(aura_Concentration)
@@ -323,14 +320,15 @@ local seal_Justice = "Seal of Justice"
 local seal_Light = "Seal of Light"
 local seal_list_all = { seal_Righteousness, seal_Crusader, seal_Justice, seal_Light }
 
-local function buff_seal(buff, check)
-  if check_target(t_attackable) then
-    return rebuff(buff, check)
+local function buff_seal(buff, custom_buff_check_list)
+  if not check_target(t_attackable) then
+    return true
   end
+  return rebuff(buff, custom_buff_check_list)
 end
 
-local function seal_and_cast(buff, cast_list, buff_check)
-  if buff_seal(buff, buff_check) then
+local function seal_and_cast(buff, cast_list, custom_buff_check_list)
+  if buff_seal(buff, custom_buff_check_list) then
     return
   end
 
@@ -341,6 +339,10 @@ local function seal_and_cast(buff, cast_list, buff_check)
   end
 end
 
+local function target_has_debuff_seal_Light()
+  -- TODO: add remaining check time and recast below 4 sec
+  return has_debuffs("target", "Spell_Holy_HealingAura")
+end
 
 -- CAST
 
@@ -372,16 +374,18 @@ end
 
 
 
--- PUBLIC
+-- ATTACKS
 function attack_rush()
   attack_wr(function()
+    cast(cast_HolyStrike)
+
     local req_aura = { aura_Sanctity }
-    rebuff_fight(req_aura)
+    rebuff_attack(req_aura)
     if not find_buff(req_aura) then
       return
     end
 
-    seal_and_cast(seal_Righteousness, cast_HolyStrike)
+    -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
     seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
   end)
 end
@@ -390,9 +394,9 @@ end
 
 function attack_mid()
   attack_wr(function()
-    rebuff_fight(aura_list_att)
+    rebuff_attack(aura_list_def)
 
-    if find_buff(seal_Light) then
+    if find_buff(seal_Light) and not target_has_debuff_seal_Light() then
       cast(cast_Judgement)
       return
     end
@@ -407,7 +411,7 @@ function attack_mid()
       --return
     --end
 
-    seal_and_cast(seal_Righteousness, cast_HolyStrike)
+    -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
     seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
   end)
 end
@@ -416,12 +420,12 @@ end
 
 function attack_fast()
   attack_wr(function()
-    rebuff_fight(aura_list_att)
+    rebuff_attack(aura_list_def)
     if not check_target(t_close) then
       return
     end
 
-    if find_buff(seal_Light) then
+    if find_buff(seal_Light) and not target_has_debuff_seal_Light() then
       cast(cast_Judgement)
       return
     end
@@ -433,7 +437,7 @@ end
 
 function attack_def()
   attack_wr(function()
-    rebuff_fight(aura_list_def)
+    rebuff_attack(aura_list_def)
     if not check_target(t_close) then
       return
     end
@@ -443,12 +447,13 @@ function attack_def()
       return
     end
 
-    if not has_debuffs("target", "Spell_Holy_HealingAura") then
+    if not target_has_debuff_seal_Light() then
       seal_and_cast(seal_Light, cast_Judgement)
       return
     end
 
-    seal_and_cast(seal_Light, cast_HolyStrike)
+    buff_seal(seal_Light)
+    -- seal_and_cast(seal_Light, cast_HolyStrike)
     -- seal_and_cast(seal_Light, build_cast_list({ }))
   end)
 end
@@ -456,13 +461,13 @@ end
 
 function attack_null()
   attack_wr(function()
-    rebuff_fight(aura_list_att)
+    rebuff_attack(aura_list_att)
   end)
 end
 
-function cast_heal(cast1)
+function cast_heal(heal_cast)
   rebuff_heal()
-  cast(cast1)
+  cast(heal_cast)
 end
 
 
