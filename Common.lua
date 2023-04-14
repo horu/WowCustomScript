@@ -39,6 +39,58 @@ function cs.time_to_str(t)
   return string.format("%02d:%02d:%02d", h, m, s)
 end
 
+function cs.create_fix_table(size)
+  local fix_table = { size = size, list = {} }
+
+  function fix_table.clear(self)
+    self.list = {}
+  end
+
+  function fix_table.add(self, value)
+    table.insert(self.list, 1, value)
+    local size = table.getn(self.list)
+    if size > self.size then
+      table.remove(self.list, size)
+    end
+  end
+
+  function fix_table.is_full(self)
+    return table.getn(self.list) == self.size
+  end
+
+  function fix_table.get_max_diff(self)
+    local min_v =  9999999
+    local max_v = -9999999
+    for _, v in self.list do
+      min_v = min(min_v, v)
+      max_v = max(max_v, v)
+    end
+
+    return max_v - min_v
+  end
+
+  function fix_table.get_sum(self, last_count)
+    local sum = 0
+    local cur_size = table.getn(self.list)
+    local cur_count = math.min(last_count or cur_size, cur_size)
+    for i=1, cur_count do
+      sum = sum + self.list[i]
+    end
+    return sum
+  end
+
+  function fix_table.get_avg_value(self, last_count)
+    local cur_size = table.getn(self.list)
+    local cur_count = math.min(last_count or cur_size, cur_size)
+    local sum = self:get_sum(cur_count)
+    if cur_size > 0 then
+      return sum / cur_count
+    end
+    return 0
+  end
+  return fix_table
+end
+
 
 
 
@@ -222,6 +274,20 @@ end
 
 
 
+function cs.create_simple_text_frame(name, x, y, text)
+  local f = CreateFrame("Frame", name, UIParent)
+  f:SetHeight(10)
+  f:SetWidth(20)
+  f:SetPoint("BOTTOM", x, y)
+
+  f.cs_text = f:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
+  f.cs_text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+  f.cs_text:SetPoint("BOTTOMLEFT", 0, 0)
+  f.cs_text:SetJustifyH("LEFT")
+  f.cs_text:SetText(text)
+
+  return f
+end
 
 
 
@@ -229,7 +295,42 @@ end
 
 
 
+function cs.create_dps_calculator()
+  local f = cs.create_simple_text_frame("nibsrsCSdps", 15, 45, "DPS")
+  f.cs_data = { storage = cs.create_fix_table(500), ts = GetTime() }
 
+  f:RegisterEvent("UNIT_COMBAT")
+  f:RegisterEvent("PLAYER_TARGET_CHANGED")
+  f:SetScript("OnEvent", function()
+    local storage = this.cs_data.storage
+    local ts = this.cs_data.ts
+    if event == "PLAYER_TARGET_CHANGED" then
+      storage:clear()
+      this.cs_data.ts = GetTime()
+      return
+    end
+
+    if arg1 ~= "target" then
+      return
+    end
+
+    local damage = arg4
+
+    storage:add(damage)
+
+    local ts_diff = GetTime() - ts
+    local sum = storage:get_sum()
+
+    print(cs.ToString({sum, ts_diff}))
+    this.cs_text:SetText("DPS: "..math.floor(sum / ts_diff))
+
+  end)
+
+  return f
+end
+
+
+local dps = cs.create_dps_calculator()
 
 
 
@@ -267,48 +368,6 @@ local function create_calc(start_value)
     return r
   end
   return calc
-end
-
--- create_fix_table
-local function create_fix_table(size)
-  local fix_table = { size = size, list = {} }
-
-  function fix_table.add(self, value)
-    table.insert(self.list, 1, value)
-    local size = table.getn(self.list)
-    if size > self.size then
-      table.remove(self.list, size)
-    end
-  end
-
-  function fix_table.is_full(self)
-    return table.getn(self.list) == self.size
-  end
-
-  function fix_table.get_max_diff(self)
-    local min_v =  9999999
-    local max_v = -9999999
-    for _, v in self.list do
-      min_v = min(min_v, v)
-      max_v = max(max_v, v)
-    end
-
-    return max_v - min_v
-  end
-
-  function fix_table.get_avg_value(self, last_count)
-    local sum = 0
-    local cur_size = table.getn(self.list)
-    local cur_count = math.min(last_count or cur_size, cur_size)
-    if cur_size > 0 then
-      for i=1, cur_count do
-        sum = sum + self.list[i]
-      end
-      return sum / cur_count
-    end
-    return 0
-  end
-  return fix_table
 end
 
 -- RUNNER
@@ -354,7 +413,7 @@ local function create_mana_checker(period, size)
     calc = create_calc(UnitMana("player")),
     ts = GetTime(),
     period = period,
-    list = create_fix_table(size),
+    list = cs.create_fix_table(size),
   }
 
   return mana_checker
@@ -399,7 +458,7 @@ end
 --SPEED
 local speed_checker = {
   x=0, y=0, calc = create_calc(0), map = "" , k = 1,
-  speed_table = create_fix_table(15)
+  speed_table = cs.create_fix_table(15)
 }
 
 function speed_checker.get_k(self)
