@@ -290,7 +290,7 @@ end
 
 local aura_saver = create_buff_saver(aura_list_all)
 local bless_saver = create_buff_saver(bless_list_all)
-local function rebuff_attack(aura_list)
+local function standard_rebuff_attack(aura_list)
   -- rebuff last bless/aura
   rebuff(aura_saver:get_buff(aura_list))
   rebuff(bless_saver:get_buff())
@@ -380,7 +380,7 @@ function attack_rush()
     cast(cast_HolyStrike)
 
     local req_aura = { aura_Sanctity }
-    rebuff_attack(req_aura)
+    standard_rebuff_attack(req_aura)
     if not find_buff(req_aura) then
       return
     end
@@ -394,7 +394,7 @@ end
 
 function attack_mid()
   attack_wr(function()
-    rebuff_attack(aura_list_def)
+    standard_rebuff_attack(aura_list_def)
 
     if find_buff(seal_Light) and not target_has_debuff_seal_Light() then
       cast(cast_Judgement)
@@ -420,7 +420,7 @@ end
 
 function attack_fast()
   attack_wr(function()
-    rebuff_attack(aura_list_def)
+    standard_rebuff_attack(aura_list_def)
     if not check_target(t_close) then
       return
     end
@@ -437,7 +437,7 @@ end
 
 function attack_def()
   attack_wr(function()
-    rebuff_attack(aura_list_def)
+    standard_rebuff_attack(aura_list_def)
     if not check_target(t_close) then
       return
     end
@@ -461,7 +461,7 @@ end
 
 function attack_null()
   attack_wr(function()
-    rebuff_attack(aura_list_att)
+    standard_rebuff_attack(aura_list_att)
   end)
 end
 
