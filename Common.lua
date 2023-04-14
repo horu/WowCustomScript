@@ -1,28 +1,28 @@
 
 
---lib
+cs_common = {}
+local cs = cs_common
 
--- error_disabler
-local error_disabler = {}
-function error_disabler.off(self)
+cs.error_disabler = {}
+function cs.error_disabler.off(self)
   self.error = UIErrorsFrame.AddMessage
   UIErrorsFrame.AddMessage = function() end
 end
 
-function error_disabler.on(self)
+function cs.error_disabler.on(self)
   if self.error then
     UIErrorsFrame.AddMessage = self.error
   end
 end
 
-local function to_table(value)
+function cs.to_table(value)
   if type(value) ~= "table" then
     return { value }
   end
   return value
 end
 
-local function fmod(v, d)
+function cs.fmod(v, d)
 
   while v >= d do
     v = v - d
@@ -31,11 +31,11 @@ local function fmod(v, d)
 end
 
 
-local function time_to_str(t)
+function cs.time_to_str(t)
   if not t then return end
-  local h = fmod(math.floor(t / 3600), 24)
-  local m = fmod(math.floor(t / 60), 60)
-  local s = fmod(math.floor(t), 60)
+  local h = cs.fmod(math.floor(t / 3600), 24)
+  local m = cs.fmod(math.floor(t / 60), 60)
+  local s = cs.fmod(math.floor(t), 60)
   return string.format("%02d:%02d:%02d", h, m, s)
 end
 
@@ -43,24 +43,28 @@ end
 
 
 -- target
-local t_friend = UnitIsFriend
-local t_enemy = UnitIsEnemy
-local t_exists = UnitExists
-local t_dead = UnitIsDead
-local t_player = UnitIsPlayer
-local t_close = "t_close"
-local t_attackable = "t_attackable"
+cs.t_friend = UnitIsFriend
+cs.t_enemy = UnitIsEnemy
+cs.t_exists = UnitExists
+cs.t_dead = UnitIsDead
+cs.t_player = UnitIsPlayer
+cs.t_close = "t_close"
+cs.t_attackable = "t_attackable"
 
 -- check condition by OR
-local function check_target(c1, c2, c3)
+function cs.check_target(c1, c2, c3)
   local check_list = { c1, c2, c3 }
 
   for _, check in pairs(check_list) do
 
-    if check == t_close then
+    if check == cs.t_close then
       if CheckInteractDistance("target", 2) then return true end
-    elseif check == t_attackable then
-      if check_target(t_exists) and not check_target(t_friend) and not check_target(t_dead) then return true end
+    elseif check == cs.t_attackable then
+      if cs.check_target(cs.t_exists) and
+              not cs.check_target(cs.t_friend) and
+              not cs.check_target(cs.t_dead) then
+        return true
+      end
     elseif check("target", "player") then
       return true
     end
@@ -72,30 +76,30 @@ end
 
 
 -- common
-local function get_hp_level() -- 0-1
+function cs.get_hp_level() -- 0-1
   return UnitHealth("player")/UnitHealthMax("player")
 end
 
-local function in_combat()
+function cs.in_combat()
   return PlayerFrame.inCombat
 end
 
-local function in_aggro()
+function cs.in_aggro()
   return pfUI.api.UnitHasAggro("player") > 0
 end
 
-local function is_in_party()
+function cs.is_in_party()
   return GetNumPartyMembers() ~= 0
 end
 
 -- auto_attack
-local function auto_attack()
-  if not check_target(t_exists) then
+function cs.auto_attack()
+  if not cs.check_target(cs.t_exists) then
     TargetNearestEnemy()
   end
-  if not in_combat() then
+  if not cs.in_combat() then
     AttackTarget()
-  elseif check_target(t_friend) then
+  elseif cs.check_target(cs.t_friend) then
     AssistUnit("target")
   end
 end
@@ -104,29 +108,9 @@ end
 
 
 
-
-
 -- buffs
-local buff_Righteous = "Righteous Fury"
-
-local aura_Concentration = "Concentration Aura"
-local aura_Devotion = "Devotion Aura"
-local aura_Sanctity = "Sanctity Aura"
-local aura_Retribution = "Retribution Aura"
-local aura_Shadow = "Shadow Resistance Aura"
-local aura_Frost = "Frost Resistance Aura"
-local aura_list_all = { aura_Concentration, aura_Sanctity, aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost }
-local aura_list_att =                     { aura_Sanctity, aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost }
-local aura_list_def =                                    { aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost }
-
-local bless_Wisdom = "Blessing of Wisdom"
-local bless_Might = "Blessing of Might"
-local bless_Salvation = "Blessing of Salvation"
-local bless_list_all = { bless_Wisdom, bless_Might, bless_Salvation }
-
-
-local function find_buff(check_list, unit)
-  for i, check in pairs(to_table(check_list)) do
+function cs.find_buff(check_list, unit)
+  for i, check in pairs(cs.to_table(check_list)) do
     if FindBuff(check, unit) then
       return i, check
     end
@@ -134,12 +118,12 @@ local function find_buff(check_list, unit)
 end
 
 -- return nil if rebuff no need
-local function rebuff(buff, custom_buff_check_list)
-  if find_buff(custom_buff_check_list or buff) then
+function cs.rebuff(buff, custom_buff_check_list)
+  if cs.find_buff(custom_buff_check_list or buff) then
     return
   end
 
-  if not check_target(t_player) and check_target(t_friend) then
+  if not cs.check_target(cs.t_player) and cs.check_target(cs.t_friend) then
     return true
   end
 
@@ -147,8 +131,8 @@ local function rebuff(buff, custom_buff_check_list)
   return true
 end
 
-local function rebuff_target(buff, check, unit)
-  if find_buff(check or buff, unit) then
+function cs.rebuff_target(buff, check, unit)
+  if cs.find_buff(check or buff, unit) then
     return
   end
 
@@ -169,12 +153,12 @@ local function rebuff_target(buff, check, unit)
   end
 
   TargetLastTarget()
-  auto_attack()
+  cs.auto_attack()
   return true
 end
 
 -- create_buff_saver
-local function create_buff_saver(list)
+function cs.create_buff_saver(list)
   local buff_saver = { list = {} }
 
   function buff_saver.add_list(self, list)
@@ -184,7 +168,7 @@ local function create_buff_saver(list)
   end
 
   function buff_saver.get_buff(self, av_list)
-    local i = find_buff(self.list)
+    local i = cs.find_buff(self.list)
     if i and i ~= 1 then
       local last_buff = self.list[i]
       -- print(last_buff)
@@ -210,7 +194,7 @@ local function create_buff_saver(list)
   return buff_saver
 end
 
-local function has_buffs(unit, buff_str, b_fun)
+function cs.has_buffs(unit, buff_str, b_fun)
   if not unit then unit = "player" end
   if not buff_str then buff_str = "" end
   if not b_fun then b_fun = UnitBuff end
@@ -226,258 +210,13 @@ local function has_buffs(unit, buff_str, b_fun)
   end
 end
 
-local function has_debuffs(unit, debuff_str)
-  return has_buffs(unit, debuff_str, UnitDebuff)
+function cs.has_debuffs(unit, debuff_str)
+  return cs.has_buffs(unit, debuff_str, UnitDebuff)
 end
 
-local function ToString(value, depth, itlimit, short)
+function cs.ToString(value, depth, itlimit, short)
   return pfUI.api.ToString(value, depth, itlimit, short)
 end
-
-
-
-
-
-
-
-
--- party
-
-local function rebuff_party_member(unit)
-  local buffs = {
-    WARRIOR = bless_Might,
-    PALADIN = bless_Might,
-    HUNTER = bless_Might,
-    ROGUE = bless_Might,
-
-    DRUID = bless_Wisdom,
-    PRIEST = bless_Wisdom,
-    MAGE = bless_Wisdom,
-    WARLOCK = bless_Wisdom,
-  }
-
-  local _, class = UnitClass(unit)
-
-  local buff = class and buffs[class] or bless_Might
-  if not buff then
-    print("BUFF NOT FOUND FOR "..class)
-    buff = bless_Might
-  end
-  rebuff_target(buff, nil, unit)
-end
-
-local function buff_party()
-  if in_combat() then return end
-
-  local size = GetNumPartyMembers()
-  for i=1, size do
-    local unit = "party"..i
-    rebuff_party_member(unit)
-    local pet = "partypet"..i
-    rebuff_party_member(pet)
-  end
-end
-
-
-
-
-
-
-
-
---main
-
-
-local aura_saver = create_buff_saver(aura_list_all)
-local bless_saver = create_buff_saver(bless_list_all)
-local function standard_rebuff_attack(aura_list)
-  -- rebuff last bless/aura
-  rebuff(aura_saver:get_buff(aura_list))
-  rebuff(bless_saver:get_buff())
-  if is_in_party() then
-    rebuff(buff_Righteous)
-    buff_party()
-  end
-end
-
-local function rebuff_heal()
-  if in_aggro() or in_combat() then
-    rebuff(aura_Concentration)
-  end
-end
-
-
-
-
-
-
-
--- SEAL
-
-local seal_Righteousness = "Seal of Righteousness"
-local seal_Crusader = "Seal of the Crusader"
-local seal_Justice = "Seal of Justice"
-local seal_Light = "Seal of Light"
-local seal_list_all = { seal_Righteousness, seal_Crusader, seal_Justice, seal_Light }
-
-local function buff_seal(buff, custom_buff_check_list)
-  if not check_target(t_attackable) then
-    return true
-  end
-  return rebuff(buff, custom_buff_check_list)
-end
-
-local function seal_and_cast(buff, cast_list, custom_buff_check_list)
-  if buff_seal(buff, custom_buff_check_list) then
-    return
-  end
-
-  if type(cast_list) ~= "table" then
-    cast(cast_list)
-  else
-    DoOrder(unpack(cast_list))
-  end
-end
-
-local function target_has_debuff_seal_Light()
-  -- TODO: add remaining check time and recast below 4 sec
-  return has_debuffs("target", "Spell_Holy_HealingAura")
-end
-
--- CAST
-
-local cast_CrusaderStrike = "Crusader Strike"
-local cast_Judgement = "Judgement"
-local cast_HolyStrike = "Holy Strike"
-local cast_Exorcism = "Exorcism"
-
-local function build_cast_list(cast_list)
-  cast_list = to_table(cast_list)
-
-  local target = UnitCreatureType("target")
-  if target == "Demon" or target == "Undead" then
-    table.insert(cast_list, 1, cast_Exorcism)
-  end
-  return cast_list
-end
-
-
--- attack_wr
-local function attack_wr(inside)
-  error_disabler:off()
-  auto_attack()
-  inside()
-  error_disabler:on()
-end
-
-
-
-
-
--- ATTACKS
-function attack_rush()
-  attack_wr(function()
-    cast(cast_HolyStrike)
-
-    local req_aura = { aura_Sanctity }
-    standard_rebuff_attack(req_aura)
-    if not find_buff(req_aura) then
-      return
-    end
-
-    -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
-    seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
-  end)
-end
-
-
-
-function attack_mid()
-  attack_wr(function()
-    standard_rebuff_attack(aura_list_def)
-
-    if find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-      cast(cast_Judgement)
-      return
-    end
-
-    --if not has_debuffs("target", "Spell_Holy_HealingAura") then
-      --if find_buff(seal_Righteousness) then
-     --   cast(cast_Judgement)
-      --  return
-    --  end
-
-      --seal_and_cast(seal_Light, cast_Judgement)
-      --return
-    --end
-
-    -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
-    seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
-  end)
-end
-
-
-
-function attack_fast()
-  attack_wr(function()
-    standard_rebuff_attack(aura_list_def)
-    if not check_target(t_close) then
-      return
-    end
-
-    if find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-      cast(cast_Judgement)
-      return
-    end
-
-    seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
-  end)
-end
-
-
-function attack_def()
-  attack_wr(function()
-    standard_rebuff_attack(aura_list_def)
-    if not check_target(t_close) then
-      return
-    end
-
-    if find_buff(seal_Righteousness) then
-      cast(cast_Judgement)
-      return
-    end
-
-    if not target_has_debuff_seal_Light() then
-      seal_and_cast(seal_Light, cast_Judgement)
-      return
-    end
-
-    buff_seal(seal_Light)
-    -- seal_and_cast(seal_Light, cast_HolyStrike)
-    -- seal_and_cast(seal_Light, build_cast_list({ }))
-  end)
-end
-
-
-function attack_null()
-  attack_wr(function()
-    standard_rebuff_attack(aura_list_att)
-  end)
-end
-
-function cast_heal(heal_cast)
-  rebuff_heal()
-  cast(heal_cast)
-end
-
-
-
-
-
-
-
-
-
 
 
 
@@ -649,7 +388,7 @@ local function get_speed_mod()
   end
 
   -- tortle mount
-  if has_buffs("player", "inv_pet_speedy") then
+  if cs.has_buffs("player", "inv_pet_speedy") then
     return 1.14
   end
 
@@ -666,7 +405,7 @@ local speed_checker = {
 function speed_checker.get_k(self)
   local k = self.k
   local is_ghost = UnitIsDeadOrGhost("player")
-  if has_debuffs() and not is_ghost then
+  if cs.has_debuffs() and not is_ghost then
     return k
   end
 
@@ -778,31 +517,31 @@ end
 PLAYER_UNIT_TYPE = "players"
 NPC_UNIT_TYPE = "mobs"
 
-  local function GetReactionAndPlayerType(plate)
-    local red, green, blue = plate.original.healthbar:GetStatusBarColor()
+local function GetReactionAndPlayerType(plate)
+  local red, green, blue = plate.original.healthbar:GetStatusBarColor()
 
-    if red > .9 and green < .2 and blue < .2 then
-      return "ENEMY", nil
-    elseif red > .9 and green > .9 and blue < .2 then
-      return "NEUTRAL", "mobs"
-    elseif red < .2 and green < .2 and blue > 0.9 then
-      return "FRIENDLY", "players"
-    elseif red < .2 and green > .9 and blue < .2 then
-      return "FRIENDLY", "mobs"
-    end
+  if red > .9 and green < .2 and blue < .2 then
     return "ENEMY", nil
+  elseif red > .9 and green > .9 and blue < .2 then
+    return "NEUTRAL", "mobs"
+  elseif red < .2 and green < .2 and blue > 0.9 then
+    return "FRIENDLY", "players"
+  elseif red < .2 and green > .9 and blue < .2 then
+    return "FRIENDLY", "mobs"
   end
+  return "ENEMY", nil
+end
 
-  local function GetUnitType(reaction, player)
-    if player == PLAYER_UNIT_TYPE then
-      if reaction == "NEUTRAL" then
-        return nil
-      end
-      return reaction.."_PLAYER"
-    else
-      return reaction.."_NPC"
+local function GetUnitType(reaction, player)
+  if player == PLAYER_UNIT_TYPE then
+    if reaction == "NEUTRAL" then
+      return nil
     end
+    return reaction.."_PLAYER"
+  else
+    return reaction.."_NPC"
   end
+end
 
 local function np_to_short(plate)
   local r, p = GetReactionAndPlayerType(plate)
@@ -846,7 +585,7 @@ local function all_dump()
       if type == "mobs" then
         local p = units["players"][name]
         if p then
-           unit_dump(name)
+          unit_dump(name)
         end
       end
       count = count + 1
