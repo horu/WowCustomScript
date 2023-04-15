@@ -158,7 +158,12 @@ local function create_state(name, aura_list, bless_list)
   state.name = name
   state.aura = aura_list[1]
   state.bless = bless_list[1]
+  state.combat_bless = nil
   state.is_init = nil
+  state.init = function(self)
+    self.is_init = nil
+    self:on_buff_changed()
+  end
   state.standard_rebuff_attack = function(self)
     self:rebuff_aura()
     self:rebuff_bless()
@@ -173,13 +178,18 @@ local function create_state(name, aura_list, bless_list)
     end
   end
   state.rebuff_bless = function(self)
-    local bless = self.bless
     if not cs.check_target(cs.t_attackable) then
       -- buff BoW for mana regen
-      bless = bless_Wisdom
+      if not self.combat_bless then
+        self.combat_bless = self.bless
+        self.bless = bless_Wisdom
+      end
+    elseif self.combat_bless then
+      self.bless = self.combat_bless
+      self.combat_bless = nil
     end
 
-    if cs.rebuff(bless) then
+    if cs.rebuff(self.bless) then
       self.is_init = nil
     end
   end
@@ -232,7 +242,11 @@ local function create_state_holder()
   f.cs_state = nil
 
   f.change_state = function(self, state_name)
-    self.cs_state = self.states[state_name]
+    local state = self.states[state_name]
+    if state ~= self.cs_state then
+      self.cs_state = state
+      self.cs_state:init()
+    end
   end
 
   f.attack_action = function(self, action_name)
