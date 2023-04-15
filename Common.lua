@@ -108,6 +108,14 @@ function cs.create_fix_table(size)
   return fix_table
 end
 
+cs.create_class = function()
+  local class = {}
+  class.new = function(self, tab)
+    local obj = setmetatable(tab or {}, {__index = self})
+    return obj
+  end
+  return class
+end
 
 
 
@@ -178,10 +186,10 @@ end
 
 -- slot
 
-cs.Slot = {}
+cs.Slot = cs.create_class()
 
-function cs.Slot.new(slot_n)
-  return setmetatable({slot_n = slot_n}, {__index = cs.Slot})
+function cs.Slot.build(slot_n)
+  return cs.Slot:new({slot_n = slot_n})
 end
 
 function cs.Slot.is_equipped(self)
@@ -198,10 +206,10 @@ function cs.Slot.try_use(self)
   end
 end
 
-cs.MultiSlot = setmetatable({}, {__index = cs.Slot})
+cs.MultiSlot = cs.Slot:new()
 
-function cs.MultiSlot.new(slot_list)
-  return setmetatable({slot_list = slot_list}, {__index = cs.MultiSlot})
+function cs.MultiSlot.build(slot_list)
+  return cs.MultiSlot:new({slot_list = slot_list})
 end
 
 function cs.MultiSlot.is_equipped(self)
@@ -352,10 +360,10 @@ end
 
 
 
-cs.Dps = {}
+cs.Dps = cs.create_class()
 
-cs.Dps.new = function()
-  local dps = setmetatable({}, {__index = cs.Dps})
+cs.Dps.build = function()
+  local dps = cs.Dps:new()
   local f = cs.create_simple_text_frame("nibsrsCSdps", "BOTTOMRIGHT",-90, 95, "DPS")
   f.cs_data = { units = {}, cur = nil, last_ts = nil }
 
@@ -423,7 +431,7 @@ cs.Dps.new = function()
   return dps
 end
 
-local dps = cs.Dps.new()
+local dps = cs.Dps.build()
 
 
 

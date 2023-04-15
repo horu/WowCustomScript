@@ -24,8 +24,8 @@ local slot_TwoHand = 13
 local slot_OneHand = 14
 local slot_OffHand = 15
 
-local slot_two_hands = cs.Slot.new(slot_TwoHand)
-local slot_one_off_hands = cs.MultiSlot.new({cs.Slot.new(slot_OneHand), cs.Slot.new(slot_OffHand)})
+local slot_two_hands = cs.Slot.build(slot_TwoHand)
+local slot_one_off_hands = cs.MultiSlot.build({cs.Slot.build(slot_OneHand), cs.Slot.build(slot_OffHand)})
 
 
 
@@ -153,10 +153,10 @@ end
 
 
 
-local State = {}
+local State = cs.create_class()
 
-State.new = function(name, aura_list, bless_list, slot_to_use)
-  local state = setmetatable({}, {__index = State})
+State.build = function(name, aura_list, bless_list, slot_to_use)
+  local state = State:new()
 
   state.name = name
   state.aura_list = aura_list
@@ -242,12 +242,14 @@ end
 
 
 
+local StateHolder = cs.create_class()
 
-local function create_state_holder()
-  local f = cs.create_simple_frame("CS_create_current_state")
+StateHolder.build = function()
+  local f = cs.create_simple_frame("StateHolder.build")
 
   f:RegisterEvent("UNIT_AURA")
   f:SetScript("OnEvent", function()
+
     if this.cs_state then
       this.cs_state:on_buff_changed()
     end
@@ -282,7 +284,7 @@ local function create_state_holder()
   f.states = {}
 
   f.add_state = function(self, state_name, a1, a2, a3, a4)
-    self.states[state_name] = State.new(state_name, a1, a2, a3, a4)
+    self.states[state_name] = State.build(state_name, a1, a2, a3, a4)
   end
 
   f.add_action = function(self, state_name, action_name, action)
@@ -292,7 +294,7 @@ local function create_state_holder()
   return f
 end
 
-local state_holder = create_state_holder()
+local state_holder = StateHolder.build()
 function attack_action(name)
   state_holder:attack_action(name)
 end
@@ -336,6 +338,7 @@ end)
 
 state_holder:add_action("normal", "fast", function(state)
   state:standard_rebuff_attack()
+
   if cs.check_target(cs.t_close) then
     if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
       cast(cast_Judgement)
