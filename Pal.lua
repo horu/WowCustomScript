@@ -20,9 +20,12 @@ local bless_Might = "Blessing of Might"
 local bless_Salvation = "Blessing of Salvation"
 local bless_list_all = { bless_Wisdom, bless_Might, bless_Salvation }
 
+local slot_TwoHand = 13
+local slot_OneHand = 14
+local slot_OffHand = 15
 
-
-
+local slot_two_hands = cs.Slot.new(slot_TwoHand)
+local slot_one_off_hands = cs.MultiSlot.new({cs.Slot.new(slot_OneHand), cs.Slot.new(slot_OffHand)})
 
 
 
@@ -150,82 +153,94 @@ end
 
 
 
+local State = {}
 
-
-local function create_state(name, aura_list, bless_list)
-  local state = { aura_list = aura_list, bless_list = bless_list }
+State.new = function(name, aura_list, bless_list, slot_to_use)
+  local state = setmetatable({}, {__index = State})
 
   state.name = name
+  state.aura_list = aura_list
+  state.bless_list = bless_list
+  state.slot_to_use = slot_to_use
+
   state.aura = aura_list[1]
   state.bless = bless_list[1]
-  state.combat_bless = nil
-  state.is_init = nil
-  state.init = function(self)
-    self.is_init = nil
-    self:on_buff_changed()
-  end
-  state.standard_rebuff_attack = function(self)
-    self:rebuff_aura()
-    self:rebuff_bless()
-    if cs.is_in_party() then
-      cs.rebuff(buff_Righteous)
-      buff_party()
-    end
-  end
-  state.rebuff_aura = function(self)
-    if cs.rebuff(self.aura) then
-      self.is_init = nil
-    end
-  end
-  state.rebuff_bless = function(self)
-    if not cs.check_target(cs.t_attackable) then
-      -- buff BoW for mana regen
-      if not self.combat_bless then
-        self.combat_bless = self.bless
-        self.bless = bless_Wisdom
-      end
-    elseif self.combat_bless then
-      self.bless = self.combat_bless
-      self.combat_bless = nil
-    end
-
-    if cs.rebuff(self.bless) then
-      self.is_init = nil
-    end
-  end
-  state.on_buff_changed = function(self)
-    if not self.is_init then
-      -- state is not initializated yet. Ignore new buffs.
-      self.is_init = cs.find_buff(self.aura) and cs.find_buff(self.bless)
-      if self.is_init then
-        print("INIT STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
-      end
-      return
-    end
-
-    local _, aura = cs.find_buff(aura_list)
-    if aura and self.aura ~= aura then
-      self.aura = aura
-      print("CHANGE STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
-    end
-
-    local _, bless = cs.find_buff(bless_list)
-    if bless and self.bless ~= bless then
-      self.bless = bless
-      print("CHANGE STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
-    end
-
-  end
 
   state.actions = {}
 
-  state.do_action = function(self, name)
-    local action = self.actions[name]
-    action(self)
-  end
+  state.is_init = nil
+  state.combat_bless = nil
 
   return state
 end
+
+State.init = function(self)
+  self.is_init = nil
+  if self.slot_to_use then
+    self.slot_to_use:try_use()
+  end
+  self:on_buff_changed()
+end
+
+State.standard_rebuff_attack = function(self)
+  self:rebuff_aura()
+  self:rebuff_bless()
+  if cs.is_in_party() then
+    cs.rebuff(buff_Righteous)
+    buff_party()
+  end
+end
+State.rebuff_aura = function(self)
+  if cs.rebuff(self.aura) then
+    self.is_init = nil
+  end
+end
+State.rebuff_bless = function(self)
+  if not cs.check_target(cs.t_attackable) then
+    -- buff BoW for mana regen
+    if not self.combat_bless then
+      self.combat_bless = self.bless
+      self.bless = bless_Wisdom
+    end
+  elseif self.combat_bless then
+    self.bless = self.combat_bless
+    self.combat_bless = nil
+  end
+
+  if cs.rebuff(self.bless) then
+    self.is_init = nil
+  end
+end
+State.on_buff_changed = function(self)
+  if not self.is_init then
+    -- state is not initializated yet. Ignore new buffs.
+    self.is_init = cs.find_buff(self.aura) and cs.find_buff(self.bless)
+    if self.is_init then
+      print("INIT STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
+    end
+    return
+  end
+
+  local _, aura = cs.find_buff(aura_list)
+  if aura and self.aura ~= aura then
+    self.aura = aura
+    print("CHANGE STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
+  end
+
+  local _, bless = cs.find_buff(bless_list)
+  if bless and self.bless ~= bless then
+    self.bless = bless
+    print("CHANGE STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
+  end
+
+end
+
+
+State.do_action = function(self, name)
+  local action = self.actions[name]
+  action(self)
+end
+
 
 
 
@@ -267,8 +282,8 @@ local function create_state_holder()
 
   f.states = {}
 
-  f.add_state = function(self, state_name, a1, a2, a3)
-    self.states[state_name] = create_state(state_name, a1, a2, a3)
+  f.add_state = function(self, state_name, a1, a2, a3, a4)
+    self.states[state_name] = State.new(state_name, a1, a2, a3, a4)
   end
 
   f.add_action = function(self, state_name, action_name, action)
@@ -284,7 +299,7 @@ function attack_action(name)
 end
 
 -- ATTACKS
-state_holder:add_state("rush", { aura_Sanctity }, { bless_Might })
+state_holder:add_state("rush", { aura_Sanctity }, { bless_Might }, slot_two_hands)
 state_holder:add_action("rush", "rush", function(state)
 
   -- cast exorcism and holy strike on one click before change state
@@ -333,7 +348,7 @@ state_holder:add_action("normal", "fast", function(state)
   seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
 end)
 
-state_holder:add_state("def", aura_list_def, bless_list_all)
+state_holder:add_state("def", aura_list_def, bless_list_all, slot_one_off_hands)
 state_holder:add_action("def", "def", function(state)
   state:standard_rebuff_attack()
   if not cs.check_target(cs.t_close) then

@@ -1,7 +1,24 @@
 
-
 cs_common = {}
 local cs = cs_common
+
+
+
+-- debug
+function cs.ToString(value, depth, itlimit, short)
+  return pfUI.api.ToString(value, depth, itlimit, short)
+end
+
+function cs.debug(msg)
+  local line = debugstack(2, 1, 1)
+  local line_end = string.find(line, '[\r\n]+')
+  line = string.sub(line, 32, line_end-1)
+  if type(msg) == "table" or msg == nil then
+    msg = cs.ToString(msg)
+  end
+  print(line..": "..msg)
+end
+
 
 cs.error_disabler = {}
 function cs.error_disabler.off(self)
@@ -159,6 +176,47 @@ end
 
 
 
+-- slot
+
+cs.Slot = {}
+
+function cs.Slot.new(slot_n)
+  return setmetatable({slot_n = slot_n}, {__index = cs.Slot})
+end
+
+function cs.Slot.is_equipped(self)
+  return IsEquippedAction(self.slot_n)
+end
+
+function cs.Slot.use(self)
+  UseAction(self.slot_n)
+end
+
+function cs.Slot.try_use(self)
+  if not self:is_equipped() then
+    self:use()
+  end
+end
+
+cs.MultiSlot = setmetatable({}, {__index = cs.Slot})
+
+function cs.MultiSlot.new(slot_list)
+  return setmetatable({slot_list = slot_list}, {__index = cs.MultiSlot})
+end
+
+function cs.MultiSlot.is_equipped(self)
+  for _, slot in pairs(self.slot_list) do
+    if not slot:is_equipped() then return end
+  end
+  return true
+end
+
+function cs.MultiSlot.use(self)
+  for _, slot in pairs(self.slot_list) do
+    slot:use()
+  end
+end
+
 
 -- buffs
 function cs.find_buff(check_list, unit)
@@ -264,10 +322,6 @@ end
 
 function cs.has_debuffs(unit, debuff_str)
   return cs.has_buffs(unit, debuff_str, UnitDebuff)
-end
-
-function cs.ToString(value, depth, itlimit, short)
-  return pfUI.api.ToString(value, depth, itlimit, short)
 end
 
 
