@@ -149,109 +149,199 @@ local function build_cast_list(cast_list)
 end
 
 
--- attack_wr
-local function attack_wr(inside)
-  cs.error_disabler:off()
-  cs.auto_attack()
-  inside()
-  cs.error_disabler:on()
+
+
+
+local function create_state(name, aura_list, bless_list)
+  local state = { aura_list = aura_list, bless_list = bless_list }
+
+  state.name = name
+  state.aura = aura_list[1]
+  state.bless = bless_list[1]
+  state.is_init = nil
+  state.standard_rebuff_attack = function(self)
+    self:rebuff_aura()
+    self:rebuff_bless()
+    if cs.is_in_party() then
+      cs.rebuff(buff_Righteous)
+      buff_party()
+    end
+  end
+  state.rebuff_aura = function(self)
+    if cs.rebuff(self.aura) then
+      self.is_init = nil
+    end
+  end
+  state.rebuff_bless = function(self)
+    if cs.rebuff(self.bless) then
+      self.is_init = nil
+    end
+  end
+  state.on_buff_changed = function(self)
+    if not self.is_init then
+      -- state is not initializated yet. Ignore new buffs.
+      self.is_init = cs.find_buff(self.aura) and cs.find_buff(self.bless)
+      if self.is_init then
+        print("INIT STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
+      end
+      return
+    end
+
+    local _, aura = cs.find_buff(aura_list)
+    if aura and self.aura ~= aura then
+      self.aura = aura
+      print("CHANGE STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
+    end
+
+    local _, bless = cs.find_buff(bless_list)
+    if bless and self.bless ~= bless then
+      self.bless = bless
+      print("CHANGE STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
+    end
+
+  end
+
+  state.actions = {}
+
+  state.do_action = function(self, name)
+    local action = self.actions[name]
+    action(self)
+  end
+
+  return state
 end
 
 
 
+local function create_state_holder()
+  local f = cs.create_simple_frame("CS_create_current_state")
+
+  f:RegisterEvent("UNIT_AURA")
+  f:SetScript("OnEvent", function()
+    if this.cs_state then
+      this.cs_state:on_buff_changed()
+    end
+  end)
+
+  f.cs_state = nil
+
+  f.change_state = function(self, state_name)
+    self.cs_state = self.states[state_name]
+  end
+
+  f.attack_action = function(self, action_name)
+    cs.error_disabler:off()
+    cs.auto_attack()
+    local state_name = nil
+    for state_name_it, state_it in pairs(self.states) do
+      if state_it.actions[action_name] then
+        state_name = state_name_it
+        break
+      end
+    end
+
+    self:change_state(state_name)
+    self.cs_state:do_action(action_name)
+    cs.error_disabler:on()
+  end
+
+  f.states = {}
+
+  f.add_state = function(self, state_name, a1, a2, a3)
+    self.states[state_name] = create_state(state_name, a1, a2, a3)
+  end
+
+  f.add_action = function(self, state_name, action_name, action)
+    self.states[state_name].actions[action_name] = action
+  end
+
+  return f
+end
+
+local state_holder = create_state_holder()
+function attack_action(name)
+  state_holder:attack_action(name)
+end
 
 -- ATTACKS
-function attack_rush()
-  attack_wr(function()
-    cast(cast_HolyStrike)
+state_holder:add_state("rush", { aura_Sanctity }, { bless_Might })
+state_holder:add_action("rush", "rush", function(state)
 
-    local req_aura = { aura_Sanctity }
-    standard_rebuff_attack(req_aura)
-    if not cs.find_buff(req_aura) then
-      return
+  -- cast exorcism and holy strike on one click before change state
+  cast(cast_HolyStrike)
+  if not cs.find_buff(aura_Sanctity) then
+    local exorcism = build_cast_list({})[1]
+    if exorcism then
+      cast(exorcism)
     end
+  end
 
-    -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
-    seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
-  end)
-end
+  state:rebuff_aura()
+  if not cs.find_buff(aura_Sanctity) then
+    return
+  end
 
+  state:rebuff_bless()
 
+  -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
+  seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
+end)
 
-function attack_mid()
-  attack_wr(function()
-    standard_rebuff_attack(aura_list_def)
+state_holder:add_state("normal", aura_list_def, bless_list_all)
+state_holder:add_action("normal", "mid", function(state)
+  state:standard_rebuff_attack()
 
-    if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-      cast(cast_Judgement)
-      return
-    end
+  if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
+    cast(cast_Judgement)
+    return
+  end
 
-    --if not cs.has_debuffs("target", "Spell_Holy_HealingAura") then
-    --if cs.find_buff(seal_Righteousness) then
-    --   cast(cast_Judgement)
-    --  return
-    --  end
+  seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
+end)
 
-    --seal_and_cast(seal_Light, cast_Judgement)
-    --return
-    --end
+state_holder:add_action("normal", "fast", function(state)
+  state:standard_rebuff_attack()
+  if not cs.check_target(cs.t_close) then
+    return
+  end
 
-    -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
-    seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
-  end)
-end
+  if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
+    cast(cast_Judgement)
+    return
+  end
 
+  seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
+end)
 
+state_holder:add_action("normal", "def", function(state)
+  state:standard_rebuff_attack()
+  if not cs.check_target(cs.t_close) then
+    return
+  end
 
-function attack_fast()
-  attack_wr(function()
-    standard_rebuff_attack(aura_list_def)
-    if not cs.check_target(cs.t_close) then
-      return
-    end
+  if cs.find_buff(seal_Righteousness) then
+    cast(cast_Judgement)
+    return
+  end
 
-    if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-      cast(cast_Judgement)
-      return
-    end
+  if not target_has_debuff_seal_Light() then
+    seal_and_cast(seal_Light, cast_Judgement)
+    return
+  end
 
-    seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
-  end)
-end
+  buff_seal(seal_Light)
+  -- seal_and_cast(seal_Light, cast_HolyStrike)
+  -- seal_and_cast(seal_Light, build_cast_list({ }))
+end)
 
+state_holder:add_action("normal", "null", function(state)
+  state:standard_rebuff_attack()
+end)
 
-function attack_def()
-  attack_wr(function()
-    standard_rebuff_attack(aura_list_def)
-    if not cs.check_target(cs.t_close) then
-      return
-    end
-
-    if cs.find_buff(seal_Righteousness) then
-      cast(cast_Judgement)
-      return
-    end
-
-    if not target_has_debuff_seal_Light() then
-      seal_and_cast(seal_Light, cast_Judgement)
-      return
-    end
-
-    buff_seal(seal_Light)
-    -- seal_and_cast(seal_Light, cast_HolyStrike)
-    -- seal_and_cast(seal_Light, build_cast_list({ }))
-  end)
-end
-
-
-function attack_null()
-  attack_wr(function()
-    standard_rebuff_attack(aura_list_att)
-  end)
-end
+state_holder:add_state("heal", { aura_Concentration }, {})
 
 function cast_heal(heal_cast)
+  state_holder:change_state("heal")
   rebuff_heal()
   cast(heal_cast)
 end

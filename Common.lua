@@ -273,9 +273,15 @@ end
 
 
 
+function cs.create_simple_frame(name)
+  local f = CreateFrame("Frame", name, UIParent)
+  return f
+end
+
+
 
 function cs.create_simple_text_frame(name, x, y, text)
-  local f = CreateFrame("Frame", name, UIParent)
+  local f = cs.create_simple_frame(name)
   f:SetHeight(10)
   f:SetWidth(20)
   f:SetPoint("BOTTOM", x, y)
@@ -321,7 +327,7 @@ function cs.create_dps_calculator()
     local ts_diff = GetTime() - ts
     local sum = storage:get_sum()
 
-    print(cs.ToString({sum, ts_diff}))
+    -- print(cs.ToString({sum, ts_diff}))
     this.cs_text:SetText("DPS: "..math.floor(sum / ts_diff))
 
   end)
