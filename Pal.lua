@@ -184,7 +184,6 @@ end
 
 State.standard_rebuff_attack = function(self)
   self:rebuff_aura()
-  self:rebuff_bless()
   if cs.is_in_party() then
     cs.rebuff(buff_Righteous)
     buff_party()
@@ -332,46 +331,44 @@ state_holder:add_action("normal", "mid", function(state)
   end
 
   seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
+  state:rebuff_bless()
 end)
 
 state_holder:add_action("normal", "fast", function(state)
   state:standard_rebuff_attack()
-  if not cs.check_target(cs.t_close) then
-    return
-  end
+  if cs.check_target(cs.t_close) then
+    if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
+      cast(cast_Judgement)
+      return
+    end
 
-  if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-    cast(cast_Judgement)
-    return
+    seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
   end
-
-  seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
+  state:rebuff_bless()
 end)
 
 state_holder:add_state("def", aura_list_def, bless_list_all, slot_one_off_hands)
 state_holder:add_action("def", "def", function(state)
   state:standard_rebuff_attack()
-  if not cs.check_target(cs.t_close) then
-    return
-  end
+  if cs.check_target(cs.t_close) then
+    if cs.find_buff(seal_Righteousness) then
+      cast(cast_Judgement)
+      return
+    end
 
-  if cs.find_buff(seal_Righteousness) then
-    cast(cast_Judgement)
-    return
-  end
+    if not target_has_debuff_seal_Light() then
+      seal_and_cast(seal_Light, cast_Judgement)
+      return
+    end
 
-  if not target_has_debuff_seal_Light() then
-    seal_and_cast(seal_Light, cast_Judgement)
-    return
+    buff_seal(seal_Light)
   end
-
-  buff_seal(seal_Light)
-  -- seal_and_cast(seal_Light, cast_HolyStrike)
-  -- seal_and_cast(seal_Light, build_cast_list({ }))
+  state:rebuff_bless()
 end)
 
 state_holder:add_action("normal", "null", function(state)
   state:standard_rebuff_attack()
+  state:rebuff_bless()
 end)
 
 state_holder:add_state("heal", { aura_Concentration }, {})

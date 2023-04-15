@@ -11,12 +11,12 @@ end
 
 function cs.debug(msg)
   local line = debugstack(2, 1, 1)
-  local line_end = string.find(line, '[\r\n]+')
+  local line_end = string.find(line, "in function")
   line = string.sub(line, 32, line_end-1)
   if type(msg) == "table" or msg == nil then
     msg = cs.ToString(msg)
   end
-  print(line..": "..msg)
+  print(line..msg)
 end
 
 
@@ -334,11 +334,11 @@ end
 
 
 
-function cs.create_simple_text_frame(name, x, y, text)
+function cs.create_simple_text_frame(name, to, x, y, text)
   local f = cs.create_simple_frame(name)
   f:SetHeight(10)
   f:SetWidth(20)
-  f:SetPoint("BOTTOM", x, y)
+  f:SetPoint(to, x, y)
 
   f.cs_text = f:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
   f.cs_text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
@@ -352,21 +352,39 @@ end
 
 
 
+cs.Dps = {}
 
+cs.Dps.new = function()
+  local dps = setmetatable({}, {__index = cs.Dps})
+  local f = cs.create_simple_text_frame("nibsrsCSdps", "BOTTOMRIGHT",-90, 95, "DPS")
+  f.cs_data = { units = {}, cur = nil, last_ts = nil }
 
-
-function cs.create_dps_calculator()
-  local f = cs.create_simple_text_frame("nibsrsCSdps", 15, 45, "DPS")
-  f.cs_data = { storage = cs.create_fix_table(500), ts = GetTime() }
+  f.cs_data.get_all = function(self)
+    local ts_sum_all = 0
+    local damage_sum_all = 0
+    for _, dam_name in pairs(self.units) do
+      for _, dam_lvl in pairs(dam_name) do
+        ts_sum_all = ts_sum_all + dam_lvl.ts_sum
+        damage_sum_all = damage_sum_all + dam_lvl.damage_sum
+      end
+    end
+    return damage_sum_all / ts_sum_all
+  end
 
   f:RegisterEvent("UNIT_COMBAT")
   f:RegisterEvent("PLAYER_TARGET_CHANGED")
+  -- f:RegisterEvent("PLAYER_ENTER_COMBAT")
+  f:RegisterEvent("PLAYER_LEAVE_COMBAT")
+  f:RegisterEvent("SPELLCAST_START")
   f:SetScript("OnEvent", function()
-    local storage = this.cs_data.storage
-    local ts = this.cs_data.ts
-    if event == "PLAYER_TARGET_CHANGED" then
-      storage:clear()
-      this.cs_data.ts = GetTime()
+    local data = this.cs_data
+    local ts = GetTime()
+
+    if (event == "PLAYER_LEAVE_COMBAT" or event == "SPELLCAST_START" or event == "PLAYER_TARGET_CHANGED")
+        and data.cur then
+      cs.debug(data.cur.ts_sum)
+      data.cur = nil
+      data.last_ts = nil
       return
     end
 
@@ -374,23 +392,38 @@ function cs.create_dps_calculator()
       return
     end
 
+    if not data.cur then
+      -- combat first damage
+
+      local name = UnitName("target")
+      local lvl = UnitLevel("target")
+      data.units[name] = data.units[name] or {}
+      data.units[name][lvl] = data.units[name][lvl] or { damage_sum = 0, ts_sum = 0 }
+
+      data.cur = data.units[name][lvl]
+      data.last_ts = ts
+      cs.debug(data.cur.ts_sum)
+    end
+
     local damage = arg4
 
-    storage:add(damage)
+    data.cur.damage_sum = data.cur.damage_sum + damage
+    data.cur.ts_sum = data.cur.ts_sum + ts - data.last_ts
 
-    local ts_diff = GetTime() - ts
-    local sum = storage:get_sum()
+    data.last_ts = ts
 
-    -- print(cs.ToString({sum, ts_diff}))
-    this.cs_text:SetText("DPS: "..math.floor(sum / ts_diff))
+    local cur_dps = data.cur.damage_sum / data.cur.ts_sum
+    local all_dps = data:get_all()
+
+    this.cs_text:SetText(string.format("DPS: %.1f (%.1f)", cur_dps, all_dps))
 
   end)
 
-  return f
+  dps.frame = f
+  return dps
 end
 
-
-local dps = cs.create_dps_calculator()
+local dps = cs.Dps.new()
 
 
 
