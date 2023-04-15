@@ -173,7 +173,13 @@ local function create_state(name, aura_list, bless_list)
     end
   end
   state.rebuff_bless = function(self)
-    if cs.rebuff(self.bless) then
+    local bless = self.bless
+    if not cs.check_target(cs.t_attackable) then
+      -- buff BoW for mana regen
+      bless = bless_Wisdom
+    end
+
+    if cs.rebuff(bless) then
       self.is_init = nil
     end
   end
@@ -313,7 +319,8 @@ state_holder:add_action("normal", "fast", function(state)
   seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
 end)
 
-state_holder:add_action("normal", "def", function(state)
+state_holder:add_state("def", aura_list_def, bless_list_all)
+state_holder:add_action("def", "def", function(state)
   state:standard_rebuff_attack()
   if not cs.check_target(cs.t_close) then
     return
