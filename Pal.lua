@@ -88,9 +88,6 @@ end
 
 
 
---main
-
-
 
 
 
@@ -128,9 +125,16 @@ local function target_has_debuff_seal_Light()
   return cs.has_debuffs("target", "Spell_Holy_HealingAura")
 end
 
+local function has_debuff_protection()
+  return cs.has_debuffs("player", "Spell_Holy_RemoveCurse")
+end
 
 
 -- CAST
+
+local cast_DivineProtection = "Divine Protection"
+local cast_BlessingProtection = "Blessing of Protection"
+
 
 local cast_CrusaderStrike = "Crusader Strike"
 local cast_Judgement = "Judgement"
@@ -176,10 +180,14 @@ end
 
 State.init = function(self)
   self.is_init = nil
+  --self:reuse_slot()
+  self:on_buff_changed()
+end
+
+State.reuse_slot = function(self)
   if self.slot_to_use then
     self.slot_to_use:try_use()
   end
-  self:on_buff_changed()
 end
 
 State.check = function(self)
@@ -285,11 +293,11 @@ StateHolder.init = function(self)
   cs.Looper.delay_q(function()
 
     self:change_state(self:get_state("null"))
-    self.looper = cs.Looper.build(self.check, self, 0.5)
+    self.looper = cs.Looper.build(self.check_loop, self, 0.5)
   end)
 end
 
-StateHolder.check = function(self)
+StateHolder.check_loop = function(self)
   for state, clicks in pairs(self.states_clicks) do
     if clicks >= 3 then
       self:change_state(state)
@@ -298,6 +306,7 @@ StateHolder.check = function(self)
   end
   self.states_clicks = {}
   self.frame.cs_text:SetText(self.cur_state:to_string())
+  self.cur_state:reuse_slot()
 end
 
 StateHolder.change_state = function(self, state)
@@ -341,8 +350,18 @@ StateHolder.add_action = function(self, state_name, action_name, action)
   self.states[state_name].actions[action_name] = action
 end
 
+StateHolder.check_hp = function(self)
+  local hp_level = cs.get_hp_level()
+  if not has_debuff_protection() and hp_level <= 0.3 then
+    DoOrder(cast_DivineProtection, cast_BlessingProtection)
+    return nil
+  end
+  return true
+end
+
 StateHolder.rebuff_heal = function(self)
   if cs.in_aggro() or cs.in_combat() then
+    self:check_hp()
     cs.rebuff(aura_Concentration)
   end
 end
@@ -408,7 +427,8 @@ state_holder:add_action("DEFE", "def", function(state)
   end
 end)
 
-state_holder:add_action("NORM", "null", function(state)
+state_holder:add_state("NULL", aura_list_att, bless_list_all, nil, aura_Shadow)
+state_holder:add_action("NULL", "null", function(state)
 end)
 
 state_holder:init()

@@ -338,7 +338,7 @@ function cs.has_buffs(unit, buff_str, b_fun)
     local buff = b_fun(unit, i)
     if not buff then break end
 
-    -- print(buff)
+    --print(buff)
     if string.find(buff, buff_str) then
       return true
     end
