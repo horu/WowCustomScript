@@ -375,10 +375,10 @@ end
 local state_holder = StateHolder.build()
 
 -- ATTACKS
-state_holder:add_state(4, State.build( "RUSH", aura_Sanctity, bless_Might, slot_two_hands))
-state_holder:add_state(3, State.build( "NORM", aura_Retribution, bless_Might))
-state_holder:add_state(2, State.build( "DEFR", aura_Devotion, bless_Wisdom, slot_one_off_hands))
-state_holder:add_state(1, State.build( "NULL", aura_Shadow, bless_Wisdom))
+state_holder:add_state(4, State.build( "|cffff2020RUSH", aura_Sanctity, bless_Might, slot_two_hands))
+state_holder:add_state(3, State.build( "|cff20ff20NORM", aura_Retribution, bless_Might))
+state_holder:add_state(2, State.build( "|cff9090ffDEFR", aura_Devotion, bless_Wisdom, slot_one_off_hands))
+state_holder:add_state(1, State.build( "|cffffffffNULL", aura_Shadow, bless_Wisdom))
 
 state_holder:add_action("rush", function(state)
   cast(cast_HolyStrike)
