@@ -161,29 +161,36 @@ cs.Looper.build = function(func, obj, period)
 end
 
 function cs.Looper:loop()
+  self.cur_period = self.cur_period - cs.Looper.global_period
   if self.cur_period <= 0 then
     self.func(self.obj)
     self.cur_period = self.period
-  else
-    self.cur_period = self.cur_period - cs.Looper.global_period
   end
   cs.Looper.delay_q(self.loop, self)
 end
 
 
 
-
+---@class cs.ActionBarProxy
 cs.ActionBarProxy = cs.create_class()
 
-cs.ActionBarProxy.build = function(callback)
+cs.ActionBarProxy.key_state_up = "up"
+cs.ActionBarProxy.key_state_down = "down"
+
+cs.ActionBarProxy.build = function()
+  ---@type cs.ActionBarProxy
   local proxy = {}
-  local bar = 1
-  local button = 1
 
-  local b = pfUI.bars[bar][button]
-  local proxyon_click = b:GetScript("OnClick")
-  b:SetScript("OnClick", function()
+  return proxy
+end
 
+function cs.ActionBarProxy.add_proxy(bar, button, callback, obj)
+  local native_b = pfUI.bars[bar][button]
+  native_b.cs_native_script = native_b:GetScript("OnClick")
+  native_b.cs_callback = { callback = callback, obj = obj, bar = bar, button = button }
+  native_b:SetScript("OnClick", function()
+    this.cs_callback.callback(this.cs_callback.obj, this.cs_callback.bar, this.cs_callback.button)
+    this.cs_native_script()
   end)
 end
 

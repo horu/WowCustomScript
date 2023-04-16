@@ -280,6 +280,7 @@ StateHolder.build = function()
   f.cs_holder = holder
   holder.looper = nil
   holder.states_clicks = {}
+  holder.states_buttons = {}
 
   holder.frame = cs.create_simple_text_frame("StateHolder.build", "BOTTOMLEFT",10, 95, "S")
 
@@ -291,11 +292,32 @@ function StateHolder:init()
 
     local _, state = next(self.states)
     self:change_state(state)
-    self.looper = cs.Looper.build(self.check_loop, self, 0.5)
+    self.looper = cs.Looper.build(self.check_loop, self, 0.2)
+
+    for i in pairs(self.states) do
+      cs.ActionBarProxy.add_proxy(1, i, StateHolder.button_callback, self)
+    end
   end)
 end
 
+function StateHolder:button_callback(bar, button)
+  --cs.debug({bar, button, keystate})
+  self.states_buttons[button] = {keystate = keystate, ts = GetTime()}
+end
+
 function StateHolder:check_loop()
+  local ts = GetTime()
+
+  for but, keyinfo in pairs(self.states_buttons) do
+    if keyinfo.keystate == cs.ActionBarProxy.key_state_down and ts - keyinfo.ts >= 0.55 then
+      local state = self.states[but]
+      self:change_state(state)
+      break
+    elseif keyinfo.keystate == cs.ActionBarProxy.key_state_up then
+      self.states_buttons[but] = nil
+    end
+  end
+
   for state, clicks in pairs(self.states_clicks) do
     if clicks >= 3 then
       self:change_state(state)
@@ -310,6 +332,7 @@ function StateHolder:change_state(state)
   if state ~= self.cur_state then
     self.cur_state = state
     self.cur_state:init()
+    print("NEW STATE: "..self.cur_state.name)
   end
 end
 
@@ -325,9 +348,9 @@ function StateHolder:attack_action(action_name)
 
 end
 
-function StateHolder:add_state(state_name, a1, a2, a3, a4, a5, a6, a7)
+function StateHolder:add_state(button, state_name, a1, a2, a3, a4, a5, a6, a7)
   local state = State.build(state_name, a1, a2, a3, a4, a5, a6, a7)
-  self.states[state_name] = state
+  self.states[button] = state
 end
 
 function StateHolder:add_action(state_name, action_name, action)
@@ -337,8 +360,8 @@ end
 function StateHolder:do_action(name)
   local state_name, action = unpack(self.actions[name])
   action()
-  local state = self.states[state_name]
-  self.states_clicks[state] = self.states_clicks[state] and self.states_clicks[state] + 1 or 0
+  --local state = self.states[state_name]
+  --self.states_clicks[state] = self.states_clicks[state] and self.states_clicks[state] + 1 or 0
 end
 
 function StateHolder:check_hp()
@@ -360,10 +383,10 @@ end
 local state_holder = StateHolder.build()
 
 -- ATTACKS
-state_holder:add_state("RUSH", { aura_Sanctity }, { bless_Might }, slot_two_hands, nil, nil)
-state_holder:add_state("NORM", aura_list_def, bless_list_all, nil, aura_Retribution, bless_Might)
-state_holder:add_state("DEFE", aura_list_def, bless_list_all, slot_one_off_hands)
-state_holder:add_state("NULL", aura_list_att, bless_list_all, nil, aura_Shadow)
+state_holder:add_state(4, "RUSH", { aura_Sanctity }, { bless_Might }, slot_two_hands, nil, nil)
+state_holder:add_state(3, "NORM", aura_list_def, bless_list_all, nil, aura_Retribution, bless_Might)
+state_holder:add_state(2, "DEFE", aura_list_def, bless_list_all, slot_one_off_hands)
+state_holder:add_state(1, "NULL", aura_list_att, bless_list_all, nil, aura_Shadow)
 
 state_holder:add_action("RUSH", "rush", function(state)
   cast(cast_HolyStrike)
