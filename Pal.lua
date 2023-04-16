@@ -169,8 +169,6 @@ State.build = function(name, aura_list, bless_list, slot_to_use, default_aura, d
   state.aura = default_aura or aura_list[1]
   state.bless = default_bless or bless_list[1]
 
-  state.actions = {}
-
   state.is_init = nil
   state.combat_bless = nil
 
@@ -190,7 +188,7 @@ function State:reuse_slot()
   end
 end
 
-function State:check()
+function State:recheck()
   self:reuse_slot()
   self:standard_rebuff_attack()
 end
@@ -258,13 +256,6 @@ function State:on_buff_changed()
 end
 
 
-
-function State:do_action(name)
-  local action = self.actions[name]
-  action(self)
-end
-
-
 ---@class StateHolder
 local StateHolder = cs.create_class()
 
@@ -275,6 +266,8 @@ StateHolder.build = function()
   ---@type State
   holder.cur_state = nil
   holder.states = {}
+
+  holder.actions = {}
 
   local f = cs.create_simple_frame("StateHolder.build")
   f:RegisterEvent("UNIT_AURA")
@@ -296,7 +289,8 @@ end
 function StateHolder:init()
   cs.Looper.delay_q(function()
 
-    self:change_state(self:get_state("null"))
+    local _, state = next(self.states)
+    self:change_state(state)
     self.looper = cs.Looper.build(self.check_loop, self, 0.5)
   end)
 end
@@ -324,27 +318,11 @@ function StateHolder:attack_action(action_name)
 
   cs.auto_attack()
 
-  self.cur_state:check()
-
-  local state = self:get_state(action_name)
-  state:do_action(action_name)
+  self.cur_state:recheck()
+  self:do_action(action_name)
 
   cs.error_disabler:on()
 
-  self.states_clicks[state] = self.states_clicks[state] and self.states_clicks[state] + 1 or 0
-end
-
----@return State
-function StateHolder:get_state(action_name)
-  local state_name = nil
-  for state_name_it, state_it in pairs(self.states) do
-    if state_it.actions[action_name] then
-      state_name = state_name_it
-      break
-    end
-  end
-
-  return self.states[state_name]
 end
 
 function StateHolder:add_state(state_name, a1, a2, a3, a4, a5, a6, a7)
@@ -353,7 +331,14 @@ function StateHolder:add_state(state_name, a1, a2, a3, a4, a5, a6, a7)
 end
 
 function StateHolder:add_action(state_name, action_name, action)
-  self.states[state_name].actions[action_name] = action
+  self.actions[action_name] = {state_name, action}
+end
+
+function StateHolder:do_action(name)
+  local state_name, action = unpack(self.actions[name])
+  action()
+  local state = self.states[state_name]
+  self.states_clicks[state] = self.states_clicks[state] and self.states_clicks[state] + 1 or 0
 end
 
 function StateHolder:check_hp()
@@ -376,13 +361,16 @@ local state_holder = StateHolder.build()
 
 -- ATTACKS
 state_holder:add_state("RUSH", { aura_Sanctity }, { bless_Might }, slot_two_hands, nil, nil)
+state_holder:add_state("NORM", aura_list_def, bless_list_all, nil, aura_Retribution, bless_Might)
+state_holder:add_state("DEFE", aura_list_def, bless_list_all, slot_one_off_hands)
+state_holder:add_state("NULL", aura_list_att, bless_list_all, nil, aura_Shadow)
+
 state_holder:add_action("RUSH", "rush", function(state)
   cast(cast_HolyStrike)
 
   seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
 end)
 
-state_holder:add_state("NORM", aura_list_def, bless_list_all, nil, aura_Retribution, bless_Might)
 state_holder:add_action("NORM", "mid", function(state)
   if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
     cast(cast_Judgement)
@@ -403,7 +391,6 @@ state_holder:add_action("NORM", "fast", function(state)
   end
 end)
 
-state_holder:add_state("DEFE", aura_list_def, bless_list_all, slot_one_off_hands)
 state_holder:add_action("DEFE", "def", function(state)
   if cs.check_target(cs.t_close) then
     if cs.find_buff(seal_Righteousness) then
@@ -420,7 +407,6 @@ state_holder:add_action("DEFE", "def", function(state)
   end
 end)
 
-state_holder:add_state("NULL", aura_list_att, bless_list_all, nil, aura_Shadow)
 state_holder:add_action("NULL", "null", function(state)
 end)
 
