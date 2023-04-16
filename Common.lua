@@ -110,7 +110,7 @@ end
 
 cs.create_class = function(class_tab)
   local class = class_tab or {}
-  class.new = function(self, tab)
+  function class:new(tab)
     local obj = setmetatable(tab or {}, {__index = self})
     return obj
   end
@@ -160,7 +160,7 @@ cs.Looper.build = function(func, obj, period)
   return looper
 end
 
-cs.Looper.loop = function(self)
+function cs.Looper:loop()
   if self.cur_period <= 0 then
     self.func(self.obj)
     self.cur_period = self.period
@@ -168,6 +168,23 @@ cs.Looper.loop = function(self)
     self.cur_period = self.cur_period - cs.Looper.global_period
   end
   cs.Looper.delay_q(self.loop, self)
+end
+
+
+
+
+cs.ActionBarProxy = cs.create_class()
+
+cs.ActionBarProxy.build = function(callback)
+  local proxy = {}
+  local bar = 1
+  local button = 1
+
+  local b = pfUI.bars[bar][button]
+  local proxyon_click = b:GetScript("OnClick")
+  b:SetScript("OnClick", function()
+
+  end)
 end
 
 
@@ -246,15 +263,15 @@ function cs.Slot.build(slot_n)
   return cs.Slot:new({slot_n = slot_n, last_ts = GetTime()})
 end
 
-function cs.Slot.is_equipped(self)
+function cs.Slot:is_equipped()
   return IsEquippedAction(self.slot_n)
 end
 
-function cs.Slot.use(self)
+function cs.Slot:use()
   UseAction(self.slot_n)
 end
 
-function cs.Slot.try_use(self)
+function cs.Slot:try_use()
   local ts = GetTime()
   if ts - self.last_ts <= 1 then
     -- frequent using has bugs
@@ -273,14 +290,14 @@ function cs.MultiSlot.build(slot_list)
   return cs.MultiSlot:new({slot_list = slot_list})
 end
 
-function cs.MultiSlot.is_equipped(self)
+function cs.MultiSlot:is_equipped()
   for _, slot in pairs(self.slot_list) do
     if not slot:is_equipped() then return end
   end
   return true
 end
 
-function cs.MultiSlot.use(self)
+function cs.MultiSlot:use()
   for _, slot in pairs(self.slot_list) do
     slot:use()
   end

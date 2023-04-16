@@ -154,10 +154,11 @@ end
 
 
 
-
+---@class State
 local State = cs.create_class()
 
 State.build = function(name, aura_list, bless_list, slot_to_use, default_aura, default_bless)
+  ---@type State
   local state = State:new()
 
   state.name = name
@@ -178,30 +179,30 @@ State.build = function(name, aura_list, bless_list, slot_to_use, default_aura, d
   return state
 end
 
-State.init = function(self)
+function State:init()
   self.is_init = nil
   self:on_buff_changed()
 end
 
-State.reuse_slot = function(self)
+function State:reuse_slot()
   if self.slot_to_use then
     self.slot_to_use:try_use()
   end
 end
 
-State.check = function(self)
+function State:check()
   self:reuse_slot()
   self:standard_rebuff_attack()
 end
 
-State.to_string = function(self)
+function State:to_string()
   local bless = self.bless and to_short(self.bless) or "NONE"
   local combat_bless = self.combat_bless and to_short(self.combat_bless) or "NONE"
   local msg = self.name.."   "..to_short(self.aura).."   ".. bless .. "/".. combat_bless .."   "..self.msg
   return msg
 end
 
-State.standard_rebuff_attack = function(self)
+function State:standard_rebuff_attack()
   self:rebuff_aura()
   self:rebuff_bless()
   if cs.is_in_party() and not cs.in_combat() then
@@ -210,13 +211,13 @@ State.standard_rebuff_attack = function(self)
   end
 end
 
-State.rebuff_aura = function(self)
+function State:rebuff_aura()
   if cs.rebuff(self.aura) then
     self.is_init = nil
   end
 end
 
-State.rebuff_bless = function(self)
+function State:rebuff_bless()
   if not cs.check_target(cs.t_attackable) then
     -- buff BoW for mana regen
     if not self.combat_bless then
@@ -233,7 +234,7 @@ State.rebuff_bless = function(self)
   end
 end
 
-State.on_buff_changed = function(self)
+function State:on_buff_changed()
   if not self.is_init then
     -- state is not initializated yet. Ignore new buffs.
     self.is_init = cs.find_buff(self.aura) and cs.find_buff(self.bless)
@@ -258,17 +259,20 @@ end
 
 
 
-State.do_action = function(self, name)
+function State:do_action(name)
   local action = self.actions[name]
   action(self)
 end
 
 
-
+---@class StateHolder
 local StateHolder = cs.create_class()
 
 StateHolder.build = function()
+  ---@type StateHolder
   local holder = StateHolder:new()
+
+  ---@type State
   holder.cur_state = nil
   holder.states = {}
 
@@ -289,7 +293,7 @@ StateHolder.build = function()
   return holder
 end
 
-StateHolder.init = function(self)
+function StateHolder:init()
   cs.Looper.delay_q(function()
 
     self:change_state(self:get_state("null"))
@@ -297,7 +301,7 @@ StateHolder.init = function(self)
   end)
 end
 
-StateHolder.check_loop = function(self)
+function StateHolder:check_loop()
   for state, clicks in pairs(self.states_clicks) do
     if clicks >= 3 then
       self:change_state(state)
@@ -308,14 +312,14 @@ StateHolder.check_loop = function(self)
   self.frame.cs_text:SetText(self.cur_state:to_string())
 end
 
-StateHolder.change_state = function(self, state)
+function StateHolder:change_state(state)
   if state ~= self.cur_state then
     self.cur_state = state
     self.cur_state:init()
   end
 end
 
-StateHolder.attack_action = function(self, action_name)
+function StateHolder:attack_action(action_name)
   cs.error_disabler:off()
 
   cs.auto_attack()
@@ -330,7 +334,8 @@ StateHolder.attack_action = function(self, action_name)
   self.states_clicks[state] = self.states_clicks[state] and self.states_clicks[state] + 1 or 0
 end
 
-StateHolder.get_state = function(self, action_name)
+---@return State
+function StateHolder:get_state(action_name)
   local state_name = nil
   for state_name_it, state_it in pairs(self.states) do
     if state_it.actions[action_name] then
@@ -342,16 +347,16 @@ StateHolder.get_state = function(self, action_name)
   return self.states[state_name]
 end
 
-
-StateHolder.add_state = function(self, state_name, a1, a2, a3, a4, a5, a6, a7)
-  self.states[state_name] = State.build(state_name, a1, a2, a3, a4, a5, a6, a7)
+function StateHolder:add_state(state_name, a1, a2, a3, a4, a5, a6, a7)
+  local state = State.build(state_name, a1, a2, a3, a4, a5, a6, a7)
+  self.states[state_name] = state
 end
 
-StateHolder.add_action = function(self, state_name, action_name, action)
+function StateHolder:add_action(state_name, action_name, action)
   self.states[state_name].actions[action_name] = action
 end
 
-StateHolder.check_hp = function(self)
+function StateHolder:check_hp()
   local hp_level = cs.get_hp_level()
   if not has_debuff_protection() and hp_level <= 0.3 then
     DoOrder(cast_DivineProtection, cast_BlessingProtection)
@@ -360,7 +365,7 @@ StateHolder.check_hp = function(self)
   return true
 end
 
-StateHolder.rebuff_heal = function(self)
+function StateHolder:rebuff_heal()
   if cs.in_aggro() or cs.in_combat() then
     self:check_hp()
     cs.rebuff(aura_Concentration)
