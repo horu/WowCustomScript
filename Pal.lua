@@ -203,8 +203,11 @@ function State:recheck()
 end
 
 function State:to_string()
+
+  local state = not self.is_init and "NONE" or (
+          (self.aura ~= self.default_aura or self.bless ~= self.default_bless) and "MODI" or "INIT")
   local bless = self.bless and to_short(self.bless) or "NONE"
-  local msg = self.name.."   "..to_short(self.aura).."   ".. bless .. "   "..self.msg
+  local msg = self.name.."   "..to_short(self.aura).."   ".. bless .. "   "..state
   return msg
 end
 
@@ -233,22 +236,17 @@ function State:on_buff_changed()
   if not self.is_init then
     -- state is not initializated yet. Ignore new buffs.
     self.is_init = cs.find_buff(self.aura) and cs.find_buff(self.bless)
-    if self.is_init then
-      self.msg = "INIT"
-    end
     return
   end
 
   local _, aura = cs.find_buff(self.aura_list)
   if aura and self.aura ~= aura then
     self.aura = aura
-    self.msg = "CHAN"
   end
 
   local _, bless = cs.find_buff(self.bless_list)
   if bless and self.bless ~= bless then
     self.bless = bless
-    self.msg = "CHAN"
   end
 end
 
