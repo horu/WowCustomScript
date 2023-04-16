@@ -317,12 +317,14 @@ end
 
 StateHolder.attack_action = function(self, action_name)
   cs.error_disabler:off()
+
   cs.auto_attack()
 
   self.cur_state:check()
 
   local state = self:get_state(action_name)
   state:do_action(action_name)
+
   cs.error_disabler:on()
 
   self.states_clicks[state] = self.states_clicks[state] and self.states_clicks[state] + 1 or 0
@@ -341,8 +343,8 @@ StateHolder.get_state = function(self, action_name)
 end
 
 
-StateHolder.add_state = function(self, state_name, a1, a2, a3, a4, a5, a6)
-  self.states[state_name] = State.build(state_name, a1, a2, a3, a4, a5, a6)
+StateHolder.add_state = function(self, state_name, a1, a2, a3, a4, a5, a6, a7)
+  self.states[state_name] = State.build(state_name, a1, a2, a3, a4, a5, a6, a7)
 end
 
 StateHolder.add_action = function(self, state_name, action_name, action)
@@ -368,23 +370,10 @@ end
 local state_holder = StateHolder.build()
 
 -- ATTACKS
-state_holder:add_state("RUSH", { aura_Sanctity }, { bless_Might }, slot_two_hands)
+state_holder:add_state("RUSH", { aura_Sanctity }, { bless_Might }, slot_two_hands, nil, nil)
 state_holder:add_action("RUSH", "rush", function(state)
-
-  -- cast exorcism and holy strike on one click before change state
   cast(cast_HolyStrike)
-  if not cs.find_buff(aura_Sanctity) then
-    local exorcism = build_cast_list({})[1]
-    if exorcism then
-      cast(exorcism)
-    end
-  end
 
-  --if not cs.find_buff(aura_Sanctity) then
-  --  return
-  --end
-
-  -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
   seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
 end)
 
