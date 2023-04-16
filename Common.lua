@@ -280,6 +280,12 @@ function cs.auto_attack()
     TargetNearestEnemy()
   end
   if not cs.in_combat() then
+
+    if cs.check_target(cs.t_enemy) and cs.check_target(cs.t_player) then
+      -- prevent random pvp attack
+      return
+    end
+
     AttackTarget()
   elseif cs.check_target(cs.t_friend) then
     AssistUnit("target")
