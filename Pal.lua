@@ -29,6 +29,23 @@ local slot_one_off_hands = cs.MultiSlot.build({cs.Slot.build(slot_OneHand), cs.S
 
 
 
+local to_short_list = {}
+to_short_list[aura_Concentration] = "CONC"
+to_short_list[aura_Devotion] = "DEVO"
+to_short_list[aura_Sanctity] = "SANC"
+to_short_list[aura_Retribution] = "RETR"
+to_short_list[aura_Shadow] = "SHAD"
+to_short_list[aura_Frost] = "FROS"
+
+to_short_list[bless_Wisdom] = "WISD"
+to_short_list[bless_Might] = "MIGH"
+to_short_list[bless_Salvation] = "SALV"
+
+local to_short = function(cast)
+  return to_short_list[cast]
+end
+
+
 -- party
 
 local function rebuff_party_member(unit)
@@ -136,7 +153,7 @@ end
 
 local State = cs.create_class()
 
-State.build = function(name, aura_list, bless_list, slot_to_use)
+State.build = function(name, aura_list, bless_list, slot_to_use, default_aura, default_bless)
   local state = State:new()
 
   state.name = name
@@ -144,15 +161,15 @@ State.build = function(name, aura_list, bless_list, slot_to_use)
   state.bless_list = bless_list
   state.slot_to_use = slot_to_use
 
-  state.aura = aura_list[1]
-  state.bless = bless_list[1]
+  state.aura = default_aura or aura_list[1]
+  state.bless = default_bless or bless_list[1]
 
   state.actions = {}
 
   state.is_init = nil
   state.combat_bless = nil
 
-  state.msg = "N"
+  state.msg = "NONE"
 
   return state
 end
@@ -170,7 +187,9 @@ State.check = function(self)
 end
 
 State.to_string = function(self)
-  local msg = self.name..":    "..self.aura.."    "..(self.bless or "").."    "..self.msg
+  local bless = self.bless and to_short(self.bless) or "NONE"
+  local combat_bless = self.combat_bless and to_short(self.combat_bless) or "NONE"
+  local msg = self.name.."   "..to_short(self.aura).."   ".. bless .. "/".. combat_bless .."   "..self.msg
   return msg
 end
 
@@ -211,7 +230,7 @@ State.on_buff_changed = function(self)
     -- state is not initializated yet. Ignore new buffs.
     self.is_init = cs.find_buff(self.aura) and cs.find_buff(self.bless)
     if self.is_init then
-      self.msg = "I"
+      self.msg = "INIT"
     end
     return
   end
@@ -219,13 +238,13 @@ State.on_buff_changed = function(self)
   local _, aura = cs.find_buff(self.aura_list)
   if aura and self.aura ~= aura then
     self.aura = aura
-    self.msg = "C"
+    self.msg = "CHAN"
   end
 
   local _, bless = cs.find_buff(self.bless_list)
   if bless and self.bless ~= bless then
     self.bless = bless
-    self.msg = "C"
+    self.msg = "CHAN"
   end
 end
 
@@ -314,8 +333,8 @@ StateHolder.get_state = function(self, action_name)
 end
 
 
-StateHolder.add_state = function(self, state_name, a1, a2, a3, a4)
-  self.states[state_name] = State.build(state_name, a1, a2, a3, a4)
+StateHolder.add_state = function(self, state_name, a1, a2, a3, a4, a5, a6)
+  self.states[state_name] = State.build(state_name, a1, a2, a3, a4, a5, a6)
 end
 
 StateHolder.add_action = function(self, state_name, action_name, action)
@@ -343,15 +362,15 @@ state_holder:add_action("RUSH", "rush", function(state)
     end
   end
 
-  if not cs.find_buff(aura_Sanctity) then
-    return
-  end
+  --if not cs.find_buff(aura_Sanctity) then
+  --  return
+  --end
 
   -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
   seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
 end)
 
-state_holder:add_state("NORM", aura_list_def, bless_list_all)
+state_holder:add_state("NORM", aura_list_def, bless_list_all, nil, aura_Retribution, bless_Might)
 state_holder:add_action("NORM", "mid", function(state)
   if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
     cast(cast_Judgement)
