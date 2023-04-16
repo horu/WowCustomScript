@@ -157,13 +157,13 @@ end
 ---@class State
 local State = cs.create_class()
 
-State.build = function(name, aura_list, bless_list, slot_to_use, default_aura, default_bless)
+State.build = function(name, default_aura, default_bless, slot_to_use)
   ---@type State
   local state = State:new()
 
   state.name = name
-  state.aura_list = aura_list
-  state.bless_list = bless_list
+  state.aura_list = aura_list_all
+  state.bless_list = bless_list_all
   state.slot_to_use = slot_to_use
 
   state.default_aura = default_aura or aura_list[1]
@@ -356,8 +356,7 @@ function StateHolder:attack_action(action_name)
 
 end
 
-function StateHolder:add_state(button, state_name, a1, a2, a3, a4, a5, a6, a7)
-  local state = State.build(state_name, a1, a2, a3, a4, a5, a6, a7)
+function StateHolder:add_state(button, state)
   self.states[button] = state
 end
 
@@ -389,10 +388,10 @@ end
 local state_holder = StateHolder.build()
 
 -- ATTACKS
-state_holder:add_state(4, "RUSH", { aura_Sanctity }, { bless_Might }, slot_two_hands, nil, nil)
-state_holder:add_state(3, "NORM", aura_list_def, bless_list_all, nil, aura_Retribution, bless_Might)
-state_holder:add_state(2, "DEFE", aura_list_def, bless_list_all, slot_one_off_hands)
-state_holder:add_state(1, "NULL", aura_list_att, bless_list_all, nil, aura_Shadow)
+state_holder:add_state(4, State.build( "RUSH", aura_Sanctity, bless_Might, slot_two_hands))
+state_holder:add_state(3, State.build( "NORM", aura_Retribution, bless_Might))
+state_holder:add_state(2, State.build( "DEFE", aura_Devotion, bless_Wisdom, slot_one_off_hands))
+state_holder:add_state(1, State.build( "NULL", aura_Shadow, bless_Wisdom))
 
 state_holder:add_action("RUSH", "rush", function(state)
   cast(cast_HolyStrike)
