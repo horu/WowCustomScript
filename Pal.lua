@@ -176,6 +176,11 @@ State.build = function(name, aura, bless, slot_to_use)
 
   state.msg = "NONE"
 
+  state.enemy_spell_base = { base = nil, ts = 0 }
+  state.enemy_spell_base.is_valid = function(self)
+    return self.base and GetTime() - self.ts <= 10
+  end
+
   return state
 end
 
@@ -221,7 +226,19 @@ function State:standard_rebuff_attack()
 end
 
 function State:rebuff_aura()
-  if cs.rebuff(self.aura) then
+  local aura = self.aura
+
+  local spell_base = self.enemy_spell_base.base
+  if self.enemy_spell_base:is_valid() then
+    if spell_base == cs.spell_base_Frost then
+      aura = aura_Frost
+    end
+    if spell_base == cs.spell_base_Shadow then
+      aura = aura_Shadow
+    end
+  end
+
+  if cs.rebuff(aura) then
     self.is_init = nil
   end
 end
@@ -250,6 +267,17 @@ function State:on_buff_changed()
   end
 end
 
+-- reacion for enenmy cast to change resist aura
+function State:on_cast_detected(spell_base)
+  if not spell_base or self.enemy_spell_base:is_valid() then
+    return
+  end
+
+  self.enemy_spell_base.base = spell_base
+  self.enemy_spell_base.ts = GetTime()
+end
+
+
 
 ---@class StateHolder
 local StateHolder = cs.create_class()
@@ -274,7 +302,6 @@ StateHolder.build = function()
   end)
 
   f.cs_holder = holder
-  holder.looper = nil
   holder.states_clicks = {}
   holder.states_buttons = {}
 
@@ -284,11 +311,11 @@ StateHolder.build = function()
 end
 
 function StateHolder:init()
-  cs.Looper.delay_q(function()
+  cs.Looper.add_event("once", 0, nil, function()
 
     local _, state = next(self.states)
     self:change_state(state)
-    self.looper = cs.Looper.build(self.check_loop, self, 0.2)
+    cs.Looper.add_event("StateHolder",0.2, self, self.check_loop)
 
     for i in pairs(self.states) do
       cs.ActionBarProxy.add_proxy(1, i, StateHolder.button_callback, self)
@@ -319,6 +346,13 @@ function StateHolder:check_loop()
   end
 
   self.frame.cs_text:SetText(self.cur_state:to_string())
+
+  if cs.check_target(cs.t_attackable) then
+    local data = cs.get_cast_info("target")
+    if data and data.spell_base then
+      self.cur_state:on_cast_detected(data.spell_base)
+    end
+  end
 end
 
 function StateHolder:change_state(state)
@@ -365,8 +399,9 @@ end
 
 function StateHolder:rebuff_heal()
   if cs.in_aggro() or cs.in_combat() then
-    self:check_hp()
-    cs.rebuff(aura_Concentration)
+    if self:check_hp() then
+      cs.rebuff(aura_Concentration)
+    end
   end
 end
 

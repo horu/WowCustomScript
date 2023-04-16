@@ -9,12 +9,12 @@ function cs.ToString(value, depth, itlimit, short)
   return pfUI.api.ToString(value, depth, itlimit, short)
 end
 
-function cs.debug(msg)
+function cs.debug(msg, depth)
   local line = debugstack(2, 1, 1)
   local line_end = string.find(line, "in function")
   line = string.sub(line, 32, line_end-1)
   if type(msg) == "table" or msg == nil then
-    msg = cs.ToString(msg)
+    msg = cs.ToString(msg, depth)
   end
   print(line..msg)
 end
@@ -117,17 +117,21 @@ cs.create_class = function(class_tab)
   return class
 end
 
-
+---@class cs.Looper
 cs.Looper = cs.create_class()
 
-cs.Looper.timer = nil
-cs.Looper.global_period = 0.1
+---@type cs.Looper
+local looper = cs.Looper:new({
+  timer = nil,
+  global_period = 0.1,
+  list = {},
+})
 
-cs.Looper.delay_q = function(a1,a2,a3,a4,a5,a6,a7,a8,a9)
-  if not cs.Looper.timer then
+looper.delay_q = function(a1,a2,a3,a4,a5,a6,a7,a8,a9)
+  if not looper.timer then
     local timer = CreateFrame("Frame")
     timer.queue = {}
-    timer.interval = cs.Looper.global_period
+    timer.interval = looper.global_period
     timer.DeQueue = function()
       local item = table.remove(timer.queue,1)
       if item then
@@ -144,29 +148,46 @@ cs.Looper.delay_q = function(a1,a2,a3,a4,a5,a6,a7,a8,a9)
         this.sinceLast = this.sinceLast - this.interval
       end
     end)
-    cs.Looper.timer = timer
+    looper.timer = timer
   end
-  table.insert(cs.Looper.timer.queue,{a1,a2,a3,a4,a5,a6,a7,a8,a9})
-  cs.Looper.timer:Show() -- start the OnUpdate
+  table.insert(looper.timer.queue,{a1,a2,a3,a4,a5,a6,a7,a8,a9})
+  looper.timer:Show() -- start the OnUpdate
 end
 
-cs.Looper.build = function(func, obj, period)
-  local looper = cs.Looper:new()
-  looper.func = func
-  looper.obj = obj
-  looper.period = period
-  looper.cur_period = 0
-  cs.Looper.delay_q(looper.loop, looper)
-  return looper
+function cs.Looper.add_event(name, period, obj, func)
+  local event = {}
+  event.func = func
+  event.obj = obj
+  event.period = period
+  event.cur_period = 0
+  looper.list[name] = event
+
+  if not looper.timer then
+    looper.delay_q(looper.main_loop, looper)
+  end
 end
 
-function cs.Looper:loop()
-  self.cur_period = self.cur_period - cs.Looper.global_period
-  if self.cur_period <= 0 then
-    self.func(self.obj)
-    self.cur_period = self.period
+function cs.Looper:iterate_event(event)
+  event.cur_period = event.cur_period - self.global_period
+  if event.cur_period <= 0 then
+    event.func(event.obj)
+    event.cur_period = event.period
   end
-  cs.Looper.delay_q(self.loop, self)
+  return event.period == 0
+end
+
+function cs.Looper:main_loop()
+  local count = 0
+  for name, event in pairs(self.list) do
+    local break_event = self:iterate_event(event)
+    if break_event then
+      self.list[name] = nil
+    end
+    count = count + 1
+  end
+  if count > 0 then
+    looper.delay_q(self.main_loop, self)
+  end
 end
 
 
@@ -176,13 +197,6 @@ cs.ActionBarProxy = cs.create_class()
 
 cs.ActionBarProxy.key_state_up = "up"
 cs.ActionBarProxy.key_state_down = "down"
-
-cs.ActionBarProxy.build = function()
-  ---@type cs.ActionBarProxy
-  local proxy = {}
-
-  return proxy
-end
 
 function cs.ActionBarProxy.add_proxy(bar, button, callback, obj)
   local native_b = pfUI.bars[bar][button]
@@ -438,7 +452,6 @@ cs.Dps.build = function()
 
     if (event == "PLAYER_LEAVE_COMBAT" or event == "SPELLCAST_START" or event == "PLAYER_TARGET_CHANGED")
         and data.cur then
-      cs.debug(data.cur.ts_sum)
       data.cur = nil
       data.last_ts = nil
       return
@@ -458,7 +471,6 @@ cs.Dps.build = function()
 
       data.cur = data.units[name][lvl]
       data.last_ts = ts
-      cs.debug(data.cur.ts_sum)
     end
 
     local damage = arg4
@@ -487,9 +499,29 @@ local dps = cs.Dps.build()
 
 
 
+cs.spell_base_Shadow = "Shadow"
+cs.spell_base_Frost = "Frost"
+cs.spell_base_Fire = "Fire"
 
+cs.get_spell_base = function(spell_icon)
+  if string.find(spell_icon, cs.spell_base_Shadow) then
+    return cs.spell_base_Shadow
+  elseif string.find(spell_icon, cs.spell_base_Frost) then
+    return cs.spell_base_Frost
+  elseif string.find(spell_icon, cs.spell_base_Fire) then
+    return cs.spell_base_Fire
+  end
+end
 
+cs.get_cast_info = function(unit)
+  local cast_db = pfUI.api.libcast.db
 
+  for name, data in pairs(cast_db) do
+    if UnitName(unit) == name and data.icon then
+      return { data = data, spell_base = cs.get_spell_base(data.icon) }
+    end
+  end
+end
 
 
 
