@@ -32,11 +32,24 @@ function cs.error_disabler.on(self)
   end
 end
 
+cs.is_table = function(value)
+  return type(value) == "table"
+end
+
 function cs.to_table(value)
   if type(value) ~= "table" then
     return { value }
   end
   return value
+end
+
+cs.to_dict = function(list)
+  local dict = {}
+  list = not cs.is_table(list) and { list } or list
+  for i, v in pairs(list) do
+    dict[v] = i
+  end
+  return dict
 end
 
 function cs.fmod(v, d)

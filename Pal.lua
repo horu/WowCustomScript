@@ -157,12 +157,12 @@ end
 ---@class State
 local State = cs.create_class()
 
-State.build = function(name, aura, bless, slot_to_use)
+State.build = function(name, aura, bless, slot_to_use, aura_list)
   ---@type State
   local state = State:new()
 
   state.name = name
-  state.aura_list = aura_list_all
+  state.aura_list = aura_list or aura_list_all
   state.bless_list = bless_list_all
   state.slot_to_use = slot_to_use
 
@@ -236,11 +236,19 @@ function State:rebuff_aura()
     if spell_base == cs.spell_base_Shadow then
       aura = aura_Shadow
     end
+
+    if not self:is_available_aura(aura) then
+      aura = self.aura
+    end
   end
 
   if cs.rebuff(aura) then
     self.is_init = nil
   end
+end
+
+function State:is_available_aura(aura)
+  return cs.to_dict(self.aura_list)[aura]
 end
 
 function State:rebuff_bless()
@@ -408,10 +416,32 @@ end
 local state_holder = StateHolder.build()
 
 -- ATTACKS
-state_holder:add_state(4, State.build( "|cffff2020RUSH", aura_Sanctity, bless_Might, slot_two_hands))
-state_holder:add_state(3, State.build( "|cff20ff20NORM", aura_Retribution, bless_Might))
-state_holder:add_state(2, State.build( "|cff9090ffDEFR", aura_Devotion, bless_Wisdom, slot_one_off_hands))
-state_holder:add_state(1, State.build( "|cffffffffNULL", aura_Shadow, bless_Wisdom))
+state_holder:add_state(4, State.build(
+        "|cffff2020RUSH",
+        aura_Sanctity,
+        bless_Might,
+        slot_two_hands,
+        { aura_Sanctity, aura_Devotion, aura_Retribution }
+))
+
+state_holder:add_state(3, State.build(
+        "|cff20ff20NORM",
+        aura_Retribution,
+        bless_Might
+))
+
+state_holder:add_state(2, State.build(
+        "|cff9090ffDEFR",
+        aura_Devotion,
+        bless_Wisdom,
+        slot_one_off_hands
+))
+
+state_holder:add_state(1, State.build(
+        "|cffffffffNULL",
+        aura_Shadow,
+        bless_Wisdom
+))
 
 state_holder:add_action("rush", function(state)
   cast(cast_HolyStrike)
