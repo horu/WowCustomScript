@@ -390,7 +390,7 @@ end
 
 
 
-function cs.create_simple_text_frame(name, to, x, y, text)
+function cs.create_simple_text_frame(name, to, x, y, text, text_to)
   local f = cs.create_simple_frame(name)
   f:SetHeight(10)
   f:SetWidth(20)
@@ -398,7 +398,7 @@ function cs.create_simple_text_frame(name, to, x, y, text)
 
   f.cs_text = f:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
   f.cs_text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-  f.cs_text:SetPoint("BOTTOMLEFT", 0, 0)
+  f.cs_text:SetPoint(text_to or "BOTTOMLEFT", 0, 0)
   f.cs_text:SetJustifyH("LEFT")
   f.cs_text:SetText(text)
 

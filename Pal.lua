@@ -166,8 +166,11 @@ State.build = function(name, aura_list, bless_list, slot_to_use, default_aura, d
   state.bless_list = bless_list
   state.slot_to_use = slot_to_use
 
-  state.aura = default_aura or aura_list[1]
-  state.bless = default_bless or bless_list[1]
+  state.default_aura = default_aura or aura_list[1]
+  state.default_bless = default_bless or bless_list[1]
+
+  state.aura = state.default_aura
+  state.bless = state.default_bless
 
   state.is_init = nil
   state.combat_bless = nil
@@ -179,6 +182,13 @@ end
 
 function State:init()
   self.is_init = nil
+  self:on_buff_changed()
+end
+
+function State:reset_buffs()
+  self.is_init = nil
+  self.aura = self.default_aura
+  self.bless = self.default_bless
   self:on_buff_changed()
 end
 
@@ -265,6 +275,7 @@ StateHolder.build = function()
 
   ---@type State
   holder.cur_state = nil
+  ---@type State[]
   holder.states = {}
 
   holder.actions = {}
@@ -282,7 +293,7 @@ StateHolder.build = function()
   holder.states_clicks = {}
   holder.states_buttons = {}
 
-  holder.frame = cs.create_simple_text_frame("StateHolder.build", "BOTTOMLEFT",10, 95, "S")
+  holder.frame = cs.create_simple_text_frame("StateHolder.build", "BOTTOM",-177, 123, "", "CENTER")
 
   return holder
 end
@@ -309,22 +320,19 @@ function StateHolder:check_loop()
   local ts = GetTime()
 
   for but, keyinfo in pairs(self.states_buttons) do
-    if keyinfo.keystate == cs.ActionBarProxy.key_state_down and ts - keyinfo.ts >= 0.55 then
+    if keyinfo.keystate == cs.ActionBarProxy.key_state_down then
       local state = self.states[but]
-      self:change_state(state)
-      break
+      if ts - keyinfo.ts >= 3 then
+        state:reset_buffs()
+        print("RESET STATE: "..self.cur_state.name)
+      elseif ts - keyinfo.ts >= 0.55 then
+        self:change_state(state)
+      end
     elseif keyinfo.keystate == cs.ActionBarProxy.key_state_up then
       self.states_buttons[but] = nil
     end
   end
 
-  for state, clicks in pairs(self.states_clicks) do
-    if clicks >= 3 then
-      self:change_state(state)
-      break
-    end
-  end
-  self.states_clicks = {}
   self.frame.cs_text:SetText(self.cur_state:to_string())
 end
 
@@ -360,8 +368,6 @@ end
 function StateHolder:do_action(name)
   local state_name, action = unpack(self.actions[name])
   action()
-  --local state = self.states[state_name]
-  --self.states_clicks[state] = self.states_clicks[state] and self.states_clicks[state] + 1 or 0
 end
 
 function StateHolder:check_hp()
