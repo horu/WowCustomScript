@@ -108,14 +108,68 @@ function cs.create_fix_table(size)
   return fix_table
 end
 
-cs.create_class = function()
-  local class = {}
+cs.create_class = function(class_tab)
+  local class = class_tab or {}
   class.new = function(self, tab)
     local obj = setmetatable(tab or {}, {__index = self})
     return obj
   end
   return class
 end
+
+
+cs.Looper = cs.create_class()
+
+cs.Looper.timer = nil
+cs.Looper.global_period = 0.1
+
+cs.Looper.delay_q = function(a1,a2,a3,a4,a5,a6,a7,a8,a9)
+  if not cs.Looper.timer then
+    local timer = CreateFrame("Frame")
+    timer.queue = {}
+    timer.interval = cs.Looper.global_period
+    timer.DeQueue = function()
+      local item = table.remove(timer.queue,1)
+      if item then
+        item[1](item[2],item[3],item[4],item[5],item[6],item[7],item[8],item[9])
+      end
+      if table.getn(timer.queue) == 0 then
+        timer:Hide() -- no need to run the OnUpdate when the queue is empty
+      end
+    end
+    timer:SetScript("OnUpdate",function()
+      this.sinceLast = (this.sinceLast or 0) + arg1
+      while (this.sinceLast > this.interval) do
+        this.DeQueue()
+        this.sinceLast = this.sinceLast - this.interval
+      end
+    end)
+    cs.Looper.timer = timer
+  end
+  table.insert(cs.Looper.timer.queue,{a1,a2,a3,a4,a5,a6,a7,a8,a9})
+  cs.Looper.timer:Show() -- start the OnUpdate
+end
+
+cs.Looper.build = function(func, obj, period)
+  local looper = cs.Looper:new()
+  looper.func = func
+  looper.obj = obj
+  looper.period = period
+  looper.cur_period = 0
+  cs.Looper.delay_q(looper.loop, looper)
+  return looper
+end
+
+cs.Looper.loop = function(self)
+  if self.cur_period <= 0 then
+    self.func(self.obj)
+    self.cur_period = self.period
+  else
+    self.cur_period = self.cur_period - cs.Looper.global_period
+  end
+  cs.Looper.delay_q(self.loop, self)
+end
+
 
 
 
@@ -273,43 +327,6 @@ function cs.rebuff_target(buff, check, unit)
   TargetLastTarget()
   cs.auto_attack()
   return true
-end
-
--- create_buff_saver
-function cs.create_buff_saver(list)
-  local buff_saver = { list = {} }
-
-  function buff_saver.add_list(self, list)
-    for _, buff in pairs(list) do
-      table.insert(self.list, buff)
-    end
-  end
-
-  function buff_saver.get_buff(self, av_list)
-    local i = cs.find_buff(self.list)
-    if i and i ~= 1 then
-      local last_buff = self.list[i]
-      -- print(last_buff)
-      table.remove(self.list, i)
-      table.insert(self.list, 1, last_buff)
-    end
-    -- print(ToString(self.list))
-    if not av_list then
-      return self.list[1]
-    end
-
-    for _, buff in pairs(self.list) do
-      for _, av_buff in pairs(av_list) do
-        if buff == av_buff then
-          return buff
-        end
-      end
-    end
-  end
-
-  buff_saver:add_list(list)
-
-  return buff_saver
 end
 
 function cs.has_buffs(unit, buff_str, b_fun)

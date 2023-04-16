@@ -55,8 +55,6 @@ local function rebuff_party_member(unit)
 end
 
 local function buff_party()
-  if cs.in_combat() then return end
-
   local size = GetNumPartyMembers()
   for i=1, size do
     local unit = "party"..i
@@ -74,25 +72,6 @@ end
 
 
 --main
-
-
-local aura_saver = cs.create_buff_saver(aura_list_all)
-local bless_saver = cs.create_buff_saver(bless_list_all)
-local function standard_rebuff_attack(aura_list)
-  -- cs.rebuff last bless/aura
-  cs.rebuff(aura_saver:get_buff(aura_list))
-  cs.rebuff(bless_saver:get_buff())
-  if cs.is_in_party() then
-    cs.rebuff(buff_Righteous)
-    buff_party()
-  end
-end
-
-local function rebuff_heal()
-  if cs.in_aggro() or cs.in_combat() then
-    cs.rebuff(aura_Concentration)
-  end
-end
 
 
 
@@ -153,6 +132,8 @@ end
 
 
 
+
+
 local State = cs.create_class()
 
 State.build = function(name, aura_list, bless_list, slot_to_use)
@@ -171,6 +152,8 @@ State.build = function(name, aura_list, bless_list, slot_to_use)
   state.is_init = nil
   state.combat_bless = nil
 
+  state.msg = "N"
+
   return state
 end
 
@@ -182,18 +165,30 @@ State.init = function(self)
   self:on_buff_changed()
 end
 
+State.check = function(self)
+  self:standard_rebuff_attack()
+end
+
+State.to_string = function(self)
+  local msg = self.name..":    "..self.aura.."    "..(self.bless or "").."    "..self.msg
+  return msg
+end
+
 State.standard_rebuff_attack = function(self)
   self:rebuff_aura()
-  if cs.is_in_party() then
+  self:rebuff_bless()
+  if cs.is_in_party() and not cs.in_combat() then
     cs.rebuff(buff_Righteous)
     buff_party()
   end
 end
+
 State.rebuff_aura = function(self)
   if cs.rebuff(self.aura) then
     self.is_init = nil
   end
 end
+
 State.rebuff_bless = function(self)
   if not cs.check_target(cs.t_attackable) then
     -- buff BoW for mana regen
@@ -210,29 +205,30 @@ State.rebuff_bless = function(self)
     self.is_init = nil
   end
 end
+
 State.on_buff_changed = function(self)
   if not self.is_init then
     -- state is not initializated yet. Ignore new buffs.
     self.is_init = cs.find_buff(self.aura) and cs.find_buff(self.bless)
     if self.is_init then
-      print("INIT STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
+      self.msg = "I"
     end
     return
   end
 
-  local _, aura = cs.find_buff(aura_list)
+  local _, aura = cs.find_buff(self.aura_list)
   if aura and self.aura ~= aura then
     self.aura = aura
-    print("CHANGE STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
+    self.msg = "C"
   end
 
-  local _, bless = cs.find_buff(bless_list)
+  local _, bless = cs.find_buff(self.bless_list)
   if bless and self.bless ~= bless then
     self.bless = bless
-    print("CHANGE STATE: "..self.name.." |         A: "..self.aura.." |          B:"..(self.bless or ""))
+    self.msg = "C"
   end
-
 end
+
 
 
 State.do_action = function(self, name)
@@ -245,63 +241,98 @@ end
 local StateHolder = cs.create_class()
 
 StateHolder.build = function()
-  local f = cs.create_simple_frame("StateHolder.build")
+  local holder = StateHolder:new()
+  holder.cur_state = nil
+  holder.states = {}
 
+  local f = cs.create_simple_frame("StateHolder.build")
   f:RegisterEvent("UNIT_AURA")
   f:SetScript("OnEvent", function()
-
-    if this.cs_state then
-      this.cs_state:on_buff_changed()
+    if this.cs_holder.cur_state then
+      this.cs_holder.cur_state:on_buff_changed()
     end
   end)
 
-  f.cs_state = nil
+  f.cs_holder = holder
+  holder.looper = nil
+  holder.states_clicks = {}
 
-  f.change_state = function(self, state_name)
-    local state = self.states[state_name]
-    if state ~= self.cs_state then
-      self.cs_state = state
-      self.cs_state:init()
+  holder.frame = cs.create_simple_text_frame("StateHolder.build", "BOTTOMLEFT",10, 95, "S")
+
+  return holder
+end
+
+StateHolder.init = function(self)
+  cs.Looper.delay_q(function()
+
+    self:change_state(self:get_state("null"))
+    self.looper = cs.Looper.build(self.check, self, 0.5)
+  end)
+end
+
+StateHolder.check = function(self)
+  for state, clicks in pairs(self.states_clicks) do
+    if clicks >= 3 then
+      self:change_state(state)
+      break
+    end
+  end
+  self.states_clicks = {}
+  self.frame.cs_text:SetText(self.cur_state:to_string())
+end
+
+StateHolder.change_state = function(self, state)
+  if state ~= self.cur_state then
+    self.cur_state = state
+    self.cur_state:init()
+  end
+end
+
+StateHolder.attack_action = function(self, action_name)
+  cs.error_disabler:off()
+  cs.auto_attack()
+
+  self.cur_state:check()
+
+  local state = self:get_state(action_name)
+  state:do_action(action_name)
+  cs.error_disabler:on()
+
+  self.states_clicks[state] = self.states_clicks[state] and self.states_clicks[state] + 1 or 0
+end
+
+StateHolder.get_state = function(self, action_name)
+  local state_name = nil
+  for state_name_it, state_it in pairs(self.states) do
+    if state_it.actions[action_name] then
+      state_name = state_name_it
+      break
     end
   end
 
-  f.attack_action = function(self, action_name)
-    cs.error_disabler:off()
-    cs.auto_attack()
-    local state_name = nil
-    for state_name_it, state_it in pairs(self.states) do
-      if state_it.actions[action_name] then
-        state_name = state_name_it
-        break
-      end
-    end
+  return self.states[state_name]
+end
 
-    self:change_state(state_name)
-    self.cs_state:do_action(action_name)
-    cs.error_disabler:on()
+
+StateHolder.add_state = function(self, state_name, a1, a2, a3, a4)
+  self.states[state_name] = State.build(state_name, a1, a2, a3, a4)
+end
+
+StateHolder.add_action = function(self, state_name, action_name, action)
+  self.states[state_name].actions[action_name] = action
+end
+
+StateHolder.rebuff_heal = function(self)
+  if cs.in_aggro() or cs.in_combat() then
+    cs.rebuff(aura_Concentration)
   end
-
-  f.states = {}
-
-  f.add_state = function(self, state_name, a1, a2, a3, a4)
-    self.states[state_name] = State.build(state_name, a1, a2, a3, a4)
-  end
-
-  f.add_action = function(self, state_name, action_name, action)
-    self.states[state_name].actions[action_name] = action
-  end
-
-  return f
 end
 
 local state_holder = StateHolder.build()
-function attack_action(name)
-  state_holder:attack_action(name)
-end
 
 -- ATTACKS
-state_holder:add_state("rush", { aura_Sanctity }, { bless_Might }, slot_two_hands)
-state_holder:add_action("rush", "rush", function(state)
+state_holder:add_state("RUSH", { aura_Sanctity }, { bless_Might }, slot_two_hands)
+state_holder:add_action("RUSH", "rush", function(state)
 
   -- cast exorcism and holy strike on one click before change state
   cast(cast_HolyStrike)
@@ -312,33 +343,25 @@ state_holder:add_action("rush", "rush", function(state)
     end
   end
 
-  state:rebuff_aura()
   if not cs.find_buff(aura_Sanctity) then
     return
   end
-
-  state:rebuff_bless()
 
   -- seal_and_cast(seal_Righteousness, cast_HolyStrike)
   seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
 end)
 
-state_holder:add_state("normal", aura_list_def, bless_list_all)
-state_holder:add_action("normal", "mid", function(state)
-  state:standard_rebuff_attack()
-
+state_holder:add_state("NORM", aura_list_def, bless_list_all)
+state_holder:add_action("NORM", "mid", function(state)
   if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
     cast(cast_Judgement)
     return
   end
 
   seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
-  state:rebuff_bless()
 end)
 
-state_holder:add_action("normal", "fast", function(state)
-  state:standard_rebuff_attack()
-
+state_holder:add_action("NORM", "fast", function(state)
   if cs.check_target(cs.t_close) then
     if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
       cast(cast_Judgement)
@@ -347,12 +370,10 @@ state_holder:add_action("normal", "fast", function(state)
 
     seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
   end
-  state:rebuff_bless()
 end)
 
-state_holder:add_state("def", aura_list_def, bless_list_all, slot_one_off_hands)
-state_holder:add_action("def", "def", function(state)
-  state:standard_rebuff_attack()
+state_holder:add_state("DEFE", aura_list_def, bless_list_all, slot_one_off_hands)
+state_holder:add_action("DEFE", "def", function(state)
   if cs.check_target(cs.t_close) then
     if cs.find_buff(seal_Righteousness) then
       cast(cast_Judgement)
@@ -366,19 +387,19 @@ state_holder:add_action("def", "def", function(state)
 
     buff_seal(seal_Light)
   end
-  state:rebuff_bless()
 end)
 
-state_holder:add_action("normal", "null", function(state)
-  state:standard_rebuff_attack()
-  state:rebuff_bless()
+state_holder:add_action("NORM", "null", function(state)
 end)
 
-state_holder:add_state("heal", { aura_Concentration }, {})
+state_holder:init()
+
+function attack_action(name)
+  state_holder:attack_action(name)
+end
 
 function cast_heal(heal_cast)
-  state_holder:change_state("heal")
-  rebuff_heal()
+  state_holder:rebuff_heal()
   cast(heal_cast)
 end
 
