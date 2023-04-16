@@ -157,7 +157,7 @@ end
 ---@class State
 local State = cs.create_class()
 
-State.build = function(name, default_aura, default_bless, slot_to_use)
+State.build = function(name, aura, bless, slot_to_use)
   ---@type State
   local state = State:new()
 
@@ -166,14 +166,13 @@ State.build = function(name, default_aura, default_bless, slot_to_use)
   state.bless_list = bless_list_all
   state.slot_to_use = slot_to_use
 
-  state.default_aura = default_aura or aura_list[1]
-  state.default_bless = default_bless or bless_list[1]
+  state.default_aura = aura
+  state.default_bless = bless
 
   state.aura = state.default_aura
   state.bless = state.default_bless
 
   state.is_init = nil
-  state.combat_bless = nil
 
   state.msg = "NONE"
 
@@ -205,8 +204,7 @@ end
 
 function State:to_string()
   local bless = self.bless and to_short(self.bless) or "NONE"
-  local combat_bless = self.combat_bless and to_short(self.combat_bless) or "NONE"
-  local msg = self.name.."   "..to_short(self.aura).."   ".. bless .. "/".. combat_bless .."   "..self.msg
+  local msg = self.name.."   "..to_short(self.aura).."   ".. bless .. "   "..self.msg
   return msg
 end
 
@@ -226,17 +224,6 @@ function State:rebuff_aura()
 end
 
 function State:rebuff_bless()
-  if not cs.check_target(cs.t_attackable) then
-    -- buff BoW for mana regen
-    if not self.combat_bless then
-      self.combat_bless = self.bless
-      self.bless = bless_Wisdom
-    end
-  elseif self.combat_bless then
-    self.bless = self.combat_bless
-    self.combat_bless = nil
-  end
-
   if cs.rebuff(self.bless) then
     self.is_init = nil
   end
@@ -360,12 +347,12 @@ function StateHolder:add_state(button, state)
   self.states[button] = state
 end
 
-function StateHolder:add_action(state_name, action_name, action)
-  self.actions[action_name] = {state_name, action}
+function StateHolder:add_action(action_name, action)
+  self.actions[action_name] = action
 end
 
 function StateHolder:do_action(name)
-  local state_name, action = unpack(self.actions[name])
+  local action = self.actions[name]
   action()
 end
 
@@ -390,16 +377,16 @@ local state_holder = StateHolder.build()
 -- ATTACKS
 state_holder:add_state(4, State.build( "RUSH", aura_Sanctity, bless_Might, slot_two_hands))
 state_holder:add_state(3, State.build( "NORM", aura_Retribution, bless_Might))
-state_holder:add_state(2, State.build( "DEFE", aura_Devotion, bless_Wisdom, slot_one_off_hands))
+state_holder:add_state(2, State.build( "DEFR", aura_Devotion, bless_Wisdom, slot_one_off_hands))
 state_holder:add_state(1, State.build( "NULL", aura_Shadow, bless_Wisdom))
 
-state_holder:add_action("RUSH", "rush", function(state)
+state_holder:add_action("rush", function(state)
   cast(cast_HolyStrike)
 
   seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
 end)
 
-state_holder:add_action("NORM", "mid", function(state)
+state_holder:add_action("mid", function(state)
   if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
     cast(cast_Judgement)
     return
@@ -408,7 +395,7 @@ state_holder:add_action("NORM", "mid", function(state)
   seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
 end)
 
-state_holder:add_action("NORM", "fast", function(state)
+state_holder:add_action("fast", function(state)
   if cs.check_target(cs.t_close) then
     if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
       cast(cast_Judgement)
@@ -419,7 +406,7 @@ state_holder:add_action("NORM", "fast", function(state)
   end
 end)
 
-state_holder:add_action("DEFE", "def", function(state)
+state_holder:add_action("def", function(state)
   if cs.check_target(cs.t_close) then
     if cs.find_buff(seal_Righteousness) then
       cast(cast_Judgement)
@@ -435,7 +422,7 @@ state_holder:add_action("DEFE", "def", function(state)
   end
 end)
 
-state_holder:add_action("NULL", "null", function(state)
+state_holder:add_action( "null", function(state)
 end)
 
 state_holder:init()
