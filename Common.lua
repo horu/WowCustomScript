@@ -243,7 +243,7 @@ end
 cs.Slot = cs.create_class()
 
 function cs.Slot.build(slot_n)
-  return cs.Slot:new({slot_n = slot_n})
+  return cs.Slot:new({slot_n = slot_n, last_ts = GetTime()})
 end
 
 function cs.Slot.is_equipped(self)
@@ -255,12 +255,19 @@ function cs.Slot.use(self)
 end
 
 function cs.Slot.try_use(self)
+  local ts = GetTime()
+  if ts - self.last_ts <= 1 then
+    -- frequent using has bugs
+    return
+  end
+  self.last_ts = ts
+
   if not self:is_equipped() then
     self:use()
   end
 end
 
-cs.MultiSlot = cs.Slot:new()
+cs.MultiSlot = cs.Slot:new({last_ts = GetTime()})
 
 function cs.MultiSlot.build(slot_list)
   return cs.MultiSlot:new({slot_list = slot_list})

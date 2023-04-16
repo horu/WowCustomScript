@@ -180,7 +180,6 @@ end
 
 State.init = function(self)
   self.is_init = nil
-  --self:reuse_slot()
   self:on_buff_changed()
 end
 
@@ -191,6 +190,7 @@ State.reuse_slot = function(self)
 end
 
 State.check = function(self)
+  self:reuse_slot()
   self:standard_rebuff_attack()
 end
 
@@ -306,7 +306,6 @@ StateHolder.check_loop = function(self)
   end
   self.states_clicks = {}
   self.frame.cs_text:SetText(self.cur_state:to_string())
-  self.cur_state:reuse_slot()
 end
 
 StateHolder.change_state = function(self, state)
