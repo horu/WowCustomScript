@@ -28,16 +28,16 @@ local slot_one_off_hands = cs.MultiSlot.build({cs.Slot.build(slot_OneHand), cs.S
 
 
 local to_short_list = {}
-to_short_list[aura_Concentration] = "CONC"
-to_short_list[aura_Devotion] = "DEVO"
-to_short_list[aura_Sanctity] = "SANC"
-to_short_list[aura_Retribution] = "RETR"
-to_short_list[aura_Shadow] = "SHAD"
-to_short_list[aura_Frost] = "FROS"
+to_short_list[aura_Concentration] = "CA"
+to_short_list[aura_Devotion] = "DA"
+to_short_list[aura_Sanctity] = "SA"
+to_short_list[aura_Retribution] = "RA"
+to_short_list[aura_Shadow] = "SRA"
+to_short_list[aura_Frost] = "FRA"
 
-to_short_list[bless_Wisdom] = "WISD"
-to_short_list[bless_Might] = "MIGH"
-to_short_list[bless_Salvation] = "SALV"
+to_short_list[bless_Wisdom] = "BW"
+to_short_list[bless_Might] = "BM"
+to_short_list[bless_Salvation] = "BV"
 
 local to_short = function(cast)
   return to_short_list[cast]
@@ -155,7 +155,7 @@ local default_state_config = {
     cur_state = 2,
   },
   states = {
-    {
+    RUSH = {
       name = "RUSH",
       hotbar = 1,
       hotkey = 4,
@@ -170,27 +170,27 @@ local default_state_config = {
       aura = aura_Sanctity,
       bless = bless_Might,
     },
-    {
+    NORM = {
       name = "NORM",
       hotbar = 1,
       hotkey = 3,
       color = "|cff20ff20",
       default_aura = aura_Retribution,
       default_bless = bless_Might,
-      aura_list = aura_list_all,
+      aura_list = aura_list_att,
       bless_list = bless_list_all,
 
       aura = aura_Retribution,
       bless = bless_Might,
     },
-    {
+    DEFF = {
       name = "DEFF",
       hotbar = 1,
       hotkey = 2,
-      color = "|cff9090ff",
+      color = "|c008692FF",
       default_aura = aura_Devotion,
       default_bless = bless_Wisdom,
-      aura_list = aura_list_all,
+      aura_list = aura_list_att,
       bless_list = bless_list_all,
 
       use_slots = { slot_OneHand, slot_OffHand },
@@ -198,14 +198,14 @@ local default_state_config = {
       aura = aura_Devotion,
       bless = bless_Wisdom,
     },
-    {
-      name = "NULL",
+    SIMP = {
+      name = "SIMP",
       hotbar = 1,
       hotkey = 1,
       color = "|cffffffff",
       default_aura = aura_Devotion,
       default_bless = bless_Wisdom,
-      aura_list = aura_list_all,
+      aura_list = aura_list_att,
       bless_list = bless_list_all,
 
       aura = aura_Devotion,
@@ -281,10 +281,13 @@ end
 function State:to_string()
   local aura_is_default = self.config.aura == self.config.default_aura
   local bless_is_default = self.config.bless == self.config.default_bless
-  local state = not self.is_init and "NONE" or ( (aura_is_default and bless_is_default) and "INIT" or "MODI")
-  local bless = self.config.bless and to_short(self.config.bless) or "NONE"
+  local state = not self.is_init and "N" or ( (aura_is_default and bless_is_default) and "D" or "M")
+  local bless = self.config.bless and to_short(self.config.bless) or "N"
 
-  local msg = self:get_name().."   "..to_short(self.config.aura).."   ".. bless .. "   "..state
+  local msg = self.config.color..string.sub(self.config.name, 1, 1).."   "..
+          to_short(self.config.aura).."   "..
+          bless .. "   "..
+          state
   return msg
 end
 
@@ -387,7 +390,8 @@ StateHolder.build = function(config)
   holder.states_clicks = {}
   holder.states_buttons = {}
 
-  holder.frame = cs.create_simple_text_frame("StateHolder.build", "BOTTOM",-177, 123, "", "CENTER")
+  holder.frame = cs.create_simple_text_frame(
+          "StateHolder.build", "BOTTOM",-290, 72, "", "CENTER")
 
   return holder
 end
@@ -415,7 +419,7 @@ function StateHolder:check_loop()
   for but, keyinfo in pairs(self.states_buttons) do
     if keyinfo.keystate == cs.ActionBarProxy.key_state_down then
       local state = self.states[but]
-      if ts - keyinfo.ts >= 10 then
+      if ts - keyinfo.ts >= 5 then
         cs_state_config = default_state_config
         print("RESET CONFIG!")
       elseif ts - keyinfo.ts >= 3 then
@@ -502,6 +506,16 @@ main_frame:SetScript("OnEvent", function()
   if event ~= "VARIABLES_LOADED" then
     return
   end
+
+  for state_name, state in pairs(cs_state_config.states) do
+    for name, value in pairs(state) do
+      if name ~= "aura" and name ~= "bless" then
+        state[name] = default_state_config.states[state_name][name]
+      end
+    end
+  end
+
+
 
   state_holder = StateHolder.build(cs_state_config.state_holder)
 
