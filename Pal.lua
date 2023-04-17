@@ -273,6 +273,11 @@ local get_state_config = function(id, dynamic)
 end
 
 
+local state_NONE = "N"
+local state_DEFAULT = "D"
+local state_MODIFIED = "M"
+local state_TEMP = "T"
+
 ---@class State
 local State = cs.create_class()
 
@@ -286,9 +291,11 @@ State.build = function(id)
 
   state.is_init = nil
 
+  state.buffs_status = { aura = nil, bless = nil }
+
   state.enemy_spell_base = { base = nil, ts = 0 }
   state.enemy_spell_base.is_valid = function(self)
-    return self.base and GetTime() - self.ts <= 10
+    return self.base and cs.compare_time(10, self.ts)
   end
 
   return state
@@ -328,6 +335,9 @@ end
 function State:to_string()
   local aura_is_default = self:get_config(1).aura == self:get_config().default_aura
   local bless_is_default = self:get_config(1).bless == self:get_config().default_bless
+  local aura_is_actual = cs.find_buff(self:get_actual_aura())
+  local bless_is_actual = cs.find_buff(self:get_actual_bless())
+
   local state = not self.is_init and "N" or ( (aura_is_default and bless_is_default) and "D" or "M")
   local bless = self:get_config(1).bless and to_short(self:get_config(1).bless) or "N"
 
@@ -347,7 +357,11 @@ function State:standard_rebuff_attack()
   end
 end
 
-function State:rebuff_aura()
+function State:is_available_aura(aura)
+  return cs.to_dict(self:get_config().aura_list)[aura]
+end
+
+function State:get_actual_aura()
   local aura = self:get_config(1).aura
 
   -- buff spell defended auras if enemy casts one
@@ -365,16 +379,18 @@ function State:rebuff_aura()
     end
   end
 
+  return aura
+end
+
+function State:rebuff_aura()
+  local aura = self:get_actual_aura()
+
   if cs.rebuff(aura) then
     self.is_init = nil
   end
 end
 
-function State:is_available_aura(aura)
-  return cs.to_dict(self:get_config().aura_list)[aura]
-end
-
-function State:rebuff_bless()
+function State:get_actual_bless()
   local bless = bless_Wisdom -- mana regen if not in combat
 
   if cs.check_target(cs.t_attackable) and cs.check_target(cs.t_close) or
@@ -382,6 +398,12 @@ function State:rebuff_bless()
   then
     bless = self:get_config(1).bless
   end
+
+  return bless
+end
+
+function State:rebuff_bless()
+  local bless = self:get_actual_bless()
 
   if cs.rebuff(bless) then
     self.is_init = nil
