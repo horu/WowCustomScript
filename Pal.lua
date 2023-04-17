@@ -1,5 +1,7 @@
 local cs = cs_common
 
+-- TODO: Combat bless
+
 -- buffs
 local buff_Righteous = "Righteous Fury"
 
@@ -21,9 +23,6 @@ local bless_list_all = { bless_Wisdom, bless_Might, bless_Salvation }
 local slot_TwoHand = 13
 local slot_OneHand = 14
 local slot_OffHand = 15
-
-local slot_two_hands = cs.Slot.build(slot_TwoHand)
-local slot_one_off_hands = cs.MultiSlot.build({cs.Slot.build(slot_OneHand), cs.Slot.build(slot_OffHand)})
 
 
 
@@ -149,6 +148,19 @@ local function build_cast_list(cast_list)
   return cast_list
 end
 
+local procast_on_seal_Light = function()
+  if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
+    cast(cast_Judgement)
+    return true
+  end
+end
+
+
+-- ID
+local state_RUSH = "RUSH"
+local state_NORM = "NORM"
+local state_DEF = "DEF"
+local state_SIMP = "SIMP"
 
 ---@class state_config
 local state_config = {
@@ -191,8 +203,8 @@ local default_states_config = {
       aura_list = aura_list_att,
       bless_list = bless_list_all,
     },
-    DEFF = {
-      name = "DEFF",
+    DEF = {
+      name = "DEF",
       hotbar = 1,
       hotkey = 2,
       color = "|c008692FF",
@@ -233,7 +245,7 @@ local default_states_dynamic_config = {
       aura = aura_Retribution,
       bless = bless_Might,
     },
-    DEFF = {
+    DEF = {
       aura = aura_Devotion,
       bless = bless_Wisdom,
     },
@@ -253,22 +265,22 @@ local get_state_holder_config = function()
 end
 
 ---@return state_config
-local get_state_config = function(name, dynamic)
+local get_state_config = function(id, dynamic)
   if dynamic then
-    return cs_states_dynamic_config.states[name]
+    return cs_states_dynamic_config.states[id]
   end
-  return cs_states_config.states[name]
+  return cs_states_config.states[id]
 end
 
 
 ---@class State
 local State = cs.create_class()
 
-State.build = function(name)
+State.build = function(id)
   ---@type State
   local state = State:new()
 
-  state.name = name
+  state.id = id
 
   state.slot_to_use = state:get_config().use_slots and cs.MultiSlot.build(state:get_config().use_slots)
 
@@ -283,7 +295,7 @@ State.build = function(name)
 end
 
 function State:get_config(dynamic)
-  return get_state_config(self.name, dynamic)
+  return get_state_config(self.id, dynamic)
 end
 
 function State:get_name()
@@ -496,9 +508,9 @@ function StateHolder:attack_action(action_name)
 
 end
 
-function StateHolder:add_state(name)
-  local config = get_state_config(name)
-  self.states[config.hotkey] = State.build(name)
+function StateHolder:add_state(id)
+  local config = get_state_config(id)
+  self.states[config.hotkey] = State.build(id)
 end
 
 function StateHolder:add_action(action_name, action)
@@ -507,7 +519,7 @@ end
 
 function StateHolder:do_action(name)
   local action = self.actions[name]
-  action()
+  action(self.cur_state)
 end
 
 function StateHolder:check_hp()
@@ -536,17 +548,9 @@ main_frame:SetScript("OnEvent", function()
     return
   end
 
-  for state_name, state in pairs(cs_states_config.states) do
-    for name, value in pairs(state) do
-      if name ~= "aura" and name ~= "bless" then
-        state[name] = default_states_config.states[state_name][name]
-      end
-    end
-  end
-
   local states = cs_states_config.states
-  for state_name in pairs(states) do
-    state_holder:add_state(state_name)
+  for id in pairs(states) do
+    state_holder:add_state(id)
   end
   state_holder:init()
 
@@ -555,12 +559,17 @@ main_frame:SetScript("OnEvent", function()
   state_holder:add_action("rush", function(state)
     cast(cast_HolyStrike)
 
+    if state.id ~= state_RUSH then
+      if procast_on_seal_Light() then
+        return
+      end
+    end
+
     seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
   end)
 
   state_holder:add_action("mid", function(state)
-    if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-      cast(cast_Judgement)
+    if procast_on_seal_Light() then
       return
     end
 
@@ -569,9 +578,15 @@ main_frame:SetScript("OnEvent", function()
 
   state_holder:add_action("fast", function(state)
     if cs.check_target(cs.t_close) then
-      if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-        cast(cast_Judgement)
+      if procast_on_seal_Light() then
         return
+      end
+
+      if state.id == state_RUSH then
+        if cs.find_buff(seal_Righteousness) then
+          cast(cast_Judgement)
+          return
+        end
       end
 
       seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
@@ -590,7 +605,7 @@ main_frame:SetScript("OnEvent", function()
         return
       end
 
-      buff_seal(seal_Light)
+      seal_and_cast(seal_Light, cast_CrusaderStrike)
     end
   end)
 
