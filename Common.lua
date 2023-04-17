@@ -326,7 +326,11 @@ end
 
 cs.MultiSlot = cs.Slot:new({last_ts = GetTime()})
 
-function cs.MultiSlot.build(slot_list)
+function cs.MultiSlot.build(slot_list_numbers)
+  local slot_list = {}
+  for _, slot in pairs(slot_list_numbers) do
+    table.insert(slot_list, cs.Slot.build(slot))
+  end
   return cs.MultiSlot:new({slot_list = slot_list})
 end
 

@@ -1,5 +1,3 @@
-
-
 local cs = cs_common
 
 -- buffs
@@ -152,29 +150,98 @@ local function build_cast_list(cast_list)
 end
 
 
+local default_state_config = {
+  state_holder = {
+    cur_state = 2,
+  },
+  states = {
+    {
+      name = "RUSH",
+      hotbar = 1,
+      hotkey = 4,
+      color = "|cffff2020",
+      default_aura = aura_Sanctity,
+      default_bless = bless_Might,
+      aura_list = { aura_Sanctity, aura_Devotion, aura_Retribution },
+      bless_list = bless_list_all,
 
+      use_slots = { slot_TwoHand },
+
+      aura = aura_Sanctity,
+      bless = bless_Might,
+    },
+    {
+      name = "NORM",
+      hotbar = 1,
+      hotkey = 3,
+      color = "|cff20ff20",
+      default_aura = aura_Retribution,
+      default_bless = bless_Might,
+      aura_list = aura_list_all,
+      bless_list = bless_list_all,
+
+      aura = aura_Retribution,
+      bless = bless_Might,
+    },
+    {
+      name = "DEFF",
+      hotbar = 1,
+      hotkey = 2,
+      color = "|cff9090ff",
+      default_aura = aura_Devotion,
+      default_bless = bless_Wisdom,
+      aura_list = aura_list_all,
+      bless_list = bless_list_all,
+
+      use_slots = { slot_OneHand, slot_OffHand },
+
+      aura = aura_Devotion,
+      bless = bless_Wisdom,
+    },
+    {
+      name = "NULL",
+      hotbar = 1,
+      hotkey = 1,
+      color = "|cffffffff",
+      default_aura = aura_Devotion,
+      default_bless = bless_Wisdom,
+      aura_list = aura_list_all,
+      bless_list = bless_list_all,
+
+      aura = aura_Devotion,
+      bless = bless_Wisdom,
+    },
+  }
+}
+
+---@class StateConfig
+local StateConfig = {
+  name = "RUSH",
+  hotbar = 1,
+  hotkey = 4,
+  color = "|cffff2020",
+  default_aura = aura_Sanctity,
+  default_bless = bless_Might,
+  use_slots = { slot_TwoHand },
+  aura_list = { aura_Sanctity, aura_Devotion, aura_Retribution },
+
+  aura = aura_Sanctity,
+  bless = bless_Might,
+}
 
 ---@class State
 local State = cs.create_class()
 
-State.build = function(name, aura, bless, slot_to_use, aura_list)
+State.build = function(config)
   ---@type State
   local state = State:new()
 
-  state.name = name
-  state.aura_list = aura_list or aura_list_all
-  state.bless_list = bless_list_all
-  state.slot_to_use = slot_to_use
+  ---@type StateConfig
+  state.config = config
 
-  state.default_aura = aura
-  state.default_bless = bless
-
-  state.aura = state.default_aura
-  state.bless = state.default_bless
+  state.slot_to_use = state.config.use_slots and cs.MultiSlot.build(state.config.use_slots)
 
   state.is_init = nil
-
-  state.msg = "NONE"
 
   state.enemy_spell_base = { base = nil, ts = 0 }
   state.enemy_spell_base.is_valid = function(self)
@@ -184,6 +251,10 @@ State.build = function(name, aura, bless, slot_to_use, aura_list)
   return state
 end
 
+function State:get_name()
+  return self.config.color..self.config.name
+end
+
 function State:init()
   self.is_init = nil
   self:on_buff_changed()
@@ -191,8 +262,8 @@ end
 
 function State:reset_buffs()
   self.is_init = nil
-  self.aura = self.default_aura
-  self.bless = self.default_bless
+  self.config.aura = self.config.default_aura
+  self.config.bless = self.config.default_bless
   self:on_buff_changed()
 end
 
@@ -208,11 +279,12 @@ function State:recheck()
 end
 
 function State:to_string()
+  local aura_is_default = self.config.aura == self.config.default_aura
+  local bless_is_default = self.config.bless == self.config.default_bless
+  local state = not self.is_init and "NONE" or ( (aura_is_default and bless_is_default) and "INIT" or "MODI")
+  local bless = self.config.bless and to_short(self.config.bless) or "NONE"
 
-  local state = not self.is_init and "NONE" or (
-          (self.aura ~= self.default_aura or self.bless ~= self.default_bless) and "MODI" or "INIT")
-  local bless = self.bless and to_short(self.bless) or "NONE"
-  local msg = self.name.."   "..to_short(self.aura).."   ".. bless .. "   "..state
+  local msg = self:get_name().."   "..to_short(self.config.aura).."   ".. bless .. "   "..state
   return msg
 end
 
@@ -226,7 +298,7 @@ function State:standard_rebuff_attack()
 end
 
 function State:rebuff_aura()
-  local aura = self.aura
+  local aura = self.config.aura
 
   local spell_base = self.enemy_spell_base.base
   if self.enemy_spell_base:is_valid() then
@@ -238,7 +310,7 @@ function State:rebuff_aura()
     end
 
     if not self:is_available_aura(aura) then
-      aura = self.aura
+      aura = self.config.aura
     end
   end
 
@@ -248,11 +320,11 @@ function State:rebuff_aura()
 end
 
 function State:is_available_aura(aura)
-  return cs.to_dict(self.aura_list)[aura]
+  return cs.to_dict(self.config.aura_list)[aura]
 end
 
 function State:rebuff_bless()
-  if cs.rebuff(self.bless) then
+  if cs.rebuff(self.config.bless) then
     self.is_init = nil
   end
 end
@@ -260,18 +332,18 @@ end
 function State:on_buff_changed()
   if not self.is_init then
     -- state is not initializated yet. Ignore new buffs.
-    self.is_init = cs.find_buff(self.aura) and cs.find_buff(self.bless)
+    self.is_init = cs.find_buff(self.config.aura) and cs.find_buff(self.config.bless)
     return
   end
 
-  local _, aura = cs.find_buff(self.aura_list)
-  if aura and self.aura ~= aura then
-    self.aura = aura
+  local _, aura = cs.find_buff(self.config.aura_list)
+  if aura then
+    self.config.aura = aura
   end
 
-  local _, bless = cs.find_buff(self.bless_list)
-  if bless and self.bless ~= bless then
-    self.bless = bless
+  local _, bless = cs.find_buff(self.config.bless_list)
+  if bless then
+    self.config.bless = bless
   end
 end
 
@@ -290,9 +362,11 @@ end
 ---@class StateHolder
 local StateHolder = cs.create_class()
 
-StateHolder.build = function()
+StateHolder.build = function(config)
   ---@type StateHolder
   local holder = StateHolder:new()
+
+  holder.config = config
 
   ---@type State
   holder.cur_state = nil
@@ -321,8 +395,7 @@ end
 function StateHolder:init()
   cs.Looper.add_event("once", 0, nil, function()
 
-    local _, state = next(self.states)
-    self:change_state(state)
+    self:change_state(self.config.cur_state)
     cs.Looper.add_event("StateHolder",0.2, self, self.check_loop)
 
     for i in pairs(self.states) do
@@ -342,11 +415,14 @@ function StateHolder:check_loop()
   for but, keyinfo in pairs(self.states_buttons) do
     if keyinfo.keystate == cs.ActionBarProxy.key_state_down then
       local state = self.states[but]
-      if ts - keyinfo.ts >= 3 then
+      if ts - keyinfo.ts >= 10 then
+        cs_state_config = default_state_config
+        print("RESET CONFIG!")
+      elseif ts - keyinfo.ts >= 3 then
         state:reset_buffs()
-        print("RESET STATE: "..self.cur_state.name)
+        print("RESET STATE: "..self.cur_state:get_name())
       elseif ts - keyinfo.ts >= 0.55 then
-        self:change_state(state)
+        self:change_state(but)
       end
     elseif keyinfo.keystate == cs.ActionBarProxy.key_state_up then
       self.states_buttons[but] = nil
@@ -363,11 +439,14 @@ function StateHolder:check_loop()
   end
 end
 
-function StateHolder:change_state(state)
+function StateHolder:change_state(state_number)
+  local state = self.states[state_number]
+
   if state ~= self.cur_state then
     self.cur_state = state
     self.cur_state:init()
-    print("NEW STATE: "..self.cur_state.name)
+    self.config.cur_state = state_number
+    print("NEW STATE: "..self.cur_state:get_name())
   end
 end
 
@@ -383,8 +462,8 @@ function StateHolder:attack_action(action_name)
 
 end
 
-function StateHolder:add_state(button, state)
-  self.states[button] = state
+function StateHolder:add_state(state_config)
+  self.states[state_config.hotkey] = State.build(state_config)
 end
 
 function StateHolder:add_action(action_name, action)
@@ -413,82 +492,75 @@ function StateHolder:rebuff_heal()
   end
 end
 
-local state_holder = StateHolder.build()
+local state_holder
 
--- ATTACKS
-state_holder:add_state(4, State.build(
-        "|cffff2020RUSH",
-        aura_Sanctity,
-        bless_Might,
-        slot_two_hands,
-        { aura_Sanctity, aura_Devotion, aura_Retribution }
-))
+cs_state_config = default_state_config
 
-state_holder:add_state(3, State.build(
-        "|cff20ff20NORM",
-        aura_Retribution,
-        bless_Might
-))
-
-state_holder:add_state(2, State.build(
-        "|cff9090ffDEFR",
-        aura_Devotion,
-        bless_Wisdom,
-        slot_one_off_hands
-))
-
-state_holder:add_state(1, State.build(
-        "|cffffffffNULL",
-        aura_Shadow,
-        bless_Wisdom
-))
-
-state_holder:add_action("rush", function(state)
-  cast(cast_HolyStrike)
-
-  seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
-end)
-
-state_holder:add_action("mid", function(state)
-  if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-    cast(cast_Judgement)
+local main_frame = cs.create_simple_frame("pal_main_frame")
+main_frame:RegisterEvent("VARIABLES_LOADED")
+main_frame:SetScript("OnEvent", function()
+  if event ~= "VARIABLES_LOADED" then
     return
   end
 
-  seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
-end)
+  state_holder = StateHolder.build(cs_state_config.state_holder)
 
-state_holder:add_action("fast", function(state)
-  if cs.check_target(cs.t_close) then
+  local states = cs_state_config.states
+  for _, state_config in pairs(states) do
+    state_holder:add_state(state_config)
+  end
+  state_holder:init()
+
+
+
+
+  -- ATTACKS
+  state_holder:add_action("rush", function(state)
+    cast(cast_HolyStrike)
+
+    seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
+  end)
+
+  state_holder:add_action("mid", function(state)
     if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
       cast(cast_Judgement)
       return
     end
 
-    seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
-  end
-end)
+    seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
+  end)
 
-state_holder:add_action("def", function(state)
-  if cs.check_target(cs.t_close) then
-    if cs.find_buff(seal_Righteousness) then
-      cast(cast_Judgement)
-      return
+  state_holder:add_action("fast", function(state)
+    if cs.check_target(cs.t_close) then
+      if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
+        cast(cast_Judgement)
+        return
+      end
+
+      seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
     end
+  end)
 
-    if not target_has_debuff_seal_Light() then
-      seal_and_cast(seal_Light, cast_Judgement)
-      return
+  state_holder:add_action("def", function(state)
+    if cs.check_target(cs.t_close) then
+      if cs.find_buff(seal_Righteousness) then
+        cast(cast_Judgement)
+        return
+      end
+
+      if not target_has_debuff_seal_Light() then
+        seal_and_cast(seal_Light, cast_Judgement)
+        return
+      end
+
+      buff_seal(seal_Light)
     end
+  end)
 
-    buff_seal(seal_Light)
-  end
+  state_holder:add_action( "null", function(state)
+  end)
+
 end)
-
-state_holder:add_action( "null", function(state)
-end)
-
-state_holder:init()
 
 function attack_action(name)
   state_holder:attack_action(name)
