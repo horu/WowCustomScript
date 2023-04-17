@@ -271,6 +271,7 @@ cs.t_exists = UnitExists
 cs.t_dead = UnitIsDead
 cs.t_player = UnitIsPlayer
 cs.t_close = "t_close"
+cs.t_close_30 = "t_close_30"
 cs.t_attackable = "t_attackable"
 
 -- check condition by OR
@@ -281,6 +282,8 @@ function cs.check_target(c1, c2, c3)
 
     if check == cs.t_close then
       if CheckInteractDistance("target", 2) then return true end
+    elseif check == cs.t_close_30 then
+      if CheckInteractDistance("target", 4) then return true end
     elseif check == cs.t_attackable then
       if cs.check_target(cs.t_exists) and
               not cs.check_target(cs.t_friend) and
@@ -323,6 +326,10 @@ function cs.auto_attack()
 
     if cs.check_target(cs.t_enemy) and cs.check_target(cs.t_player) then
       -- prevent random pvp attack
+      return
+    end
+
+    if not cs.check_target(cs.t_close) then
       return
     end
 

@@ -377,7 +377,7 @@ end
 function State:rebuff_bless()
   local bless = bless_Wisdom -- mana regen if not in combat
 
-  if cs.check_target(cs.t_attackable) and ch.check_target(cs.t_close) or
+  if cs.check_target(cs.t_attackable) and cs.check_target(cs.t_close) or
           cs.in_combat() or cs.compare_time(5, cs.get_combat_info().ts_leave) -- 5 sec after combat
   then
     bless = self:get_config(1).bless
@@ -566,6 +566,8 @@ main_frame:SetScript("OnEvent", function()
 
   -- ATTACKS
   state_holder:add_action("rush", function(state)
+    if not cs.check_target(cs.t_close_30) then return end
+
     cast(cast_HolyStrike)
 
     if state.id ~= state_RUSH then
@@ -586,36 +588,36 @@ main_frame:SetScript("OnEvent", function()
   end)
 
   state_holder:add_action("fast", function(state)
-    if cs.check_target(cs.t_close) then
-      if procast_on_seal_Light() then
-        return
-      end
+    if not cs.check_target(cs.t_close) then return end
 
-      if state.id == state_RUSH then
-        if cs.find_buff(seal_Righteousness) then
-          cast(cast_Judgement)
-          return
-        end
-      end
-
-      seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
+    if procast_on_seal_Light() then
+      return
     end
-  end)
 
-  state_holder:add_action("def", function(state)
-    if cs.check_target(cs.t_close) then
+    if state.id == state_RUSH then
       if cs.find_buff(seal_Righteousness) then
         cast(cast_Judgement)
         return
       end
-
-      if not target_has_debuff_seal_Light() then
-        seal_and_cast(seal_Light, cast_Judgement)
-        return
-      end
-
-      seal_and_cast(seal_Light, cast_CrusaderStrike)
     end
+
+    seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
+  end)
+
+  state_holder:add_action("def", function(state)
+    if not cs.check_target(cs.t_close) then return end
+
+    if cs.find_buff(seal_Righteousness) then
+      cast(cast_Judgement)
+      return
+    end
+
+    if not target_has_debuff_seal_Light() then
+      seal_and_cast(seal_Light, cast_Judgement)
+      return
+    end
+
+    seal_and_cast(seal_Light, cast_CrusaderStrike)
   end)
 
   state_holder:add_action( "null", function(state)
