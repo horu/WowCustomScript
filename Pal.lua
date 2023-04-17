@@ -186,44 +186,63 @@ local default_states_config = {
       hotbar = 1,
       hotkey = 4,
       color = "|cffff2020",
-      default_aura = aura_Sanctity,
-      default_bless = bless_Might,
-      aura_list = { aura_Sanctity, aura_Devotion, aura_Retribution },
-      bless_list = bless_list_all,
 
       use_slots = { slot_TwoHand },
+
+      aura = {
+        default = aura_Sanctity,
+        list = { aura_Sanctity, aura_Devotion, aura_Retribution },
+      },
+      bless = {
+        default = bless_Might,
+        list = bless_list_all,
+      },
     },
     NORM = {
       name = "NORM",
       hotbar = 1,
       hotkey = 3,
       color = "|cff20ff20",
-      default_aura = aura_Retribution,
-      default_bless = bless_Might,
-      aura_list = aura_list_att,
-      bless_list = bless_list_all,
+      aura = {
+        default = aura_Retribution,
+        list = aura_list_att,
+      },
+      bless = {
+        default = bless_Might,
+        list = bless_list_all,
+      },
     },
     DEF = {
       name = "DEF",
       hotbar = 1,
       hotkey = 2,
       color = "|c008692FF",
-      default_aura = aura_Devotion,
-      default_bless = bless_Wisdom,
-      aura_list = aura_list_att,
-      bless_list = bless_list_all,
 
       use_slots = { slot_OneHand, slot_OffHand },
+
+      aura = {
+        default = aura_Devotion,
+        list = aura_list_att,
+      },
+      bless = {
+        default = bless_Wisdom,
+        list = bless_list_all,
+      },
     },
     SIMP = {
       name = "SIMP",
       hotbar = 1,
       hotkey = 1,
       color = "|cffffffff",
-      default_aura = aura_Devotion,
-      default_bless = bless_Wisdom,
-      aura_list = aura_list_att,
-      bless_list = bless_list_all,
+
+      aura = {
+        default = aura_Devotion,
+        list = aura_list_att,
+      },
+      bless = {
+        default = bless_Wisdom,
+        list = bless_list_all,
+      },
     },
   }
 }
@@ -238,20 +257,20 @@ local default_states_dynamic_config = {
   state_holder = state_holder_config,
   states = {
     RUSH = {
-      aura = aura_Sanctity,
-      bless = bless_Might,
+      aura = {  },
+      bless = {  },
     },
     NORM = {
-      aura = aura_Retribution,
-      bless = bless_Might,
+      aura = {  },
+      bless = {  },
     },
     DEF = {
-      aura = aura_Devotion,
-      bless = bless_Wisdom,
+      aura = {  },
+      bless = {  },
     },
     SIMP = {
-      aura = aura_Devotion,
-      bless = bless_Wisdom,
+      aura = {  },
+      bless = {  },
     },
   }
 }
@@ -273,10 +292,122 @@ local get_state_config = function(id, dynamic)
 end
 
 
-local state_NONE = "N"
-local state_DEFAULT = "D"
-local state_MODIFIED = "M"
-local state_TEMP = "T"
+
+
+
+
+local status_NONE = "N"
+local status_DEFAULT = "D"
+local status_MODIFIED = "M"
+local status_TEMP = "T"
+
+
+---@class StateBuff
+local StateBuff = cs.create_class()
+
+StateBuff.build = function(state_id, buff_name)
+  ---@type StateBuff
+  local buff = StateBuff:new()
+
+  buff.id = state_id
+  buff.name = buff_name
+  buff.is_ready = nil
+
+  buff:get_config(1).current = buff:get_config(1).current or buff:get_config().default
+  buff.set = nil
+
+  return buff
+end
+
+function StateBuff:get_config(dynamic)
+  return get_state_config(self.id, dynamic)[self.name]
+end
+
+function StateBuff:init()
+  self.is_ready = nil
+end
+
+function StateBuff:reset()
+  self.is_ready = nil
+  self:get_config(1).current = self:get_config().default
+end
+
+function StateBuff:to_string()
+  return self:get_config(1).current
+end
+
+function StateBuff:is_available(value)
+  return cs.to_dict(self:get_config().list)[value]
+end
+
+function StateBuff:rebuff(value)
+  self.set = value
+  if not self.set or not self:is_available(self.set) then
+    self.set = self:get_config(1).current
+  end
+
+  if cs.rebuff(self.set) then
+    self.is_ready = nil
+  end
+end
+
+function StateBuff:on_buff_changed()
+  if not self.is_ready then
+    -- state is not initializated yet. Ignore new buffs.
+    cs.debug(self)
+    self.is_ready = cs.find_buff(self.set)
+    return
+  end
+
+  -- Set new custom buffs
+  local _, new = cs.find_buff(self:get_config().list)
+  if new and self.set ~= new then
+    self:get_config(1).current = new
+  end
+end
+
+function StateBuff:get_status()
+  local config = self:get_config(1).current
+  local default = self:get_config().default
+  local set = self.set
+
+  local is_default = config == default
+  local is_modified = config == set
+  local is_temp = config ~= set
+
+  local status = status_NONE
+  if self.is_ready then
+    if is_default and is_modified then
+      status = status_DEFAULT
+    elseif is_modified then
+      status = status_MODIFIED
+    else
+      status = status_TEMP
+    end
+  end
+  return status
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ---@class State
 local State = cs.create_class()
@@ -286,12 +417,12 @@ State.build = function(id)
   local state = State:new()
 
   state.id = id
+  state.buff_list = {
+    aura = StateBuff.build(id, "aura"),
+    bless = StateBuff.build(id, "bless"),
+  }
 
   state.slot_to_use = state:get_config().use_slots and cs.MultiSlot.build(state:get_config().use_slots)
-
-  state.is_init = nil
-
-  state.buffs_status = { aura = nil, bless = nil }
 
   state.enemy_spell_base = { base = nil, ts = 0 }
   state.enemy_spell_base.is_valid = function(self)
@@ -309,15 +440,21 @@ function State:get_name()
   return self:get_config().color..self:get_config().name
 end
 
+function State:every_buff(fun, a1, a2, a3)
+  for _, buff in pairs(self.buff_list) do
+    fun(buff, a1, a2, a3)
+  end
+end
+
 function State:init()
-  self.is_init = nil
+  self:every_buff(StateBuff.init)
+  self:recheck()
   self:on_buff_changed()
 end
 
 function State:reset_buffs()
-  self.is_init = nil
-  self:get_config(1).aura = self:get_config().default_aura
-  self:get_config(1).bless = self:get_config().default_bless
+  self:every_buff(StateBuff.reset)
+  self:recheck()
   self:on_buff_changed()
 end
 
@@ -333,37 +470,26 @@ function State:recheck()
 end
 
 function State:to_string()
-  local aura_is_default = self:get_config(1).aura == self:get_config().default_aura
-  local bless_is_default = self:get_config(1).bless == self:get_config().default_bless
-  local aura_is_actual = cs.find_buff(self:get_actual_aura())
-  local bless_is_actual = cs.find_buff(self:get_actual_bless())
-
-  local state = not self.is_init and "N" or ( (aura_is_default and bless_is_default) and "D" or "M")
-  local bless = self:get_config(1).bless and to_short(self:get_config(1).bless) or "N"
+  local aura_status = self.buff_list.aura:get_status()
+  local bless_status = self.buff_list.bless:get_status()
 
   local msg = self:get_config().color..string.sub(self:get_config().name, 1, 1).."   "..
-          to_short(self:get_config(1).aura).."   "..
-          bless .. "   "..
-          state
+          to_short(self.buff_list.aura:to_string()).."(".. aura_status ..")   "..
+          to_short(self.buff_list.bless:to_string()).."(".. bless_status ..")"
   return msg
 end
 
 function State:standard_rebuff_attack()
-  self:rebuff_aura()
-  self:rebuff_bless()
+  self.buff_list.aura:rebuff(self:get_aura())
+  self.buff_list.bless:rebuff(self:get_bless())
   if cs.is_in_party() and not cs.in_combat() then
     cs.rebuff(buff_Righteous)
     buff_party()
   end
 end
 
-function State:is_available_aura(aura)
-  return cs.to_dict(self:get_config().aura_list)[aura]
-end
-
-function State:get_actual_aura()
-  local aura = self:get_config(1).aura
-
+function State:get_aura()
+  local aura
   -- buff spell defended auras if enemy casts one
   local spell_base = self.enemy_spell_base.base
   if self.enemy_spell_base:is_valid() then
@@ -373,59 +499,25 @@ function State:get_actual_aura()
     if spell_base == cs.spell_base_Shadow then
       aura = aura_Shadow
     end
-
-    if not self:is_available_aura(aura) then
-      aura = self:get_config(1).aura
-    end
   end
 
   return aura
 end
 
-function State:rebuff_aura()
-  local aura = self:get_actual_aura()
-
-  if cs.rebuff(aura) then
-    self.is_init = nil
-  end
-end
-
-function State:get_actual_bless()
+function State:get_bless()
   local bless = bless_Wisdom -- mana regen if not in combat
 
   if cs.check_target(cs.t_attackable) and cs.check_target(cs.t_close) or
           cs.in_combat() or cs.compare_time(5, cs.get_combat_info().ts_leave) -- 5 sec after combat
   then
-    bless = self:get_config(1).bless
+    bless = nil
   end
 
   return bless
 end
 
-function State:rebuff_bless()
-  local bless = self:get_actual_bless()
-
-  if cs.rebuff(bless) then
-    self.is_init = nil
-  end
-end
-
 function State:on_buff_changed()
-  if not self.is_init then
-    -- state is not initializated yet. Ignore new buffs.
-    self.is_init = cs.find_buff(self:get_config(1).aura) and cs.find_buff(self:get_config(1).bless)
-    return
-  end
-
-  local _, aura = cs.find_buff(self:get_config().aura_list)
-  if aura then
-    self:get_config(1).aura = aura
-  end
-
-  local _, bless = cs.find_buff(self:get_config().bless_list)
-  if bless then
-    self:get_config(1).bless = bless
-  end
+  self:every_buff(StateBuff.on_buff_changed)
 end
 
 -- reacion for enenmy cast to change resist aura
