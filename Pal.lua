@@ -430,15 +430,12 @@ StateHolder.build = function()
 end
 
 function StateHolder:init()
-  cs.Looper.add_event("once", 0, nil, function()
+  self:change_state(get_state_holder_config().cur_state)
+  cs.Looper.add_event("StateHolder",0.2, self, self.check_loop)
 
-    self:change_state(get_state_holder_config().cur_state)
-    cs.Looper.add_event("StateHolder",0.2, self, self.check_loop)
-
-    for i in pairs(self.states) do
-      cs.ActionBarProxy.add_proxy(1, i, StateHolder.button_callback, self)
-    end
-  end)
+  for i in pairs(self.states) do
+    cs.ActionBarProxy.add_proxy(1, i, StateHolder.button_callback, self)
+  end
 end
 
 function StateHolder:button_callback(bar, button)
@@ -530,7 +527,7 @@ function StateHolder:rebuff_heal()
   end
 end
 
-local state_holder
+local state_holder = StateHolder.build()
 
 local main_frame = cs.create_simple_frame("pal_main_frame")
 main_frame:RegisterEvent("VARIABLES_LOADED")
@@ -547,16 +544,11 @@ main_frame:SetScript("OnEvent", function()
     end
   end
 
-  ---@type StateHolder
-  state_holder = StateHolder.build()
-
   local states = cs_states_config.states
   for state_name in pairs(states) do
     state_holder:add_state(state_name)
   end
   state_holder:init()
-
-
 
 
   -- ATTACKS
