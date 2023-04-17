@@ -185,7 +185,7 @@ local default_states_config = {
       name = "RUSH",
       hotbar = 1,
       hotkey = 4,
-      color = "|cffff2020",
+      color = "|cffff8888",
 
       use_slots = { slot_TwoHand },
 
@@ -216,7 +216,7 @@ local default_states_config = {
       name = "DEF",
       hotbar = 1,
       hotkey = 2,
-      color = "|c008692FF",
+      color = "|c00bbbbFF",
 
       use_slots = { slot_OneHand, slot_OffHand },
 
