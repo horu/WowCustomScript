@@ -491,16 +491,20 @@ cs.Dps = cs.create_class()
 
 cs.Dps.build = function()
   local dps = cs.Dps:new()
-  local f = cs.create_simple_text_frame("nibsrsCSdps", "BOTTOMRIGHT",-90, 95, "DPS")
-  f.cs_data = { units = {}, cur = nil, last_ts = nil }
+  local f = cs.create_simple_text_frame("nibsrsCSdps", "BOTTOM",40, 46, "DPS")
+  f.cs_data = { units = {}, cur_info = nil, last_ts = nil }
 
-  f.cs_data.get_all = function(self)
+  f.cs_data.get_all = function(self, after_ts)
     local ts_sum_all = 0
     local damage_sum_all = 0
     for _, dam_name in pairs(self.units) do
       for _, dam_lvl in pairs(dam_name) do
-        ts_sum_all = ts_sum_all + dam_lvl.ts_sum
-        damage_sum_all = damage_sum_all + dam_lvl.damage_sum
+        for start_ts, dam_ts in pairs(dam_lvl) do
+          if not after_ts or start_ts >= after_ts then
+            ts_sum_all = ts_sum_all + dam_ts.ts_sum
+            damage_sum_all = damage_sum_all + dam_ts.damage_sum
+          end
+        end
       end
     end
     return damage_sum_all / ts_sum_all
@@ -516,8 +520,8 @@ cs.Dps.build = function()
     local ts = GetTime()
 
     if (event == "PLAYER_LEAVE_COMBAT" or event == "SPELLCAST_START" or event == "PLAYER_TARGET_CHANGED")
-        and data.cur then
-      data.cur = nil
+        and data.cur_info then
+      data.cur_info = nil
       data.last_ts = nil
       return
     end
@@ -526,30 +530,33 @@ cs.Dps.build = function()
       return
     end
 
-    if not data.cur then
+    if not data.cur_info then
       -- combat first damage
 
       local name = UnitName("target")
       local lvl = UnitLevel("target")
       data.units[name] = data.units[name] or {}
-      data.units[name][lvl] = data.units[name][lvl] or { damage_sum = 0, ts_sum = 0 }
+      data.units[name][lvl] = data.units[name][lvl] or {}
+      data.units[name][lvl][ts] = data.units[name][lvl][ts] or { damage_sum = 0, ts_sum = 0 }
 
-      data.cur = data.units[name][lvl]
+      data.cur_info = { name = name, lvl = lvl, ts = ts }
       data.last_ts = ts
     end
 
     local damage = arg4
 
-    data.cur.damage_sum = data.cur.damage_sum + damage
-    data.cur.ts_sum = data.cur.ts_sum + ts - data.last_ts
+    local cur_session = data.units[data.cur_info.name][data.cur_info.lvl][data.cur_info.ts]
+
+    cur_session.damage_sum = cur_session.damage_sum + damage
+    cur_session.ts_sum = cur_session.ts_sum + ts - data.last_ts
 
     data.last_ts = ts
 
-    local cur_dps = data.cur.damage_sum / data.cur.ts_sum
+    local combat_enter_ts = cs.get_combat_info().ts_enter
+    local cur_dps = data:get_all(combat_enter_ts)
     local all_dps = data:get_all()
 
     this.cs_text:SetText(string.format("DPS: %.1f (%.1f)", cur_dps, all_dps))
-
   end)
 
   dps.frame = f

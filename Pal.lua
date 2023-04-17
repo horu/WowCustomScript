@@ -1,6 +1,6 @@
 local cs = cs_common
 
--- TODO: Combat bless
+-- +TODO: Combat bless
 
 -- buffs
 local buff_Righteous = "Righteous Fury"
