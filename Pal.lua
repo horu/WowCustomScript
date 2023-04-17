@@ -205,7 +205,7 @@ local default_states_config = {
       name = "NORM",
       hotbar = 1,
       hotkey = 3,
-      color = "|cff20ff20",
+      color = "|cffffffff",
       aura = {
         default = aura_Retribution,
         list = aura_list_att,
@@ -236,7 +236,7 @@ local default_states_config = {
       name = "SIMP",
       hotbar = 1,
       hotkey = 1,
-      color = "|cffffffff",
+      color = "|cff20ff20",
 
       aura = {
         default = aura_Devotion,
@@ -390,20 +390,6 @@ function StateBuff:get_status()
   end
   return status
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
