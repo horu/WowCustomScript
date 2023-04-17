@@ -6,6 +6,6 @@
 ## First created: Mar 2005
 ## Version: 3.17.1
 ## RequiredDeps: pfUI
-## SavedVariables: cs_state_config
+## SavedVariables: cs_states_dynamic_config
 Common.lua
 Pal.lua

@@ -150,11 +150,25 @@ local function build_cast_list(cast_list)
 end
 
 
-local default_state_config = {
-  state_holder = {
-    cur_state = 2,
-  },
+---@class state_config
+local state_config = {
+      name = "",
+      hotbar = 1,
+      hotkey = 1,
+      color = "|cffff2020",
+      default_aura = aura_Sanctity,
+      default_bless = bless_Might,
+      aura_list = { aura_Sanctity, aura_Devotion, aura_Retribution },
+      bless_list = bless_list_all,
+
+      use_slots = { slot_TwoHand },
+    }
+
+
+---@class states_config
+local default_states_config = {
   states = {
+    ---@type state_config
     RUSH = {
       name = "RUSH",
       hotbar = 1,
@@ -166,9 +180,6 @@ local default_state_config = {
       bless_list = bless_list_all,
 
       use_slots = { slot_TwoHand },
-
-      aura = aura_Sanctity,
-      bless = bless_Might,
     },
     NORM = {
       name = "NORM",
@@ -179,9 +190,6 @@ local default_state_config = {
       default_bless = bless_Might,
       aura_list = aura_list_att,
       bless_list = bless_list_all,
-
-      aura = aura_Retribution,
-      bless = bless_Might,
     },
     DEFF = {
       name = "DEFF",
@@ -194,9 +202,6 @@ local default_state_config = {
       bless_list = bless_list_all,
 
       use_slots = { slot_OneHand, slot_OffHand },
-
-      aura = aura_Devotion,
-      bless = bless_Wisdom,
     },
     SIMP = {
       name = "SIMP",
@@ -207,39 +212,65 @@ local default_state_config = {
       default_bless = bless_Wisdom,
       aura_list = aura_list_att,
       bless_list = bless_list_all,
+    },
+  }
+}
 
+---@class state_holder_config
+local state_holder_config = {
+  cur_state = 2,
+}
+
+---@class states_dynamic_config
+local default_states_dynamic_config = {
+  state_holder = state_holder_config,
+  states = {
+    RUSH = {
+      aura = aura_Sanctity,
+      bless = bless_Might,
+    },
+    NORM = {
+      aura = aura_Retribution,
+      bless = bless_Might,
+    },
+    DEFF = {
+      aura = aura_Devotion,
+      bless = bless_Wisdom,
+    },
+    SIMP = {
       aura = aura_Devotion,
       bless = bless_Wisdom,
     },
   }
 }
 
----@class StateConfig
-local StateConfig = {
-  name = "RUSH",
-  hotbar = 1,
-  hotkey = 4,
-  color = "|cffff2020",
-  default_aura = aura_Sanctity,
-  default_bless = bless_Might,
-  use_slots = { slot_TwoHand },
-  aura_list = { aura_Sanctity, aura_Devotion, aura_Retribution },
+cs_states_config = default_states_config
+cs_states_dynamic_config = default_states_dynamic_config
 
-  aura = aura_Sanctity,
-  bless = bless_Might,
-}
+
+local get_state_holder_config = function()
+  return cs_states_dynamic_config.state_holder
+end
+
+---@return state_config
+local get_state_config = function(name, dynamic)
+  if dynamic then
+    return cs_states_dynamic_config.states[name]
+  end
+  return cs_states_config.states[name]
+end
+
 
 ---@class State
 local State = cs.create_class()
 
-State.build = function(config)
+State.build = function(name)
   ---@type State
   local state = State:new()
 
-  ---@type StateConfig
-  state.config = config
+  state.name = name
 
-  state.slot_to_use = state.config.use_slots and cs.MultiSlot.build(state.config.use_slots)
+  state.slot_to_use = state:get_config().use_slots and cs.MultiSlot.build(state:get_config().use_slots)
 
   state.is_init = nil
 
@@ -251,8 +282,12 @@ State.build = function(config)
   return state
 end
 
+function State:get_config(dynamic)
+  return get_state_config(self.name, dynamic)
+end
+
 function State:get_name()
-  return self.config.color..self.config.name
+  return self:get_config().color..self:get_config().name
 end
 
 function State:init()
@@ -262,8 +297,8 @@ end
 
 function State:reset_buffs()
   self.is_init = nil
-  self.config.aura = self.config.default_aura
-  self.config.bless = self.config.default_bless
+  self:get_config(1).aura = self:get_config().default_aura
+  self:get_config(1).bless = self:get_config().default_bless
   self:on_buff_changed()
 end
 
@@ -279,13 +314,13 @@ function State:recheck()
 end
 
 function State:to_string()
-  local aura_is_default = self.config.aura == self.config.default_aura
-  local bless_is_default = self.config.bless == self.config.default_bless
+  local aura_is_default = self:get_config(1).aura == self:get_config().default_aura
+  local bless_is_default = self:get_config(1).bless == self:get_config().default_bless
   local state = not self.is_init and "N" or ( (aura_is_default and bless_is_default) and "D" or "M")
-  local bless = self.config.bless and to_short(self.config.bless) or "N"
+  local bless = self:get_config(1).bless and to_short(self:get_config(1).bless) or "N"
 
-  local msg = self.config.color..string.sub(self.config.name, 1, 1).."   "..
-          to_short(self.config.aura).."   "..
+  local msg = self:get_config().color..string.sub(self:get_config().name, 1, 1).."   "..
+          to_short(self:get_config(1).aura).."   "..
           bless .. "   "..
           state
   return msg
@@ -301,7 +336,7 @@ function State:standard_rebuff_attack()
 end
 
 function State:rebuff_aura()
-  local aura = self.config.aura
+  local aura = self:get_config(1).aura
 
   local spell_base = self.enemy_spell_base.base
   if self.enemy_spell_base:is_valid() then
@@ -313,7 +348,7 @@ function State:rebuff_aura()
     end
 
     if not self:is_available_aura(aura) then
-      aura = self.config.aura
+      aura = self:get_config(1).aura
     end
   end
 
@@ -323,11 +358,11 @@ function State:rebuff_aura()
 end
 
 function State:is_available_aura(aura)
-  return cs.to_dict(self.config.aura_list)[aura]
+  return cs.to_dict(self:get_config().aura_list)[aura]
 end
 
 function State:rebuff_bless()
-  if cs.rebuff(self.config.bless) then
+  if cs.rebuff(self:get_config(1).bless) then
     self.is_init = nil
   end
 end
@@ -335,18 +370,18 @@ end
 function State:on_buff_changed()
   if not self.is_init then
     -- state is not initializated yet. Ignore new buffs.
-    self.is_init = cs.find_buff(self.config.aura) and cs.find_buff(self.config.bless)
+    self.is_init = cs.find_buff(self:get_config(1).aura) and cs.find_buff(self:get_config(1).bless)
     return
   end
 
-  local _, aura = cs.find_buff(self.config.aura_list)
+  local _, aura = cs.find_buff(self:get_config().aura_list)
   if aura then
-    self.config.aura = aura
+    self:get_config(1).aura = aura
   end
 
-  local _, bless = cs.find_buff(self.config.bless_list)
+  local _, bless = cs.find_buff(self:get_config().bless_list)
   if bless then
-    self.config.bless = bless
+    self:get_config(1).bless = bless
   end
 end
 
@@ -365,11 +400,9 @@ end
 ---@class StateHolder
 local StateHolder = cs.create_class()
 
-StateHolder.build = function(config)
+StateHolder.build = function()
   ---@type StateHolder
   local holder = StateHolder:new()
-
-  holder.config = config
 
   ---@type State
   holder.cur_state = nil
@@ -399,7 +432,7 @@ end
 function StateHolder:init()
   cs.Looper.add_event("once", 0, nil, function()
 
-    self:change_state(self.config.cur_state)
+    self:change_state(get_state_holder_config().cur_state)
     cs.Looper.add_event("StateHolder",0.2, self, self.check_loop)
 
     for i in pairs(self.states) do
@@ -420,7 +453,7 @@ function StateHolder:check_loop()
     if keyinfo.keystate == cs.ActionBarProxy.key_state_down then
       local state = self.states[but]
       if ts - keyinfo.ts >= 5 then
-        cs_state_config = default_state_config
+        cs_states_dynamic_config = default_states_dynamic_config
         print("RESET CONFIG!")
       elseif ts - keyinfo.ts >= 3 then
         state:reset_buffs()
@@ -449,7 +482,7 @@ function StateHolder:change_state(state_number)
   if state ~= self.cur_state then
     self.cur_state = state
     self.cur_state:init()
-    self.config.cur_state = state_number
+    get_state_holder_config().cur_state = state_number
     print("NEW STATE: "..self.cur_state:get_name())
   end
 end
@@ -466,8 +499,9 @@ function StateHolder:attack_action(action_name)
 
 end
 
-function StateHolder:add_state(state_config)
-  self.states[state_config.hotkey] = State.build(state_config)
+function StateHolder:add_state(name)
+  local config = get_state_config(name)
+  self.states[config.hotkey] = State.build(name)
 end
 
 function StateHolder:add_action(action_name, action)
@@ -498,8 +532,6 @@ end
 
 local state_holder
 
-cs_state_config = default_state_config
-
 local main_frame = cs.create_simple_frame("pal_main_frame")
 main_frame:RegisterEvent("VARIABLES_LOADED")
 main_frame:SetScript("OnEvent", function()
@@ -507,21 +539,20 @@ main_frame:SetScript("OnEvent", function()
     return
   end
 
-  for state_name, state in pairs(cs_state_config.states) do
+  for state_name, state in pairs(cs_states_config.states) do
     for name, value in pairs(state) do
       if name ~= "aura" and name ~= "bless" then
-        state[name] = default_state_config.states[state_name][name]
+        state[name] = default_states_config.states[state_name][name]
       end
     end
   end
 
+  ---@type StateHolder
+  state_holder = StateHolder.build()
 
-
-  state_holder = StateHolder.build(cs_state_config.state_holder)
-
-  local states = cs_state_config.states
-  for _, state_config in pairs(states) do
-    state_holder:add_state(state_config)
+  local states = cs_states_config.states
+  for state_name in pairs(states) do
+    state_holder:add_state(state_name)
   end
   state_holder:init()
 
