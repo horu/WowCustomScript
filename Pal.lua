@@ -350,6 +350,7 @@ end
 function State:rebuff_aura()
   local aura = self:get_config(1).aura
 
+  -- buff spell defended auras if enemy casts one
   local spell_base = self.enemy_spell_base.base
   if self.enemy_spell_base:is_valid() then
     if spell_base == cs.spell_base_Frost then
@@ -374,7 +375,15 @@ function State:is_available_aura(aura)
 end
 
 function State:rebuff_bless()
-  if cs.rebuff(self:get_config(1).bless) then
+  local bless = bless_Wisdom -- mana regen if not in combat
+
+  if cs.check_target(cs.t_attackable) and ch.check_target(cs.t_close) or
+          cs.in_combat() or cs.compare_time(5, cs.get_combat_info().ts_leave) -- 5 sec after combat
+  then
+    bless = self:get_config(1).bless
+  end
+
+  if cs.rebuff(bless) then
     self.is_init = nil
   end
 end

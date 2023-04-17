@@ -69,6 +69,20 @@ function cs.time_to_str(t)
   return string.format("%02d:%02d:%02d", h, m, s)
 end
 
+cs.get_time_diff = function(past, now)
+  if not past then return end
+
+  now = now or GetTime()
+  return now - past
+end
+
+cs.compare_time = function(limit, past, now)
+  local diff = cs.get_time_diff(past, now)
+  if not diff then return end
+
+  return diff <= limit
+end
+
 function cs.create_fix_table(size)
   local fix_table = { size = size, list = {} }
 
@@ -205,6 +219,32 @@ end
 
 
 
+
+-- Frame
+function cs.create_simple_frame(name)
+  local f = CreateFrame("Frame", name, UIParent)
+  return f
+end
+
+function cs.create_simple_text_frame(name, to, x, y, text, text_to)
+  local f = cs.create_simple_frame(name)
+  f:SetHeight(10)
+  f:SetWidth(20)
+  f:SetPoint(to, x, y)
+
+  f.cs_text = f:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
+  f.cs_text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+  f.cs_text:SetPoint(text_to or "BOTTOMLEFT", 0, 0)
+  f.cs_text:SetJustifyH("LEFT")
+  f.cs_text:SetText(text)
+
+  return f
+end
+
+
+
+
+
 ---@class cs.ActionBarProxy
 cs.ActionBarProxy = cs.create_class()
 
@@ -292,7 +332,25 @@ function cs.auto_attack()
   end
 end
 
+local combat_frame = cs.create_simple_frame()
+combat_frame:RegisterEvent("PLAYER_LEAVE_COMBAT")
+combat_frame:RegisterEvent("PLAYER_ENTER_COMBAT")
+combat_frame:SetScript("OnEvent", function()
+  if event == "PLAYER_ENTER_COMBAT" then
+    this.ts_enter = GetTime()
+    this.ts_leave = nil
+    return
+  end
 
+  if event == "PLAYER_LEAVE_COMBAT" then
+    this.ts_leave = GetTime()
+    return
+  end
+end)
+
+function cs.get_combat_info()
+  return { status = cs.in_combat(), ts_enter = combat_frame.ts_enter, ts_leave = combat_frame.ts_leave}
+end
 
 
 -- slot
@@ -418,29 +476,6 @@ function cs.has_debuffs(unit, debuff_str)
 end
 
 
-
-
-function cs.create_simple_frame(name)
-  local f = CreateFrame("Frame", name, UIParent)
-  return f
-end
-
-
-
-function cs.create_simple_text_frame(name, to, x, y, text, text_to)
-  local f = cs.create_simple_frame(name)
-  f:SetHeight(10)
-  f:SetWidth(20)
-  f:SetPoint(to, x, y)
-
-  f.cs_text = f:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
-  f.cs_text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-  f.cs_text:SetPoint(text_to or "BOTTOMLEFT", 0, 0)
-  f.cs_text:SetJustifyH("LEFT")
-  f.cs_text:SetText(text)
-
-  return f
-end
 
 
 
