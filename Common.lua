@@ -413,6 +413,25 @@ function cs.MultiSlot:use()
 end
 
 
+
+
+cs.cast = function(a1,a2,a3,a4,a5,a6,a7)
+  local cast_list
+  if type(a1) == "table" then
+    cast_list = a1
+  else
+    cast_list = { a1,a2,a3,a4,a5,a6,a7 }
+  end
+
+  if table.getn(cast_list) == 1 then
+    cast(cast_list[1])
+  else
+    DoOrder(unpack(cast_list))
+  end
+  return true
+end
+
+
 -- buffs
 function cs.find_buff(check_list, unit)
   for i, check in pairs(cs.to_table(check_list)) do
@@ -432,7 +451,7 @@ function cs.rebuff(buff, custom_buff_check_list)
     return true
   end
 
-  cast(buff)
+  cs.cast(buff)
   return true
 end
 
@@ -454,7 +473,7 @@ function cs.rebuff_target(buff, check, unit)
   if UnitIsUnit(unit, "target") then
     -- SpellTargetUnit
     print("BUFF: ".. buff .. " FOR ".. unit)
-    cast(buff)
+    cs.cast(buff)
   end
 
   TargetLastTarget()

@@ -110,12 +110,7 @@ local function seal_and_cast(buff, cast_list, custom_buff_check_list)
     return
   end
 
-  if type(cast_list) ~= "table" then
-    cast(cast_list)
-  else
-    DoOrder(unpack(cast_list))
-  end
-  return true
+  return cs.cast(cast_list)
 end
 
 local function target_has_debuff_seal_Light()
@@ -130,6 +125,7 @@ end
 
 -- CAST
 
+local cast_DivineShield = "Divine Shield"
 local cast_DivineProtection = "Divine Protection"
 local cast_BlessingProtection = "Blessing of Protection"
 
@@ -151,7 +147,7 @@ end
 
 local procast_on_seal_Light = function()
   if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-    cast(cast_Judgement)
+    cs.cast(cast_Judgement)
     return true
   end
 end
@@ -651,7 +647,7 @@ end
 function StateHolder:check_hp()
   local hp_level = cs.get_hp_level()
   if not has_debuff_protection() and hp_level <= 0.3 then
-    DoOrder(cast_DivineProtection, cast_BlessingProtection)
+    cs.cast(cast_DivineShield, cast_BlessingProtection)
     return nil
   end
   return true
@@ -685,7 +681,7 @@ main_frame:SetScript("OnEvent", function()
   state_holder:add_action("rush", function(state)
     if not cs.check_target(cs.t_close_30) then return end
 
-    cast(cast_HolyStrike)
+    cs.cast(cast_HolyStrike)
 
     if state.id ~= state_RUSH then
       if procast_on_seal_Light() then
@@ -713,13 +709,13 @@ main_frame:SetScript("OnEvent", function()
 
     --if state.id == state_RUSH then
       if cs.find_buff(seal_Righteousness) then
-        cast(cast_Judgement)
+        cs.cast(cast_Judgement)
         return
       end
     --end
 
     if seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness}) then
-      cast(cast_HolyStrike)
+      cs.cast(cast_HolyStrike)
     end
   end)
 
@@ -727,7 +723,7 @@ main_frame:SetScript("OnEvent", function()
     if not cs.check_target(cs.t_close) then return end
 
     if cs.find_buff(seal_Righteousness) then
-      cast(cast_Judgement)
+      cs.cast(cast_Judgement)
       return
     end
 
@@ -735,12 +731,12 @@ main_frame:SetScript("OnEvent", function()
       seal_and_cast(seal_Light, cast_Judgement)
       return
     elseif state.id == state_RUSH then
-      cast(cast_CrusaderStrike)
+      cs.cast(cast_CrusaderStrike)
       return
     end
 
     if seal_and_cast(seal_Light, cast_CrusaderStrike) then
-      cast(cast_HolyStrike)
+      cs.cast(cast_HolyStrike)
     end
   end)
 
@@ -755,7 +751,7 @@ end
 
 function cast_heal(heal_cast)
   state_holder:rebuff_heal()
-  cast(heal_cast)
+  cs.cast(heal_cast)
 end
 
 
