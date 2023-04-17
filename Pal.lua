@@ -638,7 +638,7 @@ end
 
 function StateHolder:check_hp()
   local hp_level = cs.get_hp_level()
-  if not has_debuff_protection() and hp_level <= 0.23 then
+  if not has_debuff_protection() and hp_level <= 0.2 then
     cs.cast(cast_DivineShield, cast_BlessingProtection)
     return nil
   end
