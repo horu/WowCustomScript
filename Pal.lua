@@ -476,8 +476,8 @@ function State:to_string()
   local aura_status = self.buff_list.aura:get_status()
   local bless_status = self.buff_list.bless:get_status()
 
-  local msg = self:get_config().color..string.sub(self:get_config().name, 1, 1).."   "..
-          to_short(self.buff_list.aura:to_string()).."(".. aura_status ..")   "..
+  local msg = self:get_config().color..string.sub(self:get_config().name, 1, 1).." "..
+          to_short(self.buff_list.aura:to_string()).."(".. aura_status ..") "..
           to_short(self.buff_list.bless:to_string()).."(".. bless_status ..")"
   return msg
 end
@@ -564,7 +564,7 @@ StateHolder.build = function()
   holder.states_buttons = {}
 
   holder.frame = cs.create_simple_text_frame(
-          "StateHolder.build", "BOTTOM",-280, 72, "", "CENTER")
+          "StateHolder.build", "BOTTOM",-280, 72, "", "CENTER", true)
 
   return holder
 end
@@ -652,7 +652,7 @@ end
 
 function StateHolder:check_hp()
   local hp_level = cs.get_hp_level()
-  if not has_debuff_protection() and hp_level <= 0.3 then
+  if not has_debuff_protection() and hp_level <= 0.23 then
     cs.cast(cast_DivineShield, cast_BlessingProtection)
     return nil
   end

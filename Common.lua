@@ -226,14 +226,21 @@ function cs.create_simple_frame(name)
   return f
 end
 
-function cs.create_simple_text_frame(name, to, x, y, text, text_to)
+function cs.create_simple_text_frame(name, to, x, y, text, text_to, mono)
   local f = cs.create_simple_frame(name)
   f:SetHeight(10)
   f:SetWidth(20)
   f:SetPoint(to, x, y)
 
+  local font = "Fonts\\FRIZQT__.TTF"
+  local font_size = 12
+  if mono then
+    font = "Interface\\AddOns\\CustomScripts\\fonts\\UbuntuMono-R.ttf"
+    font_size = 14
+  end
+
   f.cs_text = f:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
-  f.cs_text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+  f.cs_text:SetFont(font, font_size, "OUTLINE")
   f.cs_text:SetPoint(text_to or "BOTTOMLEFT", 0, 0)
   f.cs_text:SetJustifyH("LEFT")
   f.cs_text:SetText(text)
