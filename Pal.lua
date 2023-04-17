@@ -115,6 +115,7 @@ local function seal_and_cast(buff, cast_list, custom_buff_check_list)
   else
     DoOrder(unpack(cast_list))
   end
+  return true
 end
 
 local function target_has_debuff_seal_Light()
@@ -505,12 +506,14 @@ function State:get_aura()
 end
 
 function State:get_bless()
-  local bless = bless_Wisdom -- mana regen if not in combat
+  local bless = nil
 
-  if cs.check_target(cs.t_attackable) and cs.check_target(cs.t_close) or
-          cs.in_combat() or cs.compare_time(5, cs.get_combat_info().ts_leave) -- 5 sec after combat
+  if not cs.check_target(cs.t_attackable) and
+          not cs.in_combat() and
+          not cs.in_aggro() and
+          not cs.compare_time(3, cs.get_combat_info().ts_leave) -- 3 sec after combat
   then
-    bless = nil
+    bless = bless_Wisdom -- mana regen if not in combat
   end
 
   return bless
@@ -708,14 +711,16 @@ main_frame:SetScript("OnEvent", function()
       return
     end
 
-    if state.id == state_RUSH then
+    --if state.id == state_RUSH then
       if cs.find_buff(seal_Righteousness) then
         cast(cast_Judgement)
         return
       end
-    end
+    --end
 
-    seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness})
+    if seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness}) then
+      cast(cast_HolyStrike)
+    end
   end)
 
   state_holder:add_action("def", function(state)
@@ -729,9 +734,14 @@ main_frame:SetScript("OnEvent", function()
     if not target_has_debuff_seal_Light() then
       seal_and_cast(seal_Light, cast_Judgement)
       return
+    elseif state.id == state_RUSH then
+      cast(cast_CrusaderStrike)
+      return
     end
 
-    seal_and_cast(seal_Light, cast_CrusaderStrike)
+    if seal_and_cast(seal_Light, cast_CrusaderStrike) then
+      cast(cast_HolyStrike)
+    end
   end)
 
   state_holder:add_action( "null", function(state)
