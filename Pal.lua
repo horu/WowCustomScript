@@ -152,6 +152,12 @@ local procast_on_seal_Light = function()
   end
 end
 
+local procast_on_seal_Righteousness = function()
+  if cs.find_buff(seal_Righteousness) then
+    cs.cast(cast_Judgement)
+    return true
+  end
+end
 
 -- ID
 local state_RUSH = "RUSH"
@@ -558,7 +564,7 @@ StateHolder.build = function()
   holder.states_buttons = {}
 
   holder.frame = cs.create_simple_text_frame(
-          "StateHolder.build", "BOTTOM",-290, 72, "", "CENTER")
+          "StateHolder.build", "BOTTOM",-280, 72, "", "CENTER")
 
   return holder
 end
@@ -692,14 +698,6 @@ main_frame:SetScript("OnEvent", function()
     seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
   end)
 
-  state_holder:add_action("mid", function(state)
-    if procast_on_seal_Light() then
-      return
-    end
-
-    seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
-  end)
-
   state_holder:add_action("fast", function(state)
     if not cs.check_target(cs.t_close) then return end
 
@@ -708,22 +706,21 @@ main_frame:SetScript("OnEvent", function()
     end
 
     --if state.id == state_RUSH then
-      if cs.find_buff(seal_Righteousness) then
-        cs.cast(cast_Judgement)
-        return
-      end
+    if procast_on_seal_Righteousness() then
+      return
+    end
     --end
 
-    if seal_and_cast(seal_Crusader, cast_CrusaderStrike, {seal_Crusader, seal_Righteousness}) then
+    if not buff_seal(seal_Crusader, {seal_Crusader, seal_Righteousness}) then
       cs.cast(cast_HolyStrike)
+      cs.cast(cast_CrusaderStrike)
     end
   end)
 
   state_holder:add_action("def", function(state)
     if not cs.check_target(cs.t_close) then return end
 
-    if cs.find_buff(seal_Righteousness) then
-      cs.cast(cast_Judgement)
+    if procast_on_seal_Righteousness() then
       return
     end
 
@@ -735,12 +732,21 @@ main_frame:SetScript("OnEvent", function()
       return
     end
 
-    if seal_and_cast(seal_Light, cast_CrusaderStrike) then
+    if not buff_seal(seal_Light) then
       cs.cast(cast_HolyStrike)
+      cs.cast(cast_CrusaderStrike)
     end
   end)
 
   state_holder:add_action( "null", function(state)
+  end)
+
+  state_holder:add_action("mid", function(state)
+    if procast_on_seal_Light() then
+      return
+    end
+
+    seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
   end)
 
 end)
