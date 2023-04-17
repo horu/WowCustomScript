@@ -712,8 +712,7 @@ main_frame:SetScript("OnEvent", function()
     --end
 
     if not buff_seal(seal_Crusader, {seal_Crusader, seal_Righteousness}) then
-      cs.cast(cast_HolyStrike)
-      cs.cast(cast_CrusaderStrike)
+      cs.cast(cast_HolyStrike, cast_CrusaderStrike)
     end
   end)
 
@@ -733,8 +732,7 @@ main_frame:SetScript("OnEvent", function()
     end
 
     if not buff_seal(seal_Light) then
-      cs.cast(cast_HolyStrike)
-      cs.cast(cast_CrusaderStrike)
+      cs.cast(cast_HolyStrike, cast_CrusaderStrike)
     end
   end)
 
