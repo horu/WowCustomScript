@@ -14,7 +14,7 @@ function cs.debug(msg, depth)
   local line_end = string.find(line, "in function")
   line = string.sub(line, 32, line_end-1)
   if type(msg) ~= "string" or msg == nil then
-    msg = cs.ToString(msg, depth)
+    msg = cs.ToString(msg, depth, 20, true)
   end
   print(line..msg)
 end
@@ -343,75 +343,116 @@ function cs.CombatChecker.build()
   combat_frame:RegisterEvent("PLAYER_LEAVE_COMBAT")
   combat_frame:RegisterEvent("PLAYER_ENTER_COMBAT")
   combat_frame:SetScript("OnEvent", function()
-    local checker = this.cs_checker
+    local combat = this.cs_checker.data.combat
 
     if event == "PLAYER_ENTER_COMBAT" then
-      checker.combat.ts_enter = GetTime()
-      checker.combat.ts_leave = nil
-      checker.combat.status = true
-      return
+      combat.ts_enter = GetTime()
+      combat.ts_leave = nil
+      combat.status = true
     end
 
     if event == "PLAYER_LEAVE_COMBAT" then
-      checker.combat.ts_leave = GetTime()
-      checker.combat.status = nil
-      return
+      combat.ts_leave = GetTime()
+      combat.status = false
     end
   end)
 
   ---@type cs.CombatChecker
   local checker = cs.CombatChecker:new()
-  checker.combat = {
-    ts_enter = GetTime(),
-  }
-  checker.aggro = {
+
+  local y = 95
+  local diff = 20
+  local x = 340
+
+  checker.data = {}
+  local data = checker.data
+
+  data.aggro = {
     name = "aggro",
+    color = "|cffff2020",
+    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x-2*diff, y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }
-  checker.affect = {
+  data.combat = {
+    name = "combat",
+    color = "|cffFF8000",
+    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x-diff, y, "0", "CENTER", false),
+    ts_enter = GetTime(),
+  }
+  data.affect = {
     name = "affect",
+    color = "|cffFFFF66",
+    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x, y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }
 
   combat_frame.cs_checker = checker
 
   cs.add_loop_event("st_combat_frame", 0.1, checker, checker._check_combat)
+  cs.add_loop_event("st_combat_frame_report", 1, checker, checker._report_status)
   return checker
 end
 
-function cs.CombatChecker:_handle(combat_data, status, time_gap)
+function cs.CombatChecker:_report_status()
   local ts = GetTime()
-  combat_data.status = status
-  if combat_data.status then
-    if combat_data.ts_leave and not cs.compare_time(time_gap, combat_data.ts_leave) then
-      combat_data.ts_enter = ts
+  for _, data in pairs(self.data) do
+    cs.debug(data)
+
+    if data.status then
+      local dur = math.floor(ts - data.ts_enter)
+      if dur >= 100 then
+        dur = math.floor(dur / 60).."m"
+      end
+
+      data.text.cs_text:SetText(data.color..dur)
+    else
+      data.text.cs_text:SetText("-")
     end
-    combat_data.ts_leave = nil
-    cs.debug(combat_data)
-  elseif not combat_data.ts_leave then
-    combat_data.ts_leave = ts
-    cs.debug(combat_data)
   end
-  return combat_data
+end
+
+function cs.CombatChecker:_handle(data, status, time_gap)
+  local ts = GetTime()
+  data.status = status
+  if data.status then
+    -- in fight
+    if data.ts_leave then
+      -- first tick after end of fight
+      if cs.compare_time(time_gap, data.ts_leave) then
+        -- end of tigh happend recently. extend previus session.
+      else
+        -- begin a new session
+        data.ts_enter = ts
+      end
+    end
+    data.ts_leave = nil
+  elseif not data.ts_leave then
+    -- out of fight
+    data.ts_leave = ts
+  end
+  return data
 end
 
 function cs.CombatChecker:_check_combat()
-  self.aggro = self:_handle(self.aggro, pfUI.api.UnitHasAggro("player") > 0, 3)
-  self.affect = self:_handle(self.affect, UnitAffectingCombat("player"), 0)
+  local data = self.data
+  data.aggro = self:_handle(data.aggro, pfUI.api.UnitHasAggro("player") > 0, 3)
+  data.affect = self:_handle(data.affect, UnitAffectingCombat("player") or false, 0)
 end
+
+
 
 local st_combat_checker = cs.CombatChecker.build()
 
 function cs.get_combat_info()
-  return st_combat_checker.combat
+  return st_combat_checker.data.combat
 end
 
 function cs.get_aggro_info()
-  return st_combat_checker.aggro
+  return st_combat_checker.data.aggro
 end
 
 function cs.get_affect_info()
-  return st_combat_checker.affect
+  return st_combat_checker.data.affect
 end
 
 -- aggro + combat
@@ -428,10 +469,6 @@ function cs.get_fight_info()
   info.ts_enter = math.min(combat.ts_enter or cs.max_number_32, aggro.ts_enter or cs.max_number_32)
   info.ts_leave = math.max(combat.ts_leave or 0, aggro.ts_leave or 0)
   return info
-end
-
-function cs.in_combat()
-  return PlayerFrame.inCombat
 end
 
 -- aggro+combat
