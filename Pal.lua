@@ -569,7 +569,7 @@ end
 
 function StateHolder:init()
   self:_change_state(get_state_holder_config().cur_state)
-  cs.Looper.add_event("StateHolder",0.2, self, self._check_loop)
+  cs.add_loop_event("StateHolder",0.2, self, self._check_loop)
 
   for i in pairs(self.states) do
     cs.ActionBarProxy.add_proxy(1, i, StateHolder._button_callback, self)

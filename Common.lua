@@ -20,6 +20,9 @@ function cs.debug(msg, depth)
 end
 
 
+
+
+-- common
 cs.error_disabler = {}
 function cs.error_disabler.off(self)
   self.error = UIErrorsFrame.AddMessage
@@ -31,6 +34,7 @@ function cs.error_disabler.on(self)
     UIErrorsFrame.AddMessage = self.error
   end
 end
+
 
 cs.is_table = function(value)
   return type(value) == "table"
@@ -52,8 +56,8 @@ cs.to_dict = function(list)
   return dict
 end
 
-function cs.fmod(v, d)
 
+function cs.fmod(v, d)
   while v >= d do
     v = v - d
   end
@@ -69,6 +73,7 @@ function cs.time_to_str(t)
   return string.format("%02d:%02d:%02d", h, m, s)
 end
 
+
 cs.get_time_diff = function(past, now)
   if not past then return end
 
@@ -82,6 +87,7 @@ cs.compare_time = function(limit, past, now)
 
   return diff <= limit
 end
+
 
 function cs.create_fix_table(size)
   local fix_table = { size = size, list = {} }
@@ -135,6 +141,7 @@ function cs.create_fix_table(size)
   return fix_table
 end
 
+
 cs.create_class = function(class_tab)
   local class = class_tab or {}
   function class:new(tab)
@@ -144,11 +151,16 @@ cs.create_class = function(class_tab)
   return class
 end
 
----@class cs.Looper
-cs.Looper = cs.create_class()
 
----@type cs.Looper
-local looper = cs.Looper:new({
+
+
+
+
+---@class Looper
+local Looper = cs.create_class()
+
+---@type Looper
+local looper = Looper:new({
   timer = nil,
   global_period = 0.1,
   list = {},
@@ -181,20 +193,7 @@ looper.delay_q = function(a1,a2,a3,a4,a5,a6,a7,a8,a9)
   looper.timer:Show() -- start the OnUpdate
 end
 
-function cs.Looper.add_event(name, period, obj, func)
-  local event = {}
-  event.func = func
-  event.obj = obj
-  event.period = period
-  event.cur_period = 0
-  looper.list[name] = event
-
-  if not looper.timer then
-    looper.delay_q(looper.main_loop, looper)
-  end
-end
-
-function cs.Looper:iterate_event(event)
+function Looper:iterate_event(event)
   event.cur_period = event.cur_period - self.global_period
   if event.cur_period <= 0 then
     event.func(event.obj)
@@ -203,7 +202,7 @@ function cs.Looper:iterate_event(event)
   return event.period == 0
 end
 
-function cs.Looper:main_loop()
+function Looper:main_loop()
   local count = 0
   for name, event in pairs(self.list) do
     local break_event = self:iterate_event(event)
@@ -216,6 +215,22 @@ function cs.Looper:main_loop()
     looper.delay_q(self.main_loop, self)
   end
 end
+
+cs.add_loop_event = function(name, period, obj, func)
+  local event = {}
+  event.func = func
+  event.obj = obj
+  event.period = period
+  event.cur_period = 0
+  looper.list[name] = event
+
+  if not looper.timer then
+    looper.delay_q(looper.main_loop, looper)
+  end
+end
+
+
+
 
 
 
@@ -267,6 +282,7 @@ function cs.ActionBarProxy.add_proxy(bar, button, callback, obj)
     this.cs_native_script()
   end)
 end
+
 
 
 
@@ -324,7 +340,6 @@ function cs.is_in_party()
   return GetNumPartyMembers() ~= 0
 end
 
--- auto_attack
 function cs.auto_attack()
   if not cs.check_target(cs.t_exists) then
     TargetNearestEnemy()
@@ -346,25 +361,14 @@ function cs.auto_attack()
   end
 end
 
-local combat_frame = cs.create_simple_frame()
-combat_frame:RegisterEvent("PLAYER_LEAVE_COMBAT")
-combat_frame:RegisterEvent("PLAYER_ENTER_COMBAT")
-combat_frame:SetScript("OnEvent", function()
-  if event == "PLAYER_ENTER_COMBAT" then
-    this.ts_enter = GetTime()
-    this.ts_leave = nil
-    return
-  end
-
-  if event == "PLAYER_LEAVE_COMBAT" then
-    this.ts_leave = GetTime()
-    return
-  end
-end)
-
+local st_combat_frame
 function cs.get_combat_info()
-  return { status = cs.in_combat(), ts_enter = combat_frame.ts_enter, ts_leave = combat_frame.ts_leave}
+  return { status = cs.in_combat(), ts_enter = st_combat_frame.ts_enter, ts_leave = st_combat_frame.ts_leave}
 end
+
+
+
+
 
 
 -- slot
@@ -422,6 +426,9 @@ end
 
 
 
+
+-- cas
+
 cs.cast = function(a1,a2,a3,a4,a5,a6,a7)
   local cast_list
   if type(a1) == "table" then
@@ -438,8 +445,6 @@ cs.cast = function(a1,a2,a3,a4,a5,a6,a7)
   return true
 end
 
-
--- buffs
 function cs.find_buff(check_list, unit)
   for i, check in pairs(cs.to_table(check_list)) do
     if FindBuff(check, unit) then
@@ -509,11 +514,38 @@ function cs.has_debuffs(unit, debuff_str)
 end
 
 
+cs.spell_base_Shadow = "Shadow"
+cs.spell_base_Frost = "Frost"
+cs.spell_base_Fire = "Fire"
+
+cs.get_spell_base = function(spell_icon)
+  if string.find(spell_icon, cs.spell_base_Shadow) then
+    return cs.spell_base_Shadow
+  elseif string.find(spell_icon, cs.spell_base_Frost) then
+    return cs.spell_base_Frost
+  elseif string.find(spell_icon, cs.spell_base_Fire) then
+    return cs.spell_base_Fire
+  end
+end
+
+cs.get_cast_info = function(unit)
+  local cast_db = pfUI.api.libcast.db
+
+  for name, data in pairs(cast_db) do
+    if UnitName(unit) == name and data.icon then
+      return { data = data, spell_base = cs.get_spell_base(data.icon) }
+    end
+  end
+end
+
+
 
 
 
 
 cs.Dps = cs.create_class()
+
+local st_dps
 
 cs.Dps.build = function()
   local dps = cs.Dps:new()
@@ -589,52 +621,12 @@ cs.Dps.build = function()
   return dps
 end
 
-local dps = cs.Dps.build()
 
 
 
 
 
-
-
-cs.spell_base_Shadow = "Shadow"
-cs.spell_base_Frost = "Frost"
-cs.spell_base_Fire = "Fire"
-
-cs.get_spell_base = function(spell_icon)
-  if string.find(spell_icon, cs.spell_base_Shadow) then
-    return cs.spell_base_Shadow
-  elseif string.find(spell_icon, cs.spell_base_Frost) then
-    return cs.spell_base_Frost
-  elseif string.find(spell_icon, cs.spell_base_Fire) then
-    return cs.spell_base_Fire
-  end
-end
-
-cs.get_cast_info = function(unit)
-  local cast_db = pfUI.api.libcast.db
-
-  for name, data in pairs(cast_db) do
-    if UnitName(unit) == name and data.icon then
-      return { data = data, spell_base = cs.get_spell_base(data.icon) }
-    end
-  end
-end
-
-
-
-
---- check
-local pvp = nil
-local mana = true
-
---PVP
-if not UnitIsPVP("player") and pvp then
-  TogglePVP()
-  print("ENABLE PVP")
-end
-
---COMMON
+-- mana check
 local function create_calc(start_value)
   local calc = { value = start_value, ts = GetTime() }
   function calc.get_avg_diff(self, value)
@@ -648,44 +640,6 @@ local function create_calc(start_value)
   end
   return calc
 end
-
--- RUNNER
-SM_single_runners = SM_single_runners or {}
-local function create_single_runner(name, period_s, obj, fun)
-  if not name then
-    return
-  end
-
-  local old_runner = SM_single_runners[name]
-  if old_runner then
-    old_runner.run_loop = nil
-  end
-
-  local runner = {
-    period = math.floor(period_s * 5),
-    count_loop = math.floor(period_s * 5),
-    run_loop = true,
-    obj = obj,
-    fun = fun,
-  }
-  function runner.loop(self)
-    if not self.run_loop then
-      return
-    end
-
-    self.count_loop = self.count_loop - 1
-    if self.count_loop <= 0 then
-      self.fun(self.obj)
-      self.count_loop = self.period
-    end
-
-    pfUI.api.QueueFunction(self.loop, self)
-  end
-  SM_single_runners[name] = runner
-  pfUI.api.QueueFunction(runner.loop, runner)
-end
-
---MANA
 
 local function create_mana_checker(period, size)
   local mana_checker = {
@@ -703,23 +657,28 @@ local function limit_value(v, limit, m_limit)
   return v
 end
 
-local mana_checker = create_mana_checker(1, 300)
+local st_mana_checker = create_mana_checker(1, 300)
 local function get_mana_regen()
   local ts = GetTime()
-  if ts - mana_checker.ts >= mana_checker.period then
+  if ts - st_mana_checker.ts >= st_mana_checker.period then
     local mana = UnitMana("player")
-    local mana_reg = mana_checker.calc:get_avg_diff(mana)
-    mana_checker.list:add(mana_reg)
-    mana_checker.ts = ts
+    local mana_reg = st_mana_checker.calc:get_avg_diff(mana)
+    st_mana_checker.list:add(mana_reg)
+    st_mana_checker.ts = ts
   end
-  local v_0 = limit_value(mana_checker.list:get_avg_value(5), 99, -99)
-  local v_1 = limit_value(mana_checker.list:get_avg_value(60), 99, -99)
-  local v_5 = limit_value(mana_checker.list:get_avg_value(300), 99, -99)
+  local v_0 = limit_value(st_mana_checker.list:get_avg_value(5), 99, -99)
+  local v_1 = limit_value(st_mana_checker.list:get_avg_value(60), 99, -99)
+  local v_5 = limit_value(st_mana_checker.list:get_avg_value(300), 99, -99)
   return string.format("%d/%d/%d", v_0, v_1, v_5)
 end
 
 
 
+
+
+
+
+--speed check
 local function get_speed_mod()
   if UnitIsDeadOrGhost("player") then
     return 1.25
@@ -733,8 +692,6 @@ local function get_speed_mod()
   return 1
 end
 
-
---SPEED
 local speed_checker = {
   x=0, y=0, calc = create_calc(0), map = "" , k = 1,
   speed_table = cs.create_fix_table(15)
@@ -801,24 +758,6 @@ end
 function SM_get_panel()
   return speed_checker:get_speed().." "..get_mana_regen()
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -952,3 +891,40 @@ function main_d()
   end
 
 end
+
+
+
+
+
+
+
+
+
+local main = function()
+  st_combat_frame = cs.create_simple_frame()
+  st_combat_frame:RegisterEvent("PLAYER_LEAVE_COMBAT")
+  st_combat_frame:RegisterEvent("PLAYER_ENTER_COMBAT")
+  st_combat_frame:SetScript("OnEvent", function()
+    if event == "PLAYER_ENTER_COMBAT" then
+      this.ts_enter = GetTime()
+      this.ts_leave = nil
+      return
+    end
+
+    if event == "PLAYER_LEAVE_COMBAT" then
+      this.ts_leave = GetTime()
+      return
+    end
+  end)
+
+  st_dps = cs.Dps.build()
+
+  --PVP
+  local pvp = nil
+  if not UnitIsPVP("player") and pvp then
+    TogglePVP()
+    print("ENABLE PVP")
+  end
+end
+
+main()
