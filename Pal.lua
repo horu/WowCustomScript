@@ -25,7 +25,6 @@ local slot_OneHand = 14
 local slot_OffHand = 15
 
 
-
 local to_short_list = {}
 to_short_list[aura_Concentration] = "CA"
 to_short_list[aura_Devotion] = "DA"
@@ -41,6 +40,9 @@ to_short_list[bless_Salvation] = "BV"
 local to_short = function(cast)
   return to_short_list[cast]
 end
+
+
+
 
 
 -- party
@@ -82,14 +84,6 @@ end
 
 
 
-
-
-
-
-
-
-
-
 -- SEAL
 
 local seal_Righteousness = "Seal of Righteousness"
@@ -121,6 +115,9 @@ end
 local function has_debuff_protection()
   return cs.has_debuffs("player", "Spell_Holy_RemoveCurse")
 end
+
+
+
 
 
 -- CAST
@@ -159,6 +156,10 @@ local procast_on_seal_Righteousness = function()
   end
 end
 
+
+
+
+
 -- ID
 local state_RUSH = "RUSH"
 local state_NORM = "NORM"
@@ -178,7 +179,6 @@ local state_config = {
 
       use_slots = { slot_TwoHand },
     }
-
 
 ---@class states_config
 local default_states_config = {
@@ -281,7 +281,6 @@ local default_states_dynamic_config = {
 cs_states_config = default_states_config
 cs_states_dynamic_config = default_states_dynamic_config
 
-
 local get_state_holder_config = function()
   return cs_states_dynamic_config.state_holder
 end
@@ -293,6 +292,7 @@ local get_state_config = function(id, dynamic)
   end
   return cs_states_config.states[id]
 end
+
 
 
 
@@ -315,39 +315,30 @@ StateBuff.build = function(state_id, buff_name)
   buff.id = state_id
   buff.name = buff_name
 
-  buff:get_config(1).current = buff:get_config(1).current or buff:get_config().default
+  buff:_get_config(1).current = buff:_get_config(1).current or buff:_get_config().default
   buff.set = nil
 
   return buff
 end
 
--- const
-function StateBuff:get_config(dynamic)
-  return get_state_config(self.id, dynamic)[self.name]
-end
 
 -- const
 -- get current buffed buf ( not config )
 function StateBuff:get_buffed()
-  local _, current = cs.find_buff(self:get_config().list)
+  local _, current = cs.find_buff(self:_get_config().list)
   return current
 end
 
 -- const
 function StateBuff:to_string()
-  return self:get_config(1).current
-end
-
--- const
-function StateBuff:is_available(value)
-  return cs.to_dict(self:get_config().list)[value]
+  return self:_get_config(1).current
 end
 
 -- const
 function StateBuff:get_status()
   local buffed = self:get_buffed()
-  local config = self:get_config(1).current
-  local default = self:get_config().default
+  local config = self:_get_config(1).current
+  local default = self:_get_config().default
   local set = self.set
 
   if buffed == default then
@@ -362,11 +353,12 @@ function StateBuff:get_status()
   return status_NONE
 end
 
+
 -- set temporary buff and dont save it to config
 function StateBuff:tmp_rebuff(value)
   self.set = value
-  if not self.set or not self:is_available(self.set) then
-    self.set = self:get_config(1).current
+  if not self.set or not self:_is_available(self.set) then
+    self.set = self:_get_config(1).current
   end
 
   cs.rebuff(self.set)
@@ -376,13 +368,24 @@ end
 
 -- set buff and save it to config
 function StateBuff:reset(value)
-  self:tmp_rebuff(value or self:get_config().default)
-  self:get_config(1).current = self.set
+  self:tmp_rebuff(value or self:_get_config().default)
+  self:_get_config(1).current = self.set
 end
 
 function StateBuff:save_buffed_to_config()
   local current = self:get_buffed()
   self:reset(current)
+end
+
+
+-- const
+function StateBuff:_get_config(dynamic)
+  return get_state_config(self.id, dynamic)[self.name]
+end
+
+-- const
+function StateBuff:_is_available(value)
+  return cs.to_dict(self:_get_config().list)[value]
 end
 
 
@@ -405,7 +408,7 @@ State.build = function(id)
     bless = StateBuff.build(id, "bless"),
   }
 
-  state.slot_to_use = state:get_config().use_slots and cs.MultiSlot.build(state:get_config().use_slots)
+  state.slot_to_use = state:_get_config().use_slots and cs.MultiSlot.build(state:_get_config().use_slots)
 
   state.enemy_spell_base = { base = nil, ts = 0 }
   state.enemy_spell_base.is_valid = function(self)
@@ -415,14 +418,10 @@ State.build = function(id)
   return state
 end
 
--- const
-function State:get_config(dynamic)
-  return get_state_config(self.id, dynamic)
-end
 
 -- const
 function State:get_name()
-  return self:get_config().color..self:get_config().name
+  return self:_get_config().color..self:_get_config().name
 end
 
 --const
@@ -430,14 +429,49 @@ function State:to_string()
   local aura_status = self.buff_list.aura:get_status()
   local bless_status = self.buff_list.bless:get_status()
 
-  local msg = self:get_config().color..string.sub(self:get_config().name, 1, 1).." "..
+  local msg = self:_get_config().color..string.sub(self:_get_config().name, 1, 1).." "..
           to_short(self.buff_list.aura:to_string()).."(".. aura_status ..") "..
           to_short(self.buff_list.bless:to_string()).."(".. bless_status ..")"
   return msg
 end
 
+
+function State:init()
+  self:recheck()
+end
+
+-- save current custom buffs
+function State:save_buffs()
+  self:_every_buff(StateBuff.save_buffed_to_config)
+end
+
+function State:reset_buffs()
+  self:_every_buff(StateBuff.reset)
+end
+
+function State:recheck()
+  self:_reuse_slot()
+  self:_standard_rebuff_attack()
+end
+
+-- reacion for enenmy cast to change resist aura
+function State:on_cast_detected(spell_base)
+  if not spell_base or self.enemy_spell_base:is_valid() then
+    return
+  end
+
+  self.enemy_spell_base.base = spell_base
+  self.enemy_spell_base.ts = GetTime()
+end
+
+
 -- const
-function State:get_aura()
+function State:_get_config(dynamic)
+  return get_state_config(self.id, dynamic)
+end
+
+-- const
+function State:_get_aura()
   local aura
   -- buff spell defended auras if enemy casts one
   local spell_base = self.enemy_spell_base.base
@@ -454,7 +488,7 @@ function State:get_aura()
 end
 
 -- const
-function State:get_bless()
+function State:_get_bless()
   local bless = nil
 
   if not cs.check_target(cs.t_attackable) and
@@ -468,54 +502,29 @@ function State:get_bless()
   return bless
 end
 
-function State:every_buff(fun, a1, a2, a3)
-  for _, buff in pairs(self.buff_list) do
-    fun(buff, a1, a2, a3)
-  end
-end
 
--- save current custom buffs
-function State:save_buffs()
-  self:every_buff(StateBuff.save_buffed_to_config)
-end
-
-function State:init()
-  self:recheck()
-end
-
-function State:reset_buffs()
-  self:every_buff(StateBuff.reset)
-end
-
-function State:reuse_slot()
-  if self.slot_to_use then
-    self.slot_to_use:try_use()
-  end
-end
-
-function State:recheck()
-  self:reuse_slot()
-  self:standard_rebuff_attack()
-end
-
-function State:standard_rebuff_attack()
-  self.buff_list.aura:tmp_rebuff(self:get_aura())
-  self.buff_list.bless:tmp_rebuff(self:get_bless())
+function State:_standard_rebuff_attack()
+  self.buff_list.aura:tmp_rebuff(self:_get_aura())
+  self.buff_list.bless:tmp_rebuff(self:_get_bless())
   if cs.is_in_party() and not cs.in_combat() then
     cs.rebuff(buff_Righteous)
     buff_party()
   end
 end
 
--- reacion for enenmy cast to change resist aura
-function State:on_cast_detected(spell_base)
-  if not spell_base or self.enemy_spell_base:is_valid() then
-    return
+function State:_reuse_slot()
+  if self.slot_to_use then
+    self.slot_to_use:try_use()
   end
-
-  self.enemy_spell_base.base = spell_base
-  self.enemy_spell_base.ts = GetTime()
 end
+
+function State:_every_buff(fun, a1, a2, a3)
+  for _, buff in pairs(self.buff_list) do
+    fun(buff, a1, a2, a3)
+  end
+end
+
+
 
 
 
@@ -551,14 +560,47 @@ StateHolder.build = function()
   return holder
 end
 
+
+-- before init
+function StateHolder:add_state(id)
+  local config = get_state_config(id)
+  self.states[config.hotkey] = State.build(id)
+end
+
 function StateHolder:init()
-  self:change_state(get_state_holder_config().cur_state)
-  cs.Looper.add_event("StateHolder",0.2, self, self.check_loop)
+  self:_change_state(get_state_holder_config().cur_state)
+  cs.Looper.add_event("StateHolder",0.2, self, self._check_loop)
 
   for i in pairs(self.states) do
-    cs.ActionBarProxy.add_proxy(1, i, StateHolder.button_callback, self)
+    cs.ActionBarProxy.add_proxy(1, i, StateHolder._button_callback, self)
   end
 end
+
+-- const
+function StateHolder:add_action(action_name, action)
+  self.actions[action_name] = action
+end
+
+function StateHolder:attack_action(action_name)
+  cs.error_disabler:off()
+
+  cs.auto_attack()
+
+  self.cur_state:recheck()
+  self:_do_action(action_name)
+
+  cs.error_disabler:on()
+
+end
+
+function StateHolder:rebuff_heal()
+  if cs.in_aggro() or cs.in_combat() then
+    if self:_check_hp() then
+      cs.rebuff(aura_Concentration)
+    end
+  end
+end
+
 
 local handler_None = 0
 local handler_Change = 1
@@ -566,12 +608,12 @@ local handler_Save = 2
 local handler_Reset = 3
 local handler_FullReset = 4
 
-function StateHolder:button_callback(bar, button)
+function StateHolder:_button_callback(bar, button)
   --cs.debug({bar, button, keystate})
   self.states_buttons[button] = {keystate = keystate, ts = GetTime(), handler = handler_None}
 end
 
-function StateHolder:check_loop()
+function StateHolder:_check_loop()
   local ts = GetTime()
 
   for but, keyinfo in pairs(self.states_buttons) do
@@ -596,7 +638,7 @@ function StateHolder:check_loop()
       elseif ts - keyinfo.ts >= 0.55 and keyinfo.handler < handler_Change then
         keyinfo.handler = handler_Change
         -- change
-        self:change_state(but)
+        self:_change_state(but)
       end
 
     elseif keyinfo.keystate == cs.ActionBarProxy.key_state_up then
@@ -614,7 +656,7 @@ function StateHolder:check_loop()
   end
 end
 
-function StateHolder:change_state(state_number)
+function StateHolder:_change_state(state_number)
   local state = self.states[state_number]
 
   if state ~= self.cur_state then
@@ -626,33 +668,14 @@ function StateHolder:change_state(state_number)
   end
 end
 
-function StateHolder:attack_action(action_name)
-  cs.error_disabler:off()
-
-  cs.auto_attack()
-
-  self.cur_state:recheck()
-  self:do_action(action_name)
-
-  cs.error_disabler:on()
-
-end
-
-function StateHolder:add_state(id)
-  local config = get_state_config(id)
-  self.states[config.hotkey] = State.build(id)
-end
-
-function StateHolder:add_action(action_name, action)
-  self.actions[action_name] = action
-end
-
-function StateHolder:do_action(name)
+-- const
+function StateHolder:_do_action(name)
   local action = self.actions[name]
   action(self.cur_state)
 end
 
-function StateHolder:check_hp()
+-- const
+function StateHolder:_check_hp()
   local hp_level = cs.get_hp_level()
   if not has_debuff_protection() and hp_level <= 0.2 then
     cs.cast(cast_DivineShield, cast_BlessingProtection)
@@ -661,22 +684,16 @@ function StateHolder:check_hp()
   return true
 end
 
-function StateHolder:rebuff_heal()
-  if cs.in_aggro() or cs.in_combat() then
-    if self:check_hp() then
-      cs.rebuff(aura_Concentration)
-    end
-  end
-end
 
-local state_holder = StateHolder.build()
+---@type StateHolder
+local state_holder
 
-local main_frame = cs.create_simple_frame("pal_main_frame")
-main_frame:RegisterEvent("VARIABLES_LOADED")
-main_frame:SetScript("OnEvent", function()
+local on_load = function()
   if event ~= "VARIABLES_LOADED" then
     return
   end
+
+  state_holder = StateHolder.build()
 
   local states = cs_states_config.states
   for id in pairs(states) do
@@ -749,8 +766,18 @@ main_frame:SetScript("OnEvent", function()
     seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
   end)
 
-end)
+end
 
+local main = function()
+  local main_frame = cs.create_simple_frame("pal_main_frame")
+  main_frame:RegisterEvent("VARIABLES_LOADED")
+  main_frame:SetScript("OnEvent", on_load)
+end
+
+main()
+
+
+-- PUBLIC
 function attack_action(name)
   state_holder:attack_action(name)
 end
