@@ -13,7 +13,7 @@ function cs.debug(msg, depth)
   local line = debugstack(2, 1, 1)
   local line_end = string.find(line, "in function")
   line = string.sub(line, 32, line_end-1)
-  if type(msg) == "table" or msg == nil then
+  if type(msg) ~= "string" or msg == nil then
     msg = cs.ToString(msg, depth)
   end
   print(line..msg)
@@ -77,6 +77,7 @@ function cs.fmod(v, d)
   return v
 end
 
+cs.max_number_32 = math.pow(2, 32)
 
 function cs.time_to_str(t)
   if not t then return end
@@ -331,21 +332,146 @@ end
 
 
 
--- common
-function cs.get_hp_level() -- 0-1
-  return UnitHealth("player")/UnitHealthMax("player")
+
+
+---@class cs.CombatChecker
+cs.CombatChecker = cs.create_class()
+
+function cs.CombatChecker.build()
+  local combat_frame = cs.create_simple_frame()
+
+  combat_frame:RegisterEvent("PLAYER_LEAVE_COMBAT")
+  combat_frame:RegisterEvent("PLAYER_ENTER_COMBAT")
+  combat_frame:SetScript("OnEvent", function()
+    local checker = this.cs_checker
+
+    if event == "PLAYER_ENTER_COMBAT" then
+      checker.combat.ts_enter = GetTime()
+      checker.combat.ts_leave = nil
+      checker.combat.status = true
+      return
+    end
+
+    if event == "PLAYER_LEAVE_COMBAT" then
+      checker.combat.ts_leave = GetTime()
+      checker.combat.status = nil
+      return
+    end
+  end)
+
+  ---@type cs.CombatChecker
+  local checker = cs.CombatChecker:new()
+  checker.combat = {
+    ts_enter = GetTime(),
+  }
+  checker.aggro = {
+    name = "aggro",
+    ts_enter = GetTime(),
+  }
+  checker.affect = {
+    name = "affect",
+    ts_enter = GetTime(),
+  }
+
+  combat_frame.cs_checker = checker
+
+  cs.add_loop_event("st_combat_frame", 0.1, checker, checker._check_combat)
+  return checker
+end
+
+function cs.CombatChecker:_handle(combat_data, status, time_gap)
+  local ts = GetTime()
+  combat_data.status = status
+  if combat_data.status then
+    if combat_data.ts_leave and not cs.compare_time(time_gap, combat_data.ts_leave) then
+      combat_data.ts_enter = ts
+    end
+    combat_data.ts_leave = nil
+    cs.debug(combat_data)
+  elseif not combat_data.ts_leave then
+    combat_data.ts_leave = ts
+    cs.debug(combat_data)
+  end
+  return combat_data
+end
+
+function cs.CombatChecker:_check_combat()
+  self.aggro = self:_handle(self.aggro, pfUI.api.UnitHasAggro("player") > 0, 3)
+  self.affect = self:_handle(self.affect, UnitAffectingCombat("player"), 0)
+end
+
+local st_combat_checker = cs.CombatChecker.build()
+
+function cs.get_combat_info()
+  return st_combat_checker.combat
+end
+
+function cs.get_aggro_info()
+  return st_combat_checker.aggro
+end
+
+function cs.get_affect_info()
+  return st_combat_checker.affect
+end
+
+-- aggro + combat
+function cs.get_fight_info()
+  local combat = st_combat_checker.combat
+  local aggro = st_combat_checker.aggro
+  local info = {}
+  info.status = combat.status or aggro.status
+  if combat.ts_leave and combat.ts_leave < aggro.ts_enter  then
+    combat = {  }
+  elseif aggro.ts_leave and aggro.ts_leave < combat.ts_enter then
+    aggro = {  }
+  end
+  info.ts_enter = math.min(combat.ts_enter or cs.max_number_32, aggro.ts_enter or cs.max_number_32)
+  info.ts_leave = math.max(combat.ts_leave or 0, aggro.ts_leave or 0)
+  return info
 end
 
 function cs.in_combat()
   return PlayerFrame.inCombat
 end
 
-function cs.in_aggro()
-  return pfUI.api.UnitHasAggro("player") > 0
+-- aggro+combat
+function cs.in_fight(second_after)
+  local info = cs.get_fight_info()
+  if second_after and info.ts_leave and cs.compare_time(second_after, info.ts_leave) then
+    return true
+  end
+  return info.status
 end
 
-function cs.is_free()
-  return not cs.in_combat() and not cs.in_aggro()
+cs.c_normal = cs.get_combat_info
+cs.c_aggro = cs.get_aggro_info
+cs.c_affect = cs.get_affect_info
+
+function cs.check_combat(m0or, m1or, m2or, m3or)
+  local to_check
+  local time_after
+  if type(m0or) == "number" then
+    to_check = { m1or, m2or, m3or }
+    time_after = m0or
+  else
+    to_check = { m0or, m1or, m2or, m3or }
+    time_after = 0
+  end
+
+
+  for _, check in pairs(to_check) do
+    local info = check()
+    if info.status or cs.compare_time(time_after, info.ts_leave) then
+      return true
+    end
+  end
+end
+
+
+
+
+function cs.get_hp_level() -- 0-1
+  return UnitHealth("player")/UnitHealthMax("player")
 end
 
 function cs.is_in_party()
@@ -356,7 +482,7 @@ function cs.auto_attack()
   if not cs.check_target(cs.t_exists) then
     TargetNearestEnemy()
   end
-  if not cs.in_combat() then
+  if not cs.check_combat(cs.c_normal) then
 
     if cs.check_target(cs.t_enemy) and cs.check_target(cs.t_player) then
       -- prevent random pvp attack
@@ -372,14 +498,6 @@ function cs.auto_attack()
     AssistUnit("target")
   end
 end
-
-local st_combat_frame
-function cs.get_combat_info()
-  return { status = cs.in_combat(), ts_enter = st_combat_frame.ts_enter, ts_leave = st_combat_frame.ts_leave}
-end
-
-
-
 
 
 
@@ -579,11 +697,24 @@ function cs.Dps.Session.build()
   local session = cs.Dps.Session:new()
   session.damage_sum = 0
   session.ts_sum = 0
+  session.first_ts = cs.max_number_32
+  session.last_ts = 0
   return session
 end
 
+-- const
 function cs.Dps.Session:get_avg()
+  if self.ts_sum <= 0 then
+    return 0
+  end
   return self.damage_sum / self.ts_sum
+end
+
+function cs.Dps.Session:update(damage, last_ts, cur_ts)
+  self.damage_sum = self.damage_sum + damage
+  self.ts_sum = self.ts_sum + cur_ts - last_ts
+  self.first_ts = math.min(self.first_ts, last_ts)
+  self.last_ts = math.max(self.last_ts, cur_ts)
 end
 
 
@@ -607,8 +738,7 @@ function cs.Dps.Data:get_all(after_ts)
     for _, dam_lvl in pairs(dam_name) do
       for start_ts, dam_ts in pairs(dam_lvl) do
         if not after_ts or start_ts >= after_ts then
-          session.ts_sum = session.ts_sum + dam_ts.ts_sum
-          session.damage_sum = session.damage_sum + dam_ts.damage_sum
+          session:update(dam_ts.damage_sum, start_ts, start_ts + dam_ts.ts_sum)
         end
       end
     end
@@ -657,35 +787,44 @@ function cs.Dps:init()
 
     local damage = arg4
 
+    ---@type cs.Dps.Session
     local cur_session = data.units[data.cur_info.name][data.cur_info.lvl][data.cur_info.ts]
 
-    cur_session.damage_sum = cur_session.damage_sum + damage
-    cur_session.ts_sum = cur_session.ts_sum + ts - data.last_ts
+    cur_session:update(damage, data.last_ts, ts)
 
     data.last_ts = ts
+    this.cs_dps:_update_output()
   end)
 
   self.frame = f
+  f.cs_dps = self
 
-  cs.add_loop_event("cs.Dps", 0.2, self, cs.Dps._loop)
+  --cs.add_loop_event("cs.Dps", 0.1, self, cs.Dps._loop)
 end
 
-function cs.Dps:_loop()
-  if not cs.in_combat() then
-    return
-  end
+function cs.Dps:_update_output()
   ---@type cs.Dps.Data
   local data = self.frame.cs_data
 
-  local combat_enter_ts = cs.get_combat_info().ts_enter
+  local combat_enter_ts = cs.get_affect_info().ts_enter
   ---@type cs.Dps.Session
   local cur_dps = data:get_all(combat_enter_ts)
+  --if cur_dps.ts_sum > 0 then
+  --  cur_dps.ts_sum = cur_dps.ts_sum + GetTime() - cur_dps.last_ts
+  --end
   ---@type cs.Dps.Session
   local all_dps = data:get_all()
 
   self.frame.cs_text:SetText(string.format(
-          "DPS: % 3.1f/% 3.1f (% 3.1f)", cur_dps:get_avg(), cur_dps.ts_sum, all_dps:get_avg()))
+          "DPS:% 3.1f/% 3.1f (% 3.1f)", cur_dps:get_avg(), cur_dps.ts_sum, all_dps:get_avg()))
 end
+
+--function cs.Dps:_loop()
+--  if cs.is_free() then
+--    return
+--  end
+--  self:_update_output()
+--end
 
 
 
@@ -967,22 +1106,6 @@ end
 
 
 local main = function()
-  st_combat_frame = cs.create_simple_frame()
-  st_combat_frame:RegisterEvent("PLAYER_LEAVE_COMBAT")
-  st_combat_frame:RegisterEvent("PLAYER_ENTER_COMBAT")
-  st_combat_frame:SetScript("OnEvent", function()
-    if event == "PLAYER_ENTER_COMBAT" then
-      this.ts_enter = GetTime()
-      this.ts_leave = nil
-      return
-    end
-
-    if event == "PLAYER_LEAVE_COMBAT" then
-      this.ts_leave = GetTime()
-      return
-    end
-  end)
-
   st_dps = cs.Dps.build()
   st_dps:init()
 

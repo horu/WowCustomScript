@@ -500,11 +500,7 @@ end
 function State:_get_bless()
   local bless = nil
 
-  if not cs.check_target(cs.t_attackable) and
-          not cs.in_combat() and
-          not cs.in_aggro() and
-          not cs.compare_time(3, cs.get_combat_info().ts_leave) -- 3 sec after combat
-  then
+  if not cs.check_target(cs.t_attackable) and not cs.check_combat(3, cs.c_affect) then -- 3 sec after combat
     bless = bless_Wisdom -- mana regen if not in combat
   end
 
@@ -515,11 +511,11 @@ end
 function State:_standard_rebuff_attack()
   self.buff_list.aura:tmp_rebuff(self:_get_aura())
   self.buff_list.bless:tmp_rebuff(self:_get_bless())
-  if cs.is_in_party() and not cs.in_combat() then
+  if cs.is_in_party() and not cs.check_combat(cs.c_affect) then
     cs.rebuff(buff_Righteous)
     buff_party()
   end
-  if cs.is_free() and cs.check_target(cs.t_fr_player) then
+  if not cs.check_combat(cs.c_normal, cs.c_aggro) and cs.check_target(cs.t_fr_player) then
     rebuff_unit("target")
   end
 end
@@ -606,7 +602,7 @@ function StateHolder:attack_action(action_name)
 end
 
 function StateHolder:rebuff_heal()
-  if cs.in_aggro() or cs.in_combat() then
+  if cs.check_combat(1, cs.c_normal, cs.c_aggro) then
     if self:_check_hp() then
       cs.rebuff(aura_Concentration)
     end
