@@ -314,7 +314,6 @@ StateBuff.build = function(state_id, buff_name)
 
   buff.id = state_id
   buff.name = buff_name
-  buff.is_ready = nil
 
   buff:get_config(1).current = buff:get_config(1).current or buff:get_config().default
   buff.set = nil
@@ -322,73 +321,68 @@ StateBuff.build = function(state_id, buff_name)
   return buff
 end
 
+-- const
 function StateBuff:get_config(dynamic)
   return get_state_config(self.id, dynamic)[self.name]
 end
 
-function StateBuff:init()
-  self.is_ready = nil
+-- const
+-- get current buffed buf ( not config )
+function StateBuff:get_buffed()
+  local _, current = cs.find_buff(self:get_config().list)
+  return current
 end
 
-function StateBuff:reset()
-  self.is_ready = nil
-  self:get_config(1).current = self:get_config().default
-end
-
+-- const
 function StateBuff:to_string()
   return self:get_config(1).current
 end
 
+-- const
 function StateBuff:is_available(value)
   return cs.to_dict(self:get_config().list)[value]
 end
 
-function StateBuff:rebuff(value)
+-- const
+function StateBuff:get_status()
+  local buffed = self:get_buffed()
+  local config = self:get_config(1).current
+  local default = self:get_config().default
+  local set = self.set
+
+  if buffed == default then
+    return status_DEFAULT
+  end
+  if buffed == config then
+    return status_MODIFIED
+  end
+  if buffed == set then
+    return status_TEMP
+  end
+  return status_NONE
+end
+
+-- set temporary buff and dont save it to config
+function StateBuff:tmp_rebuff(value)
   self.set = value
   if not self.set or not self:is_available(self.set) then
     self.set = self:get_config(1).current
   end
 
-  if cs.rebuff(self.set) then
-    self.is_ready = nil
-  end
+  cs.rebuff(self.set)
+
+  return self.set == value
 end
 
-function StateBuff:on_buff_changed()
-  if not self.is_ready then
-    -- state is not initializated yet. Ignore new buffs.
-    cs.debug(self)
-    self.is_ready = cs.find_buff(self.set)
-    return
-  end
-
-  -- Set new custom buffs
-  local _, new = cs.find_buff(self:get_config().list)
-  if new and self.set ~= new then
-    self:get_config(1).current = new
-  end
+-- set buff and save it to config
+function StateBuff:reset(value)
+  self:tmp_rebuff(value or self:get_config().default)
+  self:get_config(1).current = self.set
 end
 
-function StateBuff:get_status()
-  local config = self:get_config(1).current
-  local default = self:get_config().default
-  local set = self.set
-
-  local is_default = config == default
-  local is_modified = config == set
-  local is_temp = config ~= set
-
-  local status = status_NONE
-  if self.is_ready then
-    if is_default and is_modified then
-      status = status_DEFAULT
-    elseif is_modified then
-      status = status_MODIFIED
-    else
-      status = status_TEMP
-    end
-  end
-  return status
+function StateBuff:save_buffed_to_config()
+  local current = self:get_buffed()
+  self:reset(current)
 end
 
 
@@ -421,43 +415,17 @@ State.build = function(id)
   return state
 end
 
+-- const
 function State:get_config(dynamic)
   return get_state_config(self.id, dynamic)
 end
 
+-- const
 function State:get_name()
   return self:get_config().color..self:get_config().name
 end
 
-function State:every_buff(fun, a1, a2, a3)
-  for _, buff in pairs(self.buff_list) do
-    fun(buff, a1, a2, a3)
-  end
-end
-
-function State:init()
-  self:every_buff(StateBuff.init)
-  self:recheck()
-  self:on_buff_changed()
-end
-
-function State:reset_buffs()
-  self:every_buff(StateBuff.reset)
-  self:recheck()
-  self:on_buff_changed()
-end
-
-function State:reuse_slot()
-  if self.slot_to_use then
-    self.slot_to_use:try_use()
-  end
-end
-
-function State:recheck()
-  self:reuse_slot()
-  self:standard_rebuff_attack()
-end
-
+--const
 function State:to_string()
   local aura_status = self.buff_list.aura:get_status()
   local bless_status = self.buff_list.bless:get_status()
@@ -468,15 +436,7 @@ function State:to_string()
   return msg
 end
 
-function State:standard_rebuff_attack()
-  self.buff_list.aura:rebuff(self:get_aura())
-  self.buff_list.bless:rebuff(self:get_bless())
-  if cs.is_in_party() and not cs.in_combat() then
-    cs.rebuff(buff_Righteous)
-    buff_party()
-  end
-end
-
+-- const
 function State:get_aura()
   local aura
   -- buff spell defended auras if enemy casts one
@@ -493,6 +453,7 @@ function State:get_aura()
   return aura
 end
 
+-- const
 function State:get_bless()
   local bless = nil
 
@@ -507,8 +468,43 @@ function State:get_bless()
   return bless
 end
 
-function State:on_buff_changed()
-  self:every_buff(StateBuff.on_buff_changed)
+function State:every_buff(fun, a1, a2, a3)
+  for _, buff in pairs(self.buff_list) do
+    fun(buff, a1, a2, a3)
+  end
+end
+
+-- save current custom buffs
+function State:save_buffs()
+  self:every_buff(StateBuff.save_buffed_to_config)
+end
+
+function State:init()
+  self:recheck()
+end
+
+function State:reset_buffs()
+  self:every_buff(StateBuff.reset)
+end
+
+function State:reuse_slot()
+  if self.slot_to_use then
+    self.slot_to_use:try_use()
+  end
+end
+
+function State:recheck()
+  self:reuse_slot()
+  self:standard_rebuff_attack()
+end
+
+function State:standard_rebuff_attack()
+  self.buff_list.aura:tmp_rebuff(self:get_aura())
+  self.buff_list.bless:tmp_rebuff(self:get_bless())
+  if cs.is_in_party() and not cs.in_combat() then
+    cs.rebuff(buff_Righteous)
+    buff_party()
+  end
 end
 
 -- reacion for enenmy cast to change resist aura
@@ -537,15 +533,15 @@ StateHolder.build = function()
 
   holder.actions = {}
 
-  local f = cs.create_simple_frame("StateHolder.build")
-  f:RegisterEvent("UNIT_AURA")
-  f:SetScript("OnEvent", function()
-    if this.cs_holder.cur_state then
-      this.cs_holder.cur_state:on_buff_changed()
-    end
-  end)
-
-  f.cs_holder = holder
+  --local f = cs.create_simple_frame("StateHolder.build")
+  --f:RegisterEvent("UNIT_AURA")
+  --f:SetScript("OnEvent", function()
+  --  if this.cs_holder.cur_state then
+  --    this.cs_holder.cur_state:on_buff_changed()
+  --  end
+  --end)
+  --
+  --f.cs_holder = holder
   holder.states_clicks = {}
   holder.states_buttons = {}
 
@@ -564,9 +560,15 @@ function StateHolder:init()
   end
 end
 
+local handler_None = 0
+local handler_Change = 1
+local handler_Save = 2
+local handler_Reset = 3
+local handler_FullReset = 4
+
 function StateHolder:button_callback(bar, button)
   --cs.debug({bar, button, keystate})
-  self.states_buttons[button] = {keystate = keystate, ts = GetTime()}
+  self.states_buttons[button] = {keystate = keystate, ts = GetTime(), handler = handler_None}
 end
 
 function StateHolder:check_loop()
@@ -575,15 +577,28 @@ function StateHolder:check_loop()
   for but, keyinfo in pairs(self.states_buttons) do
     if keyinfo.keystate == cs.ActionBarProxy.key_state_down then
       local state = self.states[but]
-      if ts - keyinfo.ts >= 5 then
+
+      if ts - keyinfo.ts >= 10 and keyinfo.handler < handler_FullReset then
+        keyinfo.handler = handler_FullReset
+        -- reset config
         cs_states_dynamic_config = default_states_dynamic_config
+        state:reset_buffs()
         print("RESET CONFIG!")
-      elseif ts - keyinfo.ts >= 3 then
+      elseif ts - keyinfo.ts >= 6 and keyinfo.handler < handler_Reset then
+        keyinfo.handler = handler_Reset
+        -- reset state
         state:reset_buffs()
         print("RESET STATE: "..self.cur_state:get_name())
-      elseif ts - keyinfo.ts >= 0.55 then
+      elseif ts - keyinfo.ts >= 3 and keyinfo.handler < handler_Save then
+        keyinfo.handler = handler_Save
+        self.cur_state:save_buffs()
+        print("SAVE STATE: "..self.cur_state:get_name())
+      elseif ts - keyinfo.ts >= 0.55 and keyinfo.handler < handler_Change then
+        keyinfo.handler = handler_Change
+        -- change
         self:change_state(but)
       end
+
     elseif keyinfo.keystate == cs.ActionBarProxy.key_state_up then
       self.states_buttons[but] = nil
     end
@@ -607,6 +622,7 @@ function StateHolder:change_state(state_number)
     self.cur_state:init()
     get_state_holder_config().cur_state = state_number
     print("NEW STATE: "..self.cur_state:get_name())
+    return true
   end
 end
 
