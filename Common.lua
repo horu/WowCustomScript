@@ -36,6 +36,19 @@ function cs.error_disabler.on(self)
 end
 
 
+
+---@class cs.Class
+cs.Class = {}
+
+cs.create_class = function(class_tab)
+  local class = class_tab or {}
+  function class:new(tab)
+    local obj = setmetatable(tab or {}, {__index = self})
+    return obj
+  end
+  return class
+end
+
 cs.is_table = function(value)
   return type(value) == "table"
 end
@@ -142,17 +155,6 @@ function cs.create_fix_table(size)
 end
 
 
-cs.create_class = function(class_tab)
-  local class = class_tab or {}
-  function class:new(tab)
-    local obj = setmetatable(tab or {}, {__index = self})
-    return obj
-  end
-  return class
-end
-
-
-
 
 
 
@@ -251,7 +253,7 @@ function cs.create_simple_text_frame(name, to, x, y, text, text_to, mono)
   local font_size = 12
   if mono then
     font = "Interface\\AddOns\\CustomScripts\\fonts\\UbuntuMono-R.ttf"
-    font_size = 14
+    font_size = 13
   end
 
   f.cs_text = f:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
@@ -383,8 +385,10 @@ end
 
 -- slot
 
+---@class cs.Slot
 cs.Slot = cs.create_class()
 
+---@return cs.Slot
 function cs.Slot.build(slot_n)
   return cs.Slot:new({slot_n = slot_n, last_ts = GetTime()})
 end
@@ -410,8 +414,10 @@ function cs.Slot:try_use()
   end
 end
 
+---@class cs.MultiSlot
 cs.MultiSlot = cs.Slot:new({last_ts = GetTime()})
 
+---@return cs.MultiSlot
 function cs.MultiSlot.build(slot_list_numbers)
   local slot_list = {}
   for _, slot in pairs(slot_list_numbers) do
@@ -552,31 +558,68 @@ end
 
 
 
+---@class cs.Dps
+cs.Dps = { new = function(self) return setmetatable({}, {__index = self}) end }
 
-cs.Dps = cs.create_class()
-
+---@type cs.Dps
 local st_dps
 
-cs.Dps.build = function()
+function cs.Dps.build()
+  ---@type cs.Dps
   local dps = cs.Dps:new()
-  local f = cs.create_simple_text_frame("nibsrsCSdps", "BOTTOM",40, 46, "DPS")
-  f.cs_data = { units = {}, cur_info = nil, last_ts = nil }
+  return dps
+end
 
-  f.cs_data.get_all = function(self, after_ts)
-    local ts_sum_all = 0
-    local damage_sum_all = 0
-    for _, dam_name in pairs(self.units) do
-      for _, dam_lvl in pairs(dam_name) do
-        for start_ts, dam_ts in pairs(dam_lvl) do
-          if not after_ts or start_ts >= after_ts then
-            ts_sum_all = ts_sum_all + dam_ts.ts_sum
-            damage_sum_all = damage_sum_all + dam_ts.damage_sum
-          end
+
+---@class cs.Dps.Session
+cs.Dps.Session = { new = function(self) return setmetatable({}, {__index = self}) end }
+
+function cs.Dps.Session.build()
+  ---@type cs.Dps.Session
+  local session = cs.Dps.Session:new()
+  session.damage_sum = 0
+  session.ts_sum = 0
+  return session
+end
+
+function cs.Dps.Session:get_avg()
+  return self.damage_sum / self.ts_sum
+end
+
+
+---@class cs.Dps.Data
+cs.Dps.Data = { new = function(self) return setmetatable({}, {__index = self}) end }
+
+function cs.Dps.Data.build()
+  ---@type cs.Dps.Data
+  local data = cs.Dps.Data:new()
+  data.units = {}
+  data.cur_info = nil
+  data.last_ts = nil
+
+  return data
+end
+
+function cs.Dps.Data:get_all(after_ts)
+  ---@type cs.Dps.Session
+  local session = cs.Dps.Session.build()
+  for _, dam_name in pairs(self.units) do
+    for _, dam_lvl in pairs(dam_name) do
+      for start_ts, dam_ts in pairs(dam_lvl) do
+        if not after_ts or start_ts >= after_ts then
+          session.ts_sum = session.ts_sum + dam_ts.ts_sum
+          session.damage_sum = session.damage_sum + dam_ts.damage_sum
         end
       end
     end
-    return damage_sum_all / ts_sum_all
   end
+  return session
+end
+
+function cs.Dps:init()
+  local f = cs.create_simple_text_frame("nibsrsCSdps", "BOTTOM",20, 46, "DPS", nil, true)
+  ---@type cs.Dps.Data
+  f.cs_data = cs.Dps.Data.build()
 
   f:RegisterEvent("UNIT_COMBAT")
   f:RegisterEvent("PLAYER_TARGET_CHANGED")
@@ -584,6 +627,7 @@ cs.Dps.build = function()
   f:RegisterEvent("PLAYER_LEAVE_COMBAT")
   f:RegisterEvent("SPELLCAST_START")
   f:SetScript("OnEvent", function()
+    ---@type cs.Dps.Data
     local data = this.cs_data
     local ts = GetTime()
 
@@ -605,7 +649,7 @@ cs.Dps.build = function()
       local lvl = UnitLevel("target")
       data.units[name] = data.units[name] or {}
       data.units[name][lvl] = data.units[name][lvl] or {}
-      data.units[name][lvl][ts] = data.units[name][lvl][ts] or { damage_sum = 0, ts_sum = 0 }
+      data.units[name][lvl][ts] = data.units[name][lvl][ts] or cs.Dps.Session.build()
 
       data.cur_info = { name = name, lvl = lvl, ts = ts }
       data.last_ts = ts
@@ -619,16 +663,28 @@ cs.Dps.build = function()
     cur_session.ts_sum = cur_session.ts_sum + ts - data.last_ts
 
     data.last_ts = ts
-
-    local combat_enter_ts = cs.get_combat_info().ts_enter
-    local cur_dps = data:get_all(combat_enter_ts)
-    local all_dps = data:get_all()
-
-    this.cs_text:SetText(string.format("DPS: %.1f (%.1f)", cur_dps, all_dps))
   end)
 
-  dps.frame = f
-  return dps
+  self.frame = f
+
+  cs.add_loop_event("cs.Dps", 0.2, self, cs.Dps._loop)
+end
+
+function cs.Dps:_loop()
+  if not cs.in_combat() then
+    return
+  end
+  ---@type cs.Dps.Data
+  local data = self.frame.cs_data
+
+  local combat_enter_ts = cs.get_combat_info().ts_enter
+  ---@type cs.Dps.Session
+  local cur_dps = data:get_all(combat_enter_ts)
+  ---@type cs.Dps.Session
+  local all_dps = data:get_all()
+
+  self.frame.cs_text:SetText(string.format(
+          "DPS: % 3.1f/% 3.1f (% 3.1f)", cur_dps:get_avg(), cur_dps.ts_sum, all_dps:get_avg()))
 end
 
 
@@ -928,6 +984,7 @@ local main = function()
   end)
 
   st_dps = cs.Dps.build()
+  st_dps:init()
 
   --PVP
   local pvp = nil

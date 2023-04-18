@@ -165,7 +165,7 @@ end
 local state_RUSH = "RUSH"
 local state_NORM = "NORM"
 local state_DEF = "DEF"
-local state_SIMP = "SIMP"
+local state_BASE = "BASE"
 
 ---@class state_config
 local state_config = {
@@ -189,7 +189,7 @@ local default_states_config = {
       name = "RUSH",
       hotbar = 1,
       hotkey = 4,
-      color = "|cffff8888",
+      color = "|cffff0000",
 
       use_slots = { slot_TwoHand },
 
@@ -206,7 +206,7 @@ local default_states_config = {
       name = "NORM",
       hotbar = 1,
       hotkey = 3,
-      color = "|cffffffff",
+      color = "|cff00ff00",
       aura = {
         default = aura_Retribution,
         list = aura_list_att,
@@ -220,7 +220,7 @@ local default_states_config = {
       name = "DEF",
       hotbar = 1,
       hotkey = 2,
-      color = "|c00bbbbFF",
+      color = "|c0020a0FF",
 
       use_slots = { slot_OneHand, slot_OffHand },
 
@@ -233,14 +233,14 @@ local default_states_config = {
         list = bless_list_all,
       },
     },
-    SIMP = {
-      name = "SIMP",
+    BASE = {
+      name = "BASE",
       hotbar = 1,
       hotkey = 1,
-      color = "|cff20ff20",
+      color = "|cffffffFF",
 
       aura = {
-        default = aura_Devotion,
+        default = aura_Retribution,
         list = aura_list_att,
       },
       bless = {
@@ -272,7 +272,7 @@ local default_states_dynamic_config = {
       aura = {  },
       bless = {  },
     },
-    SIMP = {
+    BASE = {
       aura = {  },
       bless = {  },
     },
@@ -439,7 +439,7 @@ end
 
 --const
 function State:to_string()
-  local msg = self:_get_config().color..string.sub(self:_get_config().name, 1, 1).." "..
+  local msg = self:_get_config().color..string.sub(self:_get_config().name, 1, 1).."|r "..
           self.buff_list.aura:to_string().." "..self.buff_list.bless:to_string()
   return msg
 end
