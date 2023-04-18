@@ -296,6 +296,8 @@ cs.t_player = UnitIsPlayer
 cs.t_close = "t_close"
 cs.t_close_30 = "t_close_30"
 cs.t_attackable = "t_attackable"
+cs.t_fr_player = "t_fr_player"
+cs.t_en_player = "t_en_player"
 
 -- check condition by OR
 function cs.check_target(c1, c2, c3)
@@ -307,6 +309,10 @@ function cs.check_target(c1, c2, c3)
       if CheckInteractDistance("target", 2) then return true end
     elseif check == cs.t_close_30 then
       if CheckInteractDistance("target", 4) then return true end
+    elseif check == cs.t_fr_player then
+      return cs.check_target(cs.t_friend) and cs.check_target(cs.t_player)
+    elseif check == cs.t_en_player then
+      return cs.check_target(cs.t_enemy) and cs.check_target(cs.t_player)
     elseif check == cs.t_attackable then
       if cs.check_target(cs.t_exists) and
               not cs.check_target(cs.t_friend) and
@@ -334,6 +340,10 @@ end
 
 function cs.in_aggro()
   return pfUI.api.UnitHasAggro("player") > 0
+end
+
+function cs.is_free()
+  return not cs.in_combat() and not cs.in_aggro()
 end
 
 function cs.is_in_party()
@@ -467,7 +477,7 @@ function cs.rebuff(buff, custom_buff_check_list)
   return true
 end
 
-function cs.rebuff_target(buff, check, unit)
+function cs.rebuff_unit(buff, check, unit)
   if cs.find_buff(check or buff, unit) then
     return
   end

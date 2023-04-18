@@ -47,12 +47,13 @@ end
 
 -- party
 
-local function rebuff_party_member(unit)
+local function rebuff_unit(unit)
   local buffs = {
     WARRIOR = bless_Might,
     PALADIN = bless_Might,
     HUNTER = bless_Might,
     ROGUE = bless_Might,
+    SHAMAN = bless_Might,
 
     DRUID = bless_Wisdom,
     PRIEST = bless_Wisdom,
@@ -67,16 +68,16 @@ local function rebuff_party_member(unit)
     print("BUFF NOT FOUND FOR "..class)
     buff = bless_Might
   end
-  cs.rebuff_target(buff, nil, unit)
+  cs.rebuff_unit(buff, bless_list_all, unit)
 end
 
 local function buff_party()
   local size = GetNumPartyMembers()
   for i=1, size do
     local unit = "party"..i
-    rebuff_party_member(unit)
+    rebuff_unit(unit)
     local pet = "partypet"..i
-    rebuff_party_member(pet)
+    rebuff_unit(pet)
   end
 end
 
@@ -331,7 +332,19 @@ end
 
 -- const
 function StateBuff:to_string()
-  return self:_get_config(1).current
+  local buffed = self:get_buffed()
+  local current = self:_get_config(1).current
+
+  local str = to_short(current)
+  if not buffed then
+    str = str .. "(--)"
+  elseif buffed ~= current then
+    str = str .. "(" .. to_short(buffed) .. ")"
+  else
+    str = str .. "    "
+  end
+
+  return str
 end
 
 -- const
@@ -426,12 +439,8 @@ end
 
 --const
 function State:to_string()
-  local aura_status = self.buff_list.aura:get_status()
-  local bless_status = self.buff_list.bless:get_status()
-
   local msg = self:_get_config().color..string.sub(self:_get_config().name, 1, 1).." "..
-          to_short(self.buff_list.aura:to_string()).."(".. aura_status ..") "..
-          to_short(self.buff_list.bless:to_string()).."(".. bless_status ..")"
+          self.buff_list.aura:to_string().." "..self.buff_list.bless:to_string()
   return msg
 end
 
@@ -509,6 +518,9 @@ function State:_standard_rebuff_attack()
   if cs.is_in_party() and not cs.in_combat() then
     cs.rebuff(buff_Righteous)
     buff_party()
+  end
+  if cs.is_free() and cs.check_target(cs.t_fr_player) then
+    rebuff_unit("target")
   end
 end
 
