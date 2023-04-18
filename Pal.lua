@@ -2,6 +2,9 @@ local cs = cs_common
 
 -- +TODO: Combat bless
 
+local state_holder_frame = {"StateHolder.build", "BOTTOM",-290, 69, "", "CENTER", true}
+
+
 -- buffs
 local buff_Righteous = "Righteous Fury"
 
@@ -567,8 +570,7 @@ StateHolder.build = function()
   holder.states_clicks = {}
   holder.states_buttons = {}
 
-  holder.frame = cs.create_simple_text_frame(
-          "StateHolder.build", "BOTTOM",-280, 72, "", "CENTER", true)
+  holder.frame = cs.create_simple_text_frame(unpack(state_holder_frame))
 
   return holder
 end

@@ -2,7 +2,7 @@
 cs_common = {}
 local cs = cs_common
 
-
+local dps_frame = {"nibsrsCSdps", "BOTTOM",20, 42, "DPS", false, true}
 
 -- debug
 function cs.ToString(value, depth, itlimit, short)
@@ -360,9 +360,10 @@ function cs.CombatChecker.build()
   ---@type cs.CombatChecker
   local checker = cs.CombatChecker:new()
 
-  local y = 95
-  local diff = 20
-  local x = 340
+  local y = 43
+  local diff_y = 17
+  local x = 370
+  local diff_x = 0
 
   checker.data = {}
   local data = checker.data
@@ -370,13 +371,13 @@ function cs.CombatChecker.build()
   data.aggro = {
     name = "aggro",
     color = "|cffff2020",
-    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x-2*diff, y, "0", "CENTER", false),
+    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x-2*diff_x, y+2*diff_y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }
   data.combat = {
     name = "combat",
     color = "|cffFF8000",
-    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x-diff, y, "0", "CENTER", false),
+    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x-diff_x, y+diff_y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }
   data.affect = {
@@ -396,8 +397,6 @@ end
 function cs.CombatChecker:_report_status()
   local ts = GetTime()
   for _, data in pairs(self.data) do
-    cs.debug(data)
-
     if data.status then
       local dur = math.floor(ts - data.ts_enter)
       if dur >= 100 then
@@ -784,7 +783,7 @@ function cs.Dps.Data:get_all(after_ts)
 end
 
 function cs.Dps:init()
-  local f = cs.create_simple_text_frame("nibsrsCSdps", "BOTTOM",20, 46, "DPS", nil, true)
+  local f = cs.create_simple_text_frame(unpack(dps_frame))
   ---@type cs.Dps.Data
   f.cs_data = cs.Dps.Data.build()
 
