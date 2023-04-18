@@ -11,9 +11,10 @@ local aura_Sanctity = "Sanctity Aura"
 local aura_Retribution = "Retribution Aura"
 local aura_Shadow = "Shadow Resistance Aura"
 local aura_Frost = "Frost Resistance Aura"
-local aura_list_all = { aura_Concentration, aura_Sanctity, aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost }
-local aura_list_att =                     { aura_Sanctity, aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost }
-local aura_list_def =                                    { aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost }
+local aura_Fire = "Fire Resistance Aura"
+local aura_list_all = { aura_Concentration, aura_Sanctity, aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost, aura_Fire }
+local aura_list_att =                     { aura_Sanctity, aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost, aura_Fire }
+local aura_list_def =                                    { aura_Devotion, aura_Retribution, aura_Shadow, aura_Frost, aura_Fire }
 
 local bless_Wisdom = "Blessing of Wisdom"
 local bless_Might = "Blessing of Might"
@@ -30,8 +31,9 @@ to_short_list[aura_Concentration] = "CA"
 to_short_list[aura_Devotion] = "DA"
 to_short_list[aura_Sanctity] = "SA"
 to_short_list[aura_Retribution] = "RA"
-to_short_list[aura_Shadow] = "SRA"
-to_short_list[aura_Frost] = "FRA"
+to_short_list[aura_Shadow] = "SH"
+to_short_list[aura_Frost] = "FR"
+to_short_list[aura_Fire] = "FI"
 
 to_short_list[bless_Wisdom] = "BW"
 to_short_list[bless_Might] = "BM"
@@ -490,6 +492,9 @@ function State:_get_aura()
     end
     if spell_base == cs.spell_base_Shadow then
       aura = aura_Shadow
+    end
+    if spell_base == cs.spell_base_Fire then
+      aura = aura_Fire
     end
   end
 
