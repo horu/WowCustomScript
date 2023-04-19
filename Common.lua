@@ -2,7 +2,10 @@
 cs_common = {}
 local cs = cs_common
 
-local dps_frame = {"nibsrsCSdps", "BOTTOM",20, 42, "DPS", false, true}
+local dps_frame = {
+  target = {"nibsrsCSdps", "BOTTOMLEFT",1150, 94, "DPS", false, true},
+  player = {"nibsrsCSdps", "BOTTOMLEFT",347, 94, "DPS", "RIGHT", true},
+}
 
 -- debug
 function cs.ToString(value, depth, itlimit, short)
@@ -722,15 +725,6 @@ end
 ---@class cs.Dps
 cs.Dps = { new = function(self) return setmetatable({}, {__index = self}) end }
 
----@type cs.Dps
-local st_dps
-
-function cs.Dps.build()
-  ---@type cs.Dps
-  local dps = cs.Dps:new()
-  return dps
-end
-
 
 ---@class cs.Dps.Session
 cs.Dps.Session = { new = function(self) return setmetatable({}, {__index = self}) end }
@@ -760,6 +754,10 @@ function cs.Dps.Session:update(damage, last_ts, cur_ts)
   self.last_ts = math.max(self.last_ts, cur_ts)
 end
 
+function cs.Dps.Session:is_expired(ts)
+  return not cs.compare_time(10, self.last_ts, ts)
+end
+
 
 ---@class cs.Dps.Data
 cs.Dps.Data = { new = function(self) return setmetatable({}, {__index = self}) end }
@@ -767,76 +765,88 @@ cs.Dps.Data = { new = function(self) return setmetatable({}, {__index = self}) e
 function cs.Dps.Data.build()
   ---@type cs.Dps.Data
   local data = cs.Dps.Data:new()
-  data.units = {}
-  data.cur_info = nil
+  data.sessions = {}
+  data.start_ts = nil
   data.last_ts = nil
 
   return data
 end
 
 function cs.Dps.Data:get_all(after_ts)
+  if not after_ts then after_ts = 0 end
+
   ---@type cs.Dps.Session
   local session = cs.Dps.Session.build()
-  for _, dam_name in pairs(self.units) do
-    for _, dam_lvl in pairs(dam_name) do
-      for start_ts, dam_ts in pairs(dam_lvl) do
-        if not after_ts or start_ts >= after_ts then
-          session:update(dam_ts.damage_sum, start_ts, start_ts + dam_ts.ts_sum)
-        end
-      end
+  for start_ts, it in pairs(self.sessions) do
+    local session_time = it.last_ts
+    if session_time >= after_ts then
+      session:update(it.damage_sum, start_ts, start_ts + it.ts_sum)
     end
   end
   return session
 end
 
-function cs.Dps:init()
-  local f = cs.create_simple_text_frame(unpack(dps_frame))
-  ---@type cs.Dps.Data
-  f.cs_data = cs.Dps.Data.build()
+function cs.Dps.build(unit, frame_config)
+  ---@type cs.Dps
+  local dps = cs.Dps:new()
+  dps.unit = unit
+  dps.data = cs.Dps.Data.build()
+  dps:init(frame_config)
+  dps:handler("", unit, 0)
+  return dps
+end
 
+function cs.Dps:handler(event, target, damage)
+  ---@type cs.Dps.Data
+  local data = self.data
+  local ts = GetTime()
+
+  if data.start_ts then
+    local cur_session = data.sessions[data.start_ts]
+    if      event == "PLAYER_LEAVE_COMBAT" or
+            event == "SPELLCAST_START" or
+            event == "PLAYER_TARGET_CHANGED" or
+            cur_session:is_expired(ts)
+    then
+      -- close session
+      data.start_ts = nil
+      data.last_ts = nil
+      return
+    end
+  end
+
+  if target ~= self.unit then
+    return
+  end
+
+  if not data.start_ts then
+    -- combat first damage. create session
+
+    data.sessions[ts] = data.sessions[ts] or cs.Dps.Session.build()
+
+    data.start_ts = ts
+    data.last_ts = ts
+  end
+
+  ---@type cs.Dps.Session
+  local cur_session = data.sessions[data.start_ts]
+
+  cur_session:update(damage, data.last_ts, ts)
+
+  data.last_ts = ts
+  self:_update_output()
+end
+
+function cs.Dps:init(dps_frame_config)
+  local f = cs.create_simple_text_frame(unpack(dps_frame_config))
   f:RegisterEvent("UNIT_COMBAT")
   f:RegisterEvent("PLAYER_TARGET_CHANGED")
   -- f:RegisterEvent("PLAYER_ENTER_COMBAT")
   f:RegisterEvent("PLAYER_LEAVE_COMBAT")
   f:RegisterEvent("SPELLCAST_START")
   f:SetScript("OnEvent", function()
-    ---@type cs.Dps.Data
-    local data = this.cs_data
-    local ts = GetTime()
-
-    if (event == "PLAYER_LEAVE_COMBAT" or event == "SPELLCAST_START" or event == "PLAYER_TARGET_CHANGED")
-        and data.cur_info then
-      data.cur_info = nil
-      data.last_ts = nil
-      return
-    end
-
-    if arg1 ~= "target" then
-      return
-    end
-
-    if not data.cur_info then
-      -- combat first damage
-
-      local name = UnitName("target")
-      local lvl = UnitLevel("target")
-      data.units[name] = data.units[name] or {}
-      data.units[name][lvl] = data.units[name][lvl] or {}
-      data.units[name][lvl][ts] = data.units[name][lvl][ts] or cs.Dps.Session.build()
-
-      data.cur_info = { name = name, lvl = lvl, ts = ts }
-      data.last_ts = ts
-    end
-
-    local damage = arg4
-
-    ---@type cs.Dps.Session
-    local cur_session = data.units[data.cur_info.name][data.cur_info.lvl][data.cur_info.ts]
-
-    cur_session:update(damage, data.last_ts, ts)
-
-    data.last_ts = ts
-    this.cs_dps:_update_output()
+    if arg2 and arg2 == "HEAL" then return end
+    this.cs_dps:handler(event, arg1, arg4)
   end)
 
   self.frame = f
@@ -847,19 +857,18 @@ end
 
 function cs.Dps:_update_output()
   ---@type cs.Dps.Data
-  local data = self.frame.cs_data
+  local data = self.data
+  local ts = GetTime()
 
   local combat_enter_ts = cs.get_affect_info().ts_enter
-  ---@type cs.Dps.Session
   local cur_dps = data:get_all(combat_enter_ts)
-  --if cur_dps.ts_sum > 0 then
-  --  cur_dps.ts_sum = cur_dps.ts_sum + GetTime() - cur_dps.last_ts
-  --end
-  ---@type cs.Dps.Session
-  local all_dps = data:get_all()
+  local dps_4 = data:get_all(ts - 60 * 4)
+  local dps_16 = data:get_all(ts - 60 * 16)
+  local dps_64 = data:get_all(ts - 60 * 64)
 
   self.frame.cs_text:SetText(string.format(
-          "DPS:% 3.1f/% 3.1f (% 3.1f)", cur_dps:get_avg(), cur_dps.ts_sum, all_dps:get_avg()))
+          "DPS %3d [%3d%5d] / %3d / %3d / %3d",
+          cur_dps:get_avg(), cur_dps.ts_sum, cur_dps.damage_sum, dps_4:get_avg(), dps_16:get_avg(), dps_64:get_avg()))
 end
 
 --function cs.Dps:_loop()
@@ -868,6 +877,10 @@ end
 --  end
 --  self:_update_output()
 --end
+
+---@type cs.Dps
+local st_dps_target = cs.Dps.build("target", dps_frame.target)
+local st_dps_player = cs.Dps.build("player", dps_frame.player)
 
 
 
@@ -1149,8 +1162,6 @@ end
 
 
 local main = function()
-  st_dps = cs.Dps.build()
-  st_dps:init()
 
   --PVP
   local pvp = nil
