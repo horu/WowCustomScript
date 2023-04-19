@@ -24,6 +24,12 @@ local bless_Might = "Blessing of Might"
 local bless_Salvation = "Blessing of Salvation"
 local bless_list_all = { bless_Wisdom, bless_Might, bless_Salvation }
 
+local seal_Righteousness = "Seal of Righteousness"
+local seal_Crusader = "Seal of the Crusader"
+local seal_Justice = "Seal of Justice"
+local seal_Light = "Seal of Light"
+local seal_list_all = { seal_Righteousness, seal_Crusader, seal_Justice, seal_Light }
+
 local slot_TwoHand = 13
 local slot_OneHand = 14
 local slot_OffHand = 15
@@ -41,6 +47,11 @@ to_short_list[aura_Fire] = "FI"
 to_short_list[bless_Wisdom] = "BW"
 to_short_list[bless_Might] = "BM"
 to_short_list[bless_Salvation] = "BV"
+
+to_short_list[seal_Righteousness] = cs.color_green.."SR".."|r"
+to_short_list[seal_Crusader] = cs.color_orange_1.."SC".."|r"
+to_short_list[seal_Light] = cs.color_yellow.."SL".."|r"
+to_short_list[seal_Justice] = cs.color_blue.."SJ".."|r"
 
 local to_short = function(cast)
   return to_short_list[cast]
@@ -91,12 +102,6 @@ end
 
 
 -- SEAL
-
-local seal_Righteousness = "Seal of Righteousness"
-local seal_Crusader = "Seal of the Crusader"
-local seal_Justice = "Seal of Justice"
-local seal_Light = "Seal of Light"
-local seal_list_all = { seal_Righteousness, seal_Crusader, seal_Justice, seal_Light }
 
 local function buff_seal(buff, custom_buff_check_list)
   if not cs.check_target(cs.t_attackable) then
@@ -177,7 +182,7 @@ local state_config = {
       name = "",
       hotbar = 1,
       hotkey = 1,
-      color = "|cffff2020",
+      color = cs.color_intense_red,
       default_aura = aura_Sanctity,
       default_bless = bless_Might,
       aura_list = { aura_Sanctity, aura_Devotion, aura_Retribution },
@@ -194,7 +199,7 @@ local default_states_config = {
       name = "RUSH",
       hotbar = 1,
       hotkey = 4,
-      color = "|cffff0000",
+      color = cs.color_intense_red,
 
       use_slots = { slot_TwoHand },
 
@@ -211,7 +216,7 @@ local default_states_config = {
       name = "NORM",
       hotbar = 1,
       hotkey = 3,
-      color = "|cff00ff00",
+      color = cs.color_green,
       aura = {
         default = aura_Retribution,
         list = aura_list_att,
@@ -225,7 +230,7 @@ local default_states_config = {
       name = "DEF",
       hotbar = 1,
       hotkey = 2,
-      color = "|c0020a0FF",
+      color = cs.color_blue,
 
       use_slots = { slot_OneHand, slot_OffHand },
 
@@ -242,7 +247,7 @@ local default_states_config = {
       name = "BASE",
       hotbar = 1,
       hotkey = 1,
-      color = "|cffffffFF",
+      color = cs.color_white,
 
       aura = {
         default = aura_Retribution,
@@ -331,8 +336,7 @@ end
 -- const
 -- get current buffed buf ( not config )
 function StateBuff:get_buffed()
-  local _, current = cs.find_buff(self:_get_config().list)
-  return current
+  return cs.find_buff(self:_get_config().list)
 end
 
 -- const
@@ -342,13 +346,12 @@ function StateBuff:to_string()
 
   local str = to_short(current)
   if not buffed then
-    str = str .. "|cffff2020XX"
+    str = str .. cs.color_red.."XX".."|r"
   elseif buffed ~= current then
-    str = str .. "|cff00ff00" .. to_short(buffed)
+    str = str .. cs.color_green .. to_short(buffed).."|r"
   else
     str = str .. "  "
   end
-  str = str .. "|r"
 
   return str
 end
@@ -437,7 +440,6 @@ State.build = function(id)
   return state
 end
 
-
 -- const
 function State:get_name()
   return self:_get_config().color..self:_get_config().name
@@ -446,7 +448,9 @@ end
 --const
 function State:to_string()
   local msg = self:_get_config().color..string.sub(self:_get_config().name, 1, 1).."|r "..
-          self.buff_list.aura:to_string().." "..self.buff_list.bless:to_string()
+          self.buff_list.aura:to_string().." "..
+          self.buff_list.bless:to_string().." "..
+          self:_get_seal_string()
   return msg
 end
 
@@ -514,6 +518,14 @@ function State:_get_bless()
   end
 
   return bless
+end
+
+function State:_get_seal_string()
+  local seal = cs.find_buff(seal_list_all)
+  if seal then
+    return to_short(seal)
+  end
+  return cs.color_red.."XX|r"
 end
 
 

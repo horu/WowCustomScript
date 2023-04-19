@@ -236,7 +236,14 @@ end
 
 
 
-
+cs.color_red = "|cffff2020"
+cs.color_intense_red = "|cffff0000"
+cs.color_orange = "|cffFF8000"
+cs.color_orange_1 = "|cffFFB266"
+cs.color_yellow = "|cffFFFF66"
+cs.color_blue = "|c0020a0FF"
+cs.color_green = "|cff00ff00"
+cs.color_white = "|cffffffFF"
 
 -- Frame
 function cs.create_simple_frame(name)
@@ -370,19 +377,19 @@ function cs.CombatChecker.build()
 
   data.aggro = {
     name = "aggro",
-    color = "|cffff2020",
+    color = cs.color_red,
     text = cs.create_simple_text_frame("", "BOTTOMLEFT", x-2*diff_x, y+2*diff_y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }
   data.combat = {
     name = "combat",
-    color = "|cffFF8000",
+    color = cs.color_orange,
     text = cs.create_simple_text_frame("", "BOTTOMLEFT", x-diff_x, y+diff_y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }
   data.affect = {
     name = "affect",
-    color = "|cffFFFF66",
+    color = cs.color_yellow,
     text = cs.create_simple_text_frame("", "BOTTOMLEFT", x, y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }
@@ -618,7 +625,7 @@ end
 function cs.find_buff(check_list, unit)
   for i, check in pairs(cs.to_table(check_list)) do
     if FindBuff(check, unit) then
-      return i, check
+      return check, i
     end
   end
 end
