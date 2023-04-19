@@ -247,6 +247,7 @@ cs.color_yellow = "|cffFFFF66"
 cs.color_blue = "|c0020a0FF"
 cs.color_green = "|cff00ff00"
 cs.color_white = "|cffffffFF"
+cs.color_grey = "|cffA0A0A0"
 
 -- Frame
 function cs.create_simple_frame(name)
@@ -306,6 +307,7 @@ cs.t_enemy = UnitIsEnemy
 cs.t_exists = UnitExists
 cs.t_dead = UnitIsDead
 cs.t_player = UnitIsPlayer
+cs.t_self = UnitIsUnit
 cs.t_close = "t_close"
 cs.t_close_30 = "t_close_30"
 cs.t_attackable = "t_attackable"
@@ -639,7 +641,7 @@ function cs.rebuff(buff, custom_buff_check_list)
     return
   end
 
-  if not cs.check_target(cs.t_player) and cs.check_target(cs.t_friend) then
+  if cs.check_target(cs.t_friend) and not cs.check_target(cs.t_self) then
     return true
   end
 
@@ -657,20 +659,19 @@ function cs.rebuff_unit(buff, check, unit)
           UnitIsDead(unit) or
           not CheckInteractDistance(unit, 4) or
           not UnitIsVisible(unit) then
-    return true
+    return 2
   end
 
   TargetUnit(unit)
 
   if UnitIsUnit(unit, "target") then
     -- SpellTargetUnit
-    print("BUFF: ".. buff .. " FOR ".. unit)
     cs.cast(buff)
   end
 
   TargetLastTarget()
   cs.auto_attack()
-  return true
+  return 1
 end
 
 function cs.has_buffs(unit, buff_str, b_fun)

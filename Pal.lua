@@ -44,9 +44,9 @@ to_short_list[aura_Shadow] = "SH"
 to_short_list[aura_Frost] = "FR"
 to_short_list[aura_Fire] = "FI"
 
-to_short_list[bless_Wisdom] = "BW"
-to_short_list[bless_Might] = "BM"
-to_short_list[bless_Salvation] = "BV"
+to_short_list[bless_Wisdom] = cs.color_blue .. "BW" .. "|r"
+to_short_list[bless_Might] = cs.color_red .. "BM" .. "|r"
+to_short_list[bless_Salvation] = cs.color_yellow .. "BV" .. "|r"
 
 to_short_list[seal_Righteousness] = cs.color_green.."SR".."|r"
 to_short_list[seal_Crusader] = cs.color_orange_1.."SC".."|r"
@@ -54,6 +54,9 @@ to_short_list[seal_Light] = cs.color_yellow.."SL".."|r"
 to_short_list[seal_Justice] = cs.color_blue.."SJ".."|r"
 
 local to_short = function(cast)
+  if not cast then
+    return cs.color_grey.."XX".."|r"
+  end
   return to_short_list[cast]
 end
 
@@ -84,7 +87,11 @@ local function rebuff_unit(unit)
     print("BUFF NOT FOUND FOR "..class)
     buff = bless_Might
   end
-  cs.rebuff_unit(buff, bless_list_all, unit)
+  local result = cs.rebuff_unit(buff, bless_list_all, unit)
+
+  if result == 1 then
+    print("BUFF: ".. to_short(buff) .. " FOR ".. pfUI.api.GetUnitColor(unit) .. class)
+  end
 end
 
 local function buff_party()
@@ -346,7 +353,7 @@ function StateBuff:to_string()
 
   local str = to_short(current)
   if not buffed then
-    str = str .. cs.color_red.."XX".."|r"
+    str = str .. to_short()
   elseif buffed ~= current then
     str = str .. cs.color_green .. to_short(buffed).."|r"
   else
@@ -383,9 +390,7 @@ function StateBuff:tmp_rebuff(value)
     self.set = self:_get_config(1).current
   end
 
-  cs.rebuff(self.set)
-
-  return self.set == value
+  return cs.rebuff(self.set)
 end
 
 -- set buff and save it to config
@@ -522,16 +527,15 @@ end
 
 function State:_get_seal_string()
   local seal = cs.find_buff(seal_list_all)
-  if seal then
-    return to_short(seal)
-  end
-  return cs.color_red.."XX|r"
+  return to_short(seal)
 end
 
 
 function State:_standard_rebuff_attack()
   self.buff_list.aura:tmp_rebuff(self:_get_aura())
-  self.buff_list.bless:tmp_rebuff(self:_get_bless())
+  if self.buff_list.bless:tmp_rebuff(self:_get_bless()) then
+    return
+  end
   if not cs.check_combat(cs.c_affect) then
     if cs.is_in_party() then
       cs.rebuff(buff_Righteous)
