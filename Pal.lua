@@ -192,7 +192,7 @@ EmegryCaster.build = function()
   return caster
 end
 
-function EmegryCaster:cast()
+function EmegryCaster:em_cast(lay)
   local casted_shield = has_debuff_protection()
   local ts = GetTime()
   if not casted_shield then
@@ -210,6 +210,10 @@ function EmegryCaster:cast()
   end
 
   if cs.get_spell_cd(cast_LayOnHands) then
+    return
+  end
+
+  if not lay then
     return
   end
 
@@ -236,6 +240,7 @@ local state_RUSH = "RUSH"
 local state_NORM = "NORM"
 local state_DEF = "DEF"
 local state_BASE = "BASE"
+local state_HEAL = "HEAL"
 
 ---@class state_config
 local state_config = {
@@ -692,7 +697,7 @@ function StateHolder:heal_action(heal_cast)
   cs.error_disabler:off()
 
   self:_rebuff_heal()
-  if self.cur_state:rebuff_aura() then
+  if self.cur_state.id == state_HEAL and self.cur_state:rebuff_aura() then
     return
   end
   cs.cast(heal_cast)
@@ -786,7 +791,7 @@ end
 function StateHolder:_check_hp()
   local hp_level = cs.get_hp_level()
   if hp_level <= 0.2 then
-    em_caster:cast()
+    em_caster:em_cast(hp_level <= 0.1)
     return nil
   end
   return true
@@ -901,7 +906,7 @@ function cast_heal(heal_cast)
 end
 
 function emegrancy()
-  em_caster:cast()
+  em_caster:em_cast(true)
 end
 
 
