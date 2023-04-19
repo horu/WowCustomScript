@@ -555,7 +555,7 @@ end
 
 -- reacion for enenmy cast to change resist aura
 function State:on_cast_detected(spell_base)
-  if not spell_base or self.enemy_spell_base:is_valid() then
+  if not spell_base then
     return
   end
 
