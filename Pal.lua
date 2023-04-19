@@ -36,7 +36,7 @@ local slot_OffHand = 15
 
 
 local to_short_list = {}
-to_short_list[aura_Concentration] = cs.color_blue .. "CA" .. "|r"
+to_short_list[aura_Concentration] = cs.color_yellow .. "CA" .. "|r"
 to_short_list[aura_Devotion] = cs.color_blue .. "DA" .. "|r"
 to_short_list[aura_Sanctity] = cs.color_red .. "SA" .. "|r"
 to_short_list[aura_Retribution] = cs.color_purple .. "RA" .. "|r"
@@ -190,7 +190,6 @@ local state_BASE = "BASE"
 ---@class state_config
 local state_config = {
       name = "",
-      hotbar = 1,
       hotkey = 1,
       color = cs.color_red_1,
       default_aura = aura_Sanctity,
@@ -207,7 +206,6 @@ local default_states_config = {
     ---@type state_config
     RUSH = {
       name = "RUSH",
-      hotbar = 1,
       hotkey = 4,
       color = cs.color_red_1,
 
@@ -224,7 +222,6 @@ local default_states_config = {
     },
     NORM = {
       name = "NORM",
-      hotbar = 1,
       hotkey = 3,
       color = cs.color_green,
       aura = {
@@ -238,7 +235,6 @@ local default_states_config = {
     },
     DEF = {
       name = "DEF",
-      hotbar = 1,
       hotkey = 2,
       color = cs.color_blue,
 
@@ -255,13 +251,26 @@ local default_states_config = {
     },
     BASE = {
       name = "BASE",
-      hotbar = 1,
       hotkey = 1,
       color = cs.color_white,
 
       aura = {
         default = aura_Retribution,
         list = aura_list_att,
+      },
+      bless = {
+        default = bless_Wisdom,
+        list = bless_list_all,
+      },
+    },
+    HEAL = {
+      name = "HEAL",
+      hotkey = 12 * 5 + 2,
+      color = cs.color_yellow,
+
+      aura = {
+        default = aura_Concentration,
+        list = { aura_Concentration },
       },
       bless = {
         default = bless_Wisdom,
@@ -293,6 +302,10 @@ local default_states_dynamic_config = {
       bless = {  },
     },
     BASE = {
+      aura = {  },
+      bless = {  },
+    },
+    HEAL = {
       aura = {  },
       bless = {  },
     },
@@ -481,6 +494,10 @@ function State:recheck()
   self:_standard_rebuff_attack()
 end
 
+function State:rebuff_aura()
+  return self.buff_list.aura:tmp_rebuff(self:_get_aura())
+end
+
 -- reacion for enenmy cast to change resist aura
 function State:on_cast_detected(spell_base)
   if not spell_base or self.enemy_spell_base:is_valid() then
@@ -535,7 +552,7 @@ end
 
 
 function State:_standard_rebuff_attack()
-  self.buff_list.aura:tmp_rebuff(self:_get_aura())
+  self:rebuff_aura()
   if self.buff_list.bless:tmp_rebuff(self:_get_bless()) then
     return
   end
@@ -577,20 +594,9 @@ StateHolder.build = function()
   holder.cur_state = nil
   ---@type State[]
   holder.states = {}
+  holder.states_buttons = {}
 
   holder.actions = {}
-
-  --local f = cs.create_simple_frame("StateHolder.build")
-  --f:RegisterEvent("UNIT_AURA")
-  --f:SetScript("OnEvent", function()
-  --  if this.cs_holder.cur_state then
-  --    this.cs_holder.cur_state:on_buff_changed()
-  --  end
-  --end)
-  --
-  --f.cs_holder = holder
-  holder.states_clicks = {}
-  holder.states_buttons = {}
 
   holder.frame = cs.create_simple_text_frame(unpack(state_holder_frame))
 
@@ -608,8 +614,10 @@ function StateHolder:init()
   self:_change_state(get_state_holder_config().cur_state)
   cs.add_loop_event("StateHolder",0.2, self, self._check_loop)
 
-  for i in pairs(self.states) do
-    cs.ActionBarProxy.add_proxy(1, i, StateHolder._button_callback, self)
+  for hotkey in pairs(self.states) do
+    local bar = math.floor(hotkey / 12 + 1)
+    local key = cs.fmod(hotkey, 12)
+    cs.ActionBarProxy.add_proxy(bar, key, StateHolder._button_callback, self)
   end
 end
 
@@ -630,7 +638,19 @@ function StateHolder:attack_action(action_name)
 
 end
 
-function StateHolder:rebuff_heal()
+function StateHolder:heal_action(heal_cast)
+  cs.error_disabler:off()
+
+  self:_rebuff_heal()
+  if self.cur_state:rebuff_aura() then
+    return
+  end
+  cs.cast(heal_cast)
+
+  cs.error_disabler:on()
+end
+
+function StateHolder:_rebuff_heal()
   if cs.check_combat(1, cs.c_normal, cs.c_aggro) then
     if self:_check_hp() then
       cs.rebuff(aura_Concentration)
@@ -645,9 +665,10 @@ local handler_Save = 2
 local handler_Reset = 3
 local handler_FullReset = 4
 
-function StateHolder:_button_callback(bar, button)
-  --cs.debug({bar, button, keystate})
-  self.states_buttons[button] = {keystate = keystate, ts = GetTime(), handler = handler_None}
+function StateHolder:_button_callback(bar, key)
+  --cs.debug({bar, key, keystate})
+  local state_number = bar * 12 + key - 12
+  self.states_buttons[state_number] = {keystate = keystate, ts = GetTime(), handler = handler_None}
 end
 
 function StateHolder:_check_loop()
@@ -864,8 +885,7 @@ function attack_action(name)
 end
 
 function cast_heal(heal_cast)
-  state_holder:rebuff_heal()
-  cs.cast(heal_cast)
+  state_holder:heal_action(heal_cast)
 end
 
 function emegrancy()
