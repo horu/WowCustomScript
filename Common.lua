@@ -485,30 +485,6 @@ function cs.get_affect_info()
   return st_combat_checker.data.affect
 end
 
--- aggro + combat
-function cs.get_fight_info()
-  local combat = st_combat_checker.combat
-  local aggro = st_combat_checker.aggro
-  local info = {}
-  info.status = combat.status or aggro.status
-  if combat.ts_leave and combat.ts_leave < aggro.ts_enter  then
-    combat = {  }
-  elseif aggro.ts_leave and aggro.ts_leave < combat.ts_enter then
-    aggro = {  }
-  end
-  info.ts_enter = math.min(combat.ts_enter or cs.max_number_32, aggro.ts_enter or cs.max_number_32)
-  info.ts_leave = math.max(combat.ts_leave or 0, aggro.ts_leave or 0)
-  return info
-end
-
--- aggro+combat
-function cs.in_fight(second_after)
-  local info = cs.get_fight_info()
-  if second_after and info.ts_leave and cs.compare_time(second_after, info.ts_leave) then
-    return true
-  end
-  return info.status
-end
 
 cs.c_normal = cs.get_combat_info
 cs.c_aggro = cs.get_aggro_info
@@ -525,6 +501,10 @@ function cs.check_combat(m0or, m1or, m2or, m3or)
     time_after = 0
   end
 
+  if not to_check[1] then
+    -- default normal + agro
+    to_check = { cs.c_normal, cs.c_aggro }
+  end
 
   for _, check in pairs(to_check) do
     local info = check()
@@ -533,6 +513,12 @@ function cs.check_combat(m0or, m1or, m2or, m3or)
     end
   end
 end
+
+
+
+
+
+
 
 
 

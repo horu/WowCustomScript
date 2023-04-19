@@ -606,7 +606,7 @@ function State:_standard_rebuff_attack()
   if self.buff_list.bless:tmp_rebuff(self:_get_bless()) then
     return
   end
-  if not cs.check_combat(cs.c_affect) then
+  if not cs.check_combat(1) then
     if cs.is_in_party() then
       cs.rebuff(buff_Righteous)
       buff_party()
@@ -701,7 +701,7 @@ function StateHolder:heal_action(heal_cast)
 end
 
 function StateHolder:_rebuff_heal()
-  if cs.check_combat(1, cs.c_normal, cs.c_aggro) then
+  if cs.check_combat(1) then
     if self:_check_hp() then
       cs.rebuff(aura_Concentration)
     end
