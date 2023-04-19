@@ -2,7 +2,7 @@ local cs = cs_common
 
 -- +TODO: Combat bless
 
-local state_holder_frame = {"StateHolder.build", "BOTTOM",-330, 69, "", "LEFT", true}
+local state_holder_frame = {"StateHolder.build", "BOTTOMLEFT",415, 69, "", "LEFT", true, false, }
 
 
 -- buffs
@@ -36,13 +36,13 @@ local slot_OffHand = 15
 
 
 local to_short_list = {}
-to_short_list[aura_Concentration] = "CA"
-to_short_list[aura_Devotion] = "DA"
-to_short_list[aura_Sanctity] = "SA"
-to_short_list[aura_Retribution] = "RA"
-to_short_list[aura_Shadow] = "SH"
-to_short_list[aura_Frost] = "FR"
-to_short_list[aura_Fire] = "FI"
+to_short_list[aura_Concentration] = cs.color_blue .. "CA" .. "|r"
+to_short_list[aura_Devotion] = cs.color_blue .. "DA" .. "|r"
+to_short_list[aura_Sanctity] = cs.color_red .. "SA" .. "|r"
+to_short_list[aura_Retribution] = cs.color_purple .. "RA" .. "|r"
+to_short_list[aura_Shadow] = cs.color_purple .. "SH" .. "|r"
+to_short_list[aura_Frost] = cs.color_blue .. "FR" .. "|r"
+to_short_list[aura_Fire] = cs.color_orange_1 .. "FI" .. "|r"
 
 to_short_list[bless_Wisdom] = cs.color_blue .. "BW" .. "|r"
 to_short_list[bless_Might] = cs.color_red .. "BM" .. "|r"
@@ -189,7 +189,7 @@ local state_config = {
       name = "",
       hotbar = 1,
       hotkey = 1,
-      color = cs.color_intense_red,
+      color = cs.color_red_1,
       default_aura = aura_Sanctity,
       default_bless = bless_Might,
       aura_list = { aura_Sanctity, aura_Devotion, aura_Retribution },
@@ -206,7 +206,7 @@ local default_states_config = {
       name = "RUSH",
       hotbar = 1,
       hotkey = 4,
-      color = cs.color_intense_red,
+      color = cs.color_red_1,
 
       use_slots = { slot_TwoHand },
 
@@ -680,7 +680,7 @@ function StateHolder:_check_loop()
     end
   end
 
-  self.frame.cs_text:SetText(self.cur_state:to_string())
+  self.frame:CS_SetText(self.cur_state:to_string())
 
   if cs.check_target(cs.t_attackable) then
     local data = cs.get_cast_info("target")

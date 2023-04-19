@@ -237,17 +237,20 @@ end
 
 
 
+cs.make_color = function(rgb)
+  return "|cff"..rgb
+end
 
-
-cs.color_red = "|cffff2020"
-cs.color_intense_red = "|cffff0000"
-cs.color_orange = "|cffFF8000"
-cs.color_orange_1 = "|cffFFB266"
-cs.color_yellow = "|cffFFFF66"
-cs.color_blue = "|c0020a0FF"
-cs.color_green = "|cff00ff00"
-cs.color_white = "|cffffffFF"
-cs.color_grey = "|cffA0A0A0"
+cs.color_red = cs.make_color("ff2020")
+cs.color_red_1 = cs.make_color("ff0000")
+cs.color_orange = cs.make_color("FF8000")
+cs.color_orange_1 = cs.make_color("FFB266")
+cs.color_yellow = cs.make_color("FFFF66")
+cs.color_blue = cs.make_color("20a0FF")
+cs.color_purple = cs.make_color("C086F9")
+cs.color_green = cs.make_color("00ff00")
+cs.color_white = cs.make_color("ffffFF")
+cs.color_grey = cs.make_color("A0A0A0")
 
 -- Frame
 function cs.create_simple_frame(name)
@@ -255,17 +258,18 @@ function cs.create_simple_frame(name)
   return f
 end
 
-function cs.create_simple_text_frame(name, to, x, y, text, text_to, mono)
+function cs.create_simple_text_frame(name, to, x, y, text, text_to, mono, font_size,background)
   local f = cs.create_simple_frame(name)
   f:SetHeight(10)
   f:SetWidth(20)
   f:SetPoint(to, x, y)
 
   local font = "Fonts\\FRIZQT__.TTF"
-  local font_size = 12
   if mono then
     font = "Interface\\AddOns\\CustomScripts\\fonts\\UbuntuMono-R.ttf"
-    font_size = 13
+    font_size = font_size or 14
+  else
+    font_size = font_size or 12
   end
 
   f.cs_text = f:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
@@ -273,6 +277,21 @@ function cs.create_simple_text_frame(name, to, x, y, text, text_to, mono)
   f.cs_text:SetPoint(text_to or "BOTTOMLEFT", 0, 0)
   f.cs_text:SetJustifyH("LEFT")
   f.cs_text:SetText(text)
+
+  if background then
+    f.texture = f:CreateTexture(nil, "BACKGROUND")
+    f.texture:SetTexture(unpack(background))
+  end
+
+  function f:CS_SetText(text)
+    self.cs_text:SetText(text)
+    if self.texture then
+      self.texture:SetHeight(self.cs_text:GetHeight()+2)
+      self.texture:SetWidth(self.cs_text:GetWidth()+2)
+      self.texture:ClearAllPoints()
+      self.texture:SetPoint("CENTER", self.cs_text, "CENTER", 0, -1)
+    end
+  end
 
   return f
 end
