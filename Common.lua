@@ -746,7 +746,7 @@ end
 
 ---@class cs.Dps
 cs.Dps = { new = function(self) return setmetatable({}, {__index = self}) end }
-
+cs.Dps.session_store_limit_ts = 3600 * 2
 
 ---@class cs.Dps.Session
 cs.Dps.Session = { new = function(self) return setmetatable({}, {__index = self}) end }
@@ -781,13 +781,23 @@ function cs.Dps.Session:is_expired(ts)
 end
 
 
+cs_dps_sessions = { target = {}, player = {}}
+
 ---@class cs.Dps.Data
 cs.Dps.Data = { new = function(self) return setmetatable({}, {__index = self}) end }
 
-function cs.Dps.Data.build()
+function cs.Dps.Data.build(unit)
   ---@type cs.Dps.Data
   local data = cs.Dps.Data:new()
-  data.sessions = {}
+  data.sessions = cs_dps_sessions[unit]
+  local ts = GetTime()
+  -- remove expired sessions from saves
+  for it in pairs(data.sessions) do
+    if not cs.compare_time(cs.Dps.session_store_limit_ts, it, ts) then
+      data.sessions[it] = nil
+    end
+  end
+
   data.start_ts = nil
   data.last_ts = nil
 
@@ -812,7 +822,7 @@ function cs.Dps.build(unit, frame_config)
   ---@type cs.Dps
   local dps = cs.Dps:new()
   dps.unit = unit
-  dps.data = cs.Dps.Data.build()
+  dps.data = cs.Dps.Data.build(unit)
   dps:init(frame_config)
   dps:handler("", unit, 0)
   return dps
@@ -901,10 +911,8 @@ end
 --end
 
 ---@type cs.Dps
-local st_dps_target = cs.Dps.build("target", dps_frame.target)
-local st_dps_player = cs.Dps.build("player", dps_frame.player)
-
-
+local st_dps_target
+local st_dps_player
 
 
 
@@ -1184,6 +1192,13 @@ end
 
 
 local main = function()
+
+  local main_frame = cs.create_simple_frame("pal_main_frame")
+  main_frame:RegisterEvent("VARIABLES_LOADED")
+  main_frame:SetScript("OnEvent", function()
+    st_dps_target = cs.Dps.build("target", dps_frame.target)
+    st_dps_player = cs.Dps.build("player", dps_frame.player)
+  end)
 
   --PVP
   local pvp = nil
