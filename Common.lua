@@ -405,7 +405,7 @@ function cs.CombatChecker:_report_status()
 
       data.text.cs_text:SetText(data.color..dur)
     else
-      data.text.cs_text:SetText("-")
+      data.text.cs_text:SetText(" ")
     end
   end
 end

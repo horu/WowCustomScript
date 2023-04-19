@@ -2,7 +2,7 @@ local cs = cs_common
 
 -- +TODO: Combat bless
 
-local state_holder_frame = {"StateHolder.build", "BOTTOM",-290, 69, "", "CENTER", true}
+local state_holder_frame = {"StateHolder.build", "BOTTOM",-330, 69, "", "LEFT", true}
 
 
 -- buffs
@@ -342,12 +342,13 @@ function StateBuff:to_string()
 
   local str = to_short(current)
   if not buffed then
-    str = str .. "(--)"
+    str = str .. "|cffff2020XX"
   elseif buffed ~= current then
-    str = str .. "(" .. to_short(buffed) .. ")"
+    str = str .. "|cff00ff00" .. to_short(buffed)
   else
-    str = str .. "    "
+    str = str .. "  "
   end
+  str = str .. "|r"
 
   return str
 end
@@ -519,12 +520,14 @@ end
 function State:_standard_rebuff_attack()
   self.buff_list.aura:tmp_rebuff(self:_get_aura())
   self.buff_list.bless:tmp_rebuff(self:_get_bless())
-  if cs.is_in_party() and not cs.check_combat(cs.c_affect) then
-    cs.rebuff(buff_Righteous)
-    buff_party()
-  end
-  if not cs.check_combat(cs.c_normal, cs.c_aggro) and cs.check_target(cs.t_fr_player) then
-    rebuff_unit("target")
+  if not cs.check_combat(cs.c_affect) then
+    if cs.is_in_party() then
+      cs.rebuff(buff_Righteous)
+      buff_party()
+    end
+    if cs.check_target(cs.t_fr_player) then
+      rebuff_unit("target")
+    end
   end
 end
 
