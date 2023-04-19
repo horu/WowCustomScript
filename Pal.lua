@@ -143,6 +143,9 @@ end
 local cast_DivineShield = "Divine Shield"
 local cast_DivineProtection = "Divine Protection"
 local cast_BlessingProtection = "Blessing of Protection"
+local cast_LayOnHands = "Lay on Hands"
+
+local cast_shield_list = {cast_DivineShield, cast_BlessingProtection}
 
 
 local cast_CrusaderStrike = "Crusader Strike"
@@ -802,6 +805,50 @@ local on_load = function()
 
 end
 
+
+
+
+
+
+
+local EmegryCaster = cs.create_class()
+
+EmegryCaster.build = function()
+  local caster = EmegryCaster:new()
+  caster.shield_ts = 0
+  return caster
+end
+
+function EmegryCaster:cast()
+  local casted_shield = has_debuff_protection()
+  local ts = GetTime()
+  if not casted_shield then
+    for _, shield_spell in pairs(cast_shield_list) do
+      if not cs.get_spell_cd(shield_spell) then
+        cs.cast(shield_spell)
+        self.shield_ts = ts
+        return
+      end
+    end
+  end
+
+  if cs.compare_time(8, self.shield_ts) or cs.find_buff({cast_DivineShield, cast_BlessingProtection}) then
+    return
+  end
+
+  ClearTarget()
+  cs.debug("Lay")
+  cs.cast(cast_LayOnHands)
+end
+
+local em_caster = EmegryCaster.build()
+
+
+
+
+
+
+
 local main = function()
   local main_frame = cs.create_simple_frame("pal_main_frame")
   main_frame:RegisterEvent("VARIABLES_LOADED")
@@ -821,6 +868,9 @@ function cast_heal(heal_cast)
   cs.cast(heal_cast)
 end
 
+function emegrancy()
+  em_caster:cast()
+end
 
 
 

@@ -646,6 +646,22 @@ cs.cast = function(a1,a2,a3,a4,a5,a6,a7)
   return true
 end
 
+cs.get_spell_cd = function(spell)
+  local i,a=0
+  while a~=spell do
+    i=i+1
+    a=GetSpellName(i,"spell")
+  end
+  local ts_start, duration = GetSpellCooldown(i,"spell")
+  if ts_start == 0 then
+    -- no cd
+    return nil
+  end
+
+  local ts = GetTime()
+  return duration - ts + ts_start, ts_start, duration
+end
+
 function cs.find_buff(check_list, unit)
   for i, check in pairs(cs.to_table(check_list)) do
     if FindBuff(check, unit) then
