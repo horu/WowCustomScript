@@ -691,7 +691,7 @@ function cs.rebuff_unit(buff, check, unit)
   end
 
   TargetLastTarget()
-  cs.auto_attack()
+  --cs.auto_attack()
   return 1
 end
 

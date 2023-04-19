@@ -1,6 +1,8 @@
 local cs = cs_common
 
 -- +TODO: Combat bless
+-- invit overmouse
+
 
 local state_holder_frame = {"StateHolder.build", "BOTTOMLEFT",415, 69, "", "LEFT", true, false, }
 
@@ -92,6 +94,7 @@ local function rebuff_unit(unit)
   if result == 1 then
     print("BUFF: ".. to_short(buff) .. " FOR ".. pfUI.api.GetUnitColor(unit) .. class)
   end
+  return result
 end
 
 local function buff_party()
@@ -104,6 +107,19 @@ local function buff_party()
   end
 end
 
+local alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+local function rebuff_anybody()
+  if not cs.check_combat(cs.c_affect) and not cs.check_target(cs.t_exists) then
+    for i=1,strlen(alphabet) do
+      local name = string.sub(alphabet, i, i)
+      TargetByName(name)
+      if cs.check_target(cs.t_fr_player) then
+        rebuff_unit("target")
+      end
+      ClearTarget()
+    end
+  end
+end
 
 
 
@@ -909,6 +925,9 @@ function emegrancy()
   em_caster:em_cast(true)
 end
 
+function random_rebuff()
+  rebuff_anybody()
+end
 
 
 
