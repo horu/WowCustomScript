@@ -181,6 +181,56 @@ end
 
 
 
+
+
+
+local EmegryCaster = cs.create_class()
+
+EmegryCaster.build = function()
+  local caster = EmegryCaster:new()
+  caster.shield_ts = 0
+  return caster
+end
+
+function EmegryCaster:cast()
+  local casted_shield = has_debuff_protection()
+  local ts = GetTime()
+  if not casted_shield then
+    for _, shield_spell in pairs(cast_shield_list) do
+      if not cs.get_spell_cd(shield_spell) then
+        cs.cast(shield_spell)
+        self.shield_ts = ts
+        return true
+      end
+    end
+  end
+
+  if cs.compare_time(8, self.shield_ts) or cs.find_buff({cast_DivineShield, cast_BlessingProtection}) then
+    return
+  end
+
+  if cs.get_spell_cd(cast_LayOnHands) then
+    return
+  end
+
+  ClearTarget()
+  cs.debug("Lay")
+  cs.cast(cast_LayOnHands)
+  return true
+end
+
+local em_caster = EmegryCaster.build()
+
+
+
+
+
+
+
+
+
+
+
 -- ID
 local state_RUSH = "RUSH"
 local state_NORM = "NORM"
@@ -735,8 +785,8 @@ end
 -- const
 function StateHolder:_check_hp()
   local hp_level = cs.get_hp_level()
-  if not has_debuff_protection() and hp_level <= 0.2 then
-    cs.cast(cast_DivineShield, cast_BlessingProtection)
+  if hp_level <= 0.2 then
+    em_caster:cast()
     return nil
   end
   return true
@@ -825,44 +875,6 @@ local on_load = function()
   end)
 
 end
-
-
-
-
-
-
-
-local EmegryCaster = cs.create_class()
-
-EmegryCaster.build = function()
-  local caster = EmegryCaster:new()
-  caster.shield_ts = 0
-  return caster
-end
-
-function EmegryCaster:cast()
-  local casted_shield = has_debuff_protection()
-  local ts = GetTime()
-  if not casted_shield then
-    for _, shield_spell in pairs(cast_shield_list) do
-      if not cs.get_spell_cd(shield_spell) then
-        cs.cast(shield_spell)
-        self.shield_ts = ts
-        return
-      end
-    end
-  end
-
-  if cs.compare_time(8, self.shield_ts) or cs.find_buff({cast_DivineShield, cast_BlessingProtection}) then
-    return
-  end
-
-  ClearTarget()
-  cs.debug("Lay")
-  cs.cast(cast_LayOnHands)
-end
-
-local em_caster = EmegryCaster.build()
 
 
 
