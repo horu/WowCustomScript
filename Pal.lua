@@ -40,7 +40,7 @@ local slot_OffHand = 15
 
 local to_short_list = {}
 to_short_list[aura_Concentration] = cs.color_yellow .. "CA" .. "|r"
-to_short_list[aura_Devotion] = cs.color_blue .. "DA" .. "|r"
+to_short_list[aura_Devotion] = cs.color_white .. "DA" .. "|r"
 to_short_list[aura_Sanctity] = cs.color_red .. "SA" .. "|r"
 to_short_list[aura_Retribution] = cs.color_purple .. "RA" .. "|r"
 to_short_list[aura_Shadow] = cs.color_purple .. "SH" .. "|r"
@@ -126,37 +126,6 @@ end
 
 
 
--- SEAL
-
-local function buff_seal(buff, custom_buff_check_list)
-  if not cs.check_target(cs.t_attackable) then
-    return true
-  end
-  return cs.rebuff(buff, custom_buff_check_list)
-end
-
-local function seal_and_cast(buff, cast_list, custom_buff_check_list)
-  if buff_seal(buff, custom_buff_check_list) then
-    return
-  end
-
-  return cs.cast(cast_list)
-end
-
-local function target_has_debuff_seal_Light()
-  -- TODO: add remaining check time and recast below 4 sec
-  return cs.has_debuffs(cs.u_target, "Spell_Holy_HealingAura")
-end
-
-local function has_debuff_seal_Wisdom()
-  return cs.has_debuffs(cs.u_target, "Spell_Holy_RighteousnessAura")
-end
-
-local function has_debuff_protection()
-  return cs.has_debuffs(cs.u_target, "Spell_Holy_RemoveCurse")
-end
-
-
 
 
 
@@ -169,9 +138,8 @@ local cast_LayOnHands = "Lay on Hands"
 
 local cast_shield_list = {cast_DivineShield, cast_BlessingProtection}
 
-
-local cast_CrusaderStrike = "Crusader Strike"
 local cast_Judgement = "Judgement"
+local cast_CrusaderStrike = "Crusader Strike"
 local cast_HolyStrike = "Holy Strike"
 local cast_Exorcism = "Exorcism"
 
@@ -185,19 +153,79 @@ local function build_cast_list(cast_list)
   return cast_list
 end
 
-local procast_on_seal_Light = function()
-  if cs.find_buff(seal_Light) and not target_has_debuff_seal_Light() then
-    cs.cast(cast_Judgement)
+local function has_debuff_protection()
+  return cs.has_debuffs(cs.u_target, "Spell_Holy_RemoveCurse")
+end
+
+
+
+
+
+
+
+
+
+-- SEAL
+---@class Seal
+local Seal = cs.create_class()
+
+Seal.init = function()
+  Seal.seal_Righteousness = Seal.build(seal_Righteousness)
+  Seal.seal_Crusader = Seal.build(seal_Crusader)
+  Seal.seal_Light = Seal.build(seal_Light, "Spell_Holy_HealingAura")
+  Seal.seal_Wisdom = Seal.build(seal_Wisdom, "Spell_Holy_RighteousnessAura")
+end
+
+Seal.build = function(buff, target_debuff)
+  local seal = Seal:new()
+
+  seal.buff = cs.Buff.build(buff)
+  seal.target_debuff = target_debuff
+  seal.judgement = cs.Spell.build(cast_Judgement)
+
+  return seal
+end
+
+-- const
+function Seal:check_target_debuff()
+  if not self.target_debuff then
+    return
+  end
+
+  return cs.has_debuffs(cs.u_target, self.target_debuff)
+end
+
+-- const
+function Seal:check_exists()
+  return self.buff:check_exists()
+end
+
+function Seal:reseal()
+  if not cs.check_target(cs.t_attackable) then
+    return cs.Buff.failed
+  end
+  return self.buff:rebuff()
+end
+
+-- return true on success cast
+function Seal:reseal_and_cast(...)
+  if self:reseal() then
+    return
+  end
+
+  local order = cs.SpellOrder.build(unpack(arg))
+  return order:cast()
+end
+
+function Seal:judgement_it()
+  if self:check_exists() and not self:check_target_debuff() then
+    self.judgement:cast()
     return true
   end
 end
 
-local procast_on_seal_Righteousness = function()
-  if cs.find_buff(seal_Righteousness) then
-    cs.cast(cast_Judgement)
-    return true
-  end
-end
+
+
 
 
 
@@ -310,7 +338,7 @@ local default_states_config = {
     DEF = {
       name = "DEF",
       hotkey = 2,
-      color = cs.color_blue,
+      color = cs.color_white,
 
       use_slots = { slot_OneHand, slot_OffHand },
 
@@ -326,7 +354,7 @@ local default_states_config = {
     BASE = {
       name = "BASE",
       hotkey = 1,
-      color = cs.color_white,
+      color = cs.color_blue,
 
       aura = {
         default = aura_Retribution,
@@ -780,6 +808,7 @@ function StateHolder:_check_loop()
     end
   end
 
+  -- TODO: optimize
   self.frame:CS_SetText(self.cur_state:to_string())
 
   if cs.check_target(cs.t_attackable) then
@@ -823,6 +852,10 @@ end
 local state_holder
 
 local on_load = function()
+  Seal.init()
+
+  em_caster = EmegryCaster.build()
+
   state_holder = StateHolder.build()
 
   local states = cs_states_config.states
@@ -839,55 +872,62 @@ local on_load = function()
     cs.cast(cast_HolyStrike)
 
     if state.id ~= state_RUSH then
-      if procast_on_seal_Light() then
+      if Seal.seal_Light:judgement_it() then
         return
       end
     end
 
-    seal_and_cast(seal_Righteousness, build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
+    Seal.seal_Righteousness:reseal_and_cast(build_cast_list({ cast_Judgement, cast_CrusaderStrike }))
   end)
 
   state_holder:add_action("fast", function(state)
     if not cs.check_target(cs.t_close) then return end
 
-    if procast_on_seal_Light() then
+    if Seal.seal_Light:judgement_it() or Seal.seal_Righteousness:judgement_it() or Seal.seal_Wisdom:judgement_it() then
       return
     end
 
-    --if state.id == state_RUSH then
-    if procast_on_seal_Righteousness() then
-      return
-    end
-    --end
-
-    if not buff_seal(seal_Crusader, {seal_Crusader, seal_Righteousness}) then
-      cs.cast(cast_HolyStrike, cast_CrusaderStrike)
-    end
+    Seal.seal_Crusader:reseal_and_cast(cast_HolyStrike, cast_CrusaderStrike)
   end)
 
   state_holder:add_action("def", function(state)
     if not cs.check_target(cs.t_close) then return end
 
-    if procast_on_seal_Righteousness() then
+    if Seal.seal_Righteousness:judgement_it() or Seal.seal_Wisdom:judgement_it() then
       return
     end
 
-    if not target_has_debuff_seal_Light() then
-      seal_and_cast(seal_Light, cast_Judgement)
+    if not Seal.seal_Light:check_target_debuff() and not Seal.seal_Wisdom:check_target_debuff() then
+      Seal.seal_Light:reseal_and_cast(cast_Judgement)
       return
-    elseif state.id == state_RUSH then
+    end
+
+    if state.id == state_RUSH then
       cs.cast(cast_CrusaderStrike)
       return
     end
 
-    if not buff_seal(seal_Light) then
-      cs.cast(cast_HolyStrike, cast_CrusaderStrike)
-    end
+    Seal.seal_Light:reseal_and_cast(cast_HolyStrike, cast_CrusaderStrike)
   end)
 
   state_holder:add_action( "mana", function(state)
     if not cs.check_target(cs.t_close) then return end
 
+    if Seal.seal_Light:judgement_it() or Seal.seal_Righteousness:judgement_it() then
+      return
+    end
+
+    if not Seal.seal_Light:check_target_debuff() and not Seal.seal_Wisdom:check_target_debuff() then
+      Seal.seal_Wisdom:reseal_and_cast(cast_Judgement)
+      return
+    end
+
+    if state.id == state_RUSH then
+      cs.cast(cast_CrusaderStrike)
+      return
+    end
+
+    Seal.seal_Wisdom:reseal_and_cast(cast_HolyStrike, cast_CrusaderStrike)
   end)
 
 
@@ -936,7 +976,9 @@ function cs_rebuff_unit()
   rebuff_unit(unit)
 end
 
-
+function cs_rebuff_anybody()
+  rebuff_anybody()
+end
 
 
 

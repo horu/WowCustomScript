@@ -56,11 +56,17 @@ cs.is_table = function(value)
   return type(value) == "table"
 end
 
-function cs.to_table(value)
-  if type(value) ~= "table" then
-    return { value }
+function cs.to_table(...)
+  local tbl = {}
+  for i, v in pairs(arg) do
+    if type(v) == "table" then
+      return v
+    end
+    if type(i) == "number" then
+      table.insert(tbl, v)
+    end
   end
-  return value
+  return tbl
 end
 
 cs.to_dict = function(list)
@@ -246,6 +252,15 @@ end
 cs.add_loop_event_once = function(name, delay, obj, func)
   cs.add_loop_event(name, delay, obj, func, 1)
 end
+
+
+
+
+
+
+
+
+
 
 
 cs.make_color = function(rgb)
@@ -779,11 +794,11 @@ end
 ---@class cs.SpellOrder
 cs.SpellOrder = cs.create_class()
 
-cs.SpellOrder.build = function(list_name)
+cs.SpellOrder.build = function(...)
   local order = cs.SpellOrder:new()
 
   order.spell_list = {}
-  for _, name in pairs(list_name) do
+  for _, name in pairs(cs.to_table(unpack(arg))) do
     local spell = cs.Spell.build(name)
     table.insert(order.spell_list, spell)
   end
@@ -852,9 +867,56 @@ function cs.find_buff(check_list, unit)
   end
 end
 
-cs.buff_Exists = nil
-cs.buff_Success = 1
-cs.buff_Failed = 2
+
+
+
+---@class cs.Buff
+cs.Buff = cs.create_class()
+
+cs.Buff.exists = nil
+cs.Buff.success = 1
+cs.Buff.failed = 2
+
+cs.Buff.build = function(name, unit)
+  local buff = cs.Buff:new()
+
+  buff.name = name
+  buff.unit = unit or cs.u_player
+  buff.spell = cs.Spell.build(name)
+
+  return buff
+end
+
+-- const
+function cs.Buff:check_target_range()
+  local unit = self.unit
+  if unit == cs.u_player then
+    return true
+  end
+  return UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDead(unit) and
+          CheckInteractDistance(unit, 4) and UnitIsVisible(unit)
+end
+
+-- const
+function cs.Buff:check_exists()
+  return cs.find_buff(self.name, self.unit)
+end
+
+function cs.Buff:rebuff()
+  if not self:check_target_range() then
+    return cs.Buff.failed
+  end
+
+  if self:check_exists() then
+    return cs.Buff.exists
+  end
+
+  if self.spell:cast_to_unit(self.unit) then
+    return cs.Buff.success
+  end
+
+  return cs.Buff.failed
+end
 
 -- default to player
 function cs.rebuff(buff, custom_buff_check_list, unit)
@@ -866,20 +928,20 @@ function cs.rebuff(buff, custom_buff_check_list, unit)
             UnitIsDead(unit) or
             not CheckInteractDistance(unit, 4) or
             not UnitIsVisible(unit) then
-      return cs.buff_Failed
+      return cs.Buff.failed
     end
   end
 
   if cs.find_buff(custom_buff_check_list or buff, unit) then
-    return cs.buff_Exists
+    return cs.Buff.exists
   end
 
   local spell = cs.Spell.build(buff)
   if spell:cast_to_unit(unit) then
-    return cs.buff_Success
+    return cs.Buff.success
   end
 
-  return cs.buff_Failed
+  return cs.Buff.failed
 end
 
 cs.get_buff_list = function(unit, b_fun)
