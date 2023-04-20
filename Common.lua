@@ -169,7 +169,7 @@ local Looper = cs.create_class()
 local looper = Looper:new({
   timer = nil,
   global_period = 0.1,
-  list = {},
+  event_list = {},
 })
 
 looper.delay_q = function(a1,a2,a3,a4,a5,a6,a7,a8,a9)
@@ -204,16 +204,22 @@ function Looper:iterate_event(event)
   if event.cur_period <= 0 then
     event.func(event.obj)
     event.cur_period = event.period
+    if event.count then
+      event.count = event.count - 1
+      if event.count <= 0 then
+        event.period = 0
+      end
+    end
   end
   return event.period == 0
 end
 
 function Looper:main_loop()
   local count = 0
-  for name, event in pairs(self.list) do
+  for name, event in pairs(self.event_list) do
     local break_event = self:iterate_event(event)
     if break_event then
-      self.list[name] = nil
+      self.event_list[name] = nil
     end
     count = count + 1
   end
@@ -222,13 +228,15 @@ function Looper:main_loop()
   end
 end
 
-cs.add_loop_event = function(name, period, obj, func)
+cs.add_loop_event = function(name, period, obj, func, count)
   local event = {}
   event.func = func
   event.obj = obj
   event.period = period
-  event.cur_period = 0
-  looper.list[name] = event
+  event.cur_period = period
+  event.count = count
+
+  looper.event_list[name] = event
 
   if not looper.timer then
     looper.delay_q(looper.main_loop, looper)
@@ -318,7 +326,10 @@ end
 
 
 
-
+--units
+cs.u_mouseover = "mouseover"
+cs.u_target = "target"
+cs.u_player = "player"
 
 -- target
 cs.t_friend = UnitIsFriend
@@ -353,11 +364,97 @@ function cs.check_target(c1, c2, c3)
               not cs.check_target(cs.t_dead) then
         return true
       end
-    elseif check("target", "player") then
+    elseif check(cs.u_target, cs.u_player) then
       return true
     end
   end
 end
+
+
+
+
+
+
+
+---@class cs.Targeter
+cs.Targeter = cs.create_class()
+
+function cs.Targeter.build()
+  local targeter = cs.Targeter:new()
+
+  return targeter
+end
+
+function cs.Targeter:set_target_mouse()
+  if self.in_progress then
+    return
+  end
+  self.in_progress = 1
+
+  self.prev_target = cs.check_target(cs.t_exists)
+  self.prev_combat = cs.check_combat(cs.c_normal)
+
+  if UnitExists(cs.u_mouseover) then
+    self.cur_target = cs.u_mouseover
+    TargetUnit(cs.u_mouseover)
+  else
+    self.in_progress = 3
+    self:completion()
+  end
+end
+
+function cs.Targeter:set_last_target()
+  if self.in_progress ~= 1 then
+    return
+  end
+  self.in_progress = 2
+
+  if self.prev_target then
+    TargetLastTarget()
+  else
+    ClearTarget()
+  end
+
+  if self.prev_combat then
+    cs.add_loop_event("Targeter2", 0.4, self, cs.Targeter.deffered_set_combat_mode, 1)
+  else
+    self.in_progress = 3
+    self:completion()
+  end
+end
+
+function cs.Targeter:deffered_set_combat_mode()
+  --cs.debug(self)
+  if self.in_progress ~= 2 then
+    return
+  end
+
+  self.in_progress = 3
+
+  if self.prev_combat then
+    if not cs.check_combat(cs.c_normal) then
+      AttackTarget()
+    end
+  end
+
+  cs.add_loop_event("Targeter3", 0.4, self, cs.Targeter.completion, 1)
+end
+
+function cs.Targeter:completion()
+  --cs.debug(self)
+  if self.in_progress ~= 3 then
+    return
+  end
+
+  self.in_progress = 4
+
+  self.cur_target = nil
+  self.in_progress = nil
+  self.prev_combat = nil
+  self.prev_target = nil
+end
+
+local st_targeter = cs.Targeter.build()
 
 
 
@@ -1189,8 +1286,6 @@ end
 
 
 
-
-
 local main = function()
 
   local main_frame = cs.create_simple_frame("pal_main_frame")
@@ -1209,3 +1304,24 @@ local main = function()
 end
 
 main()
+
+
+
+
+
+
+
+
+
+
+
+
+-- public
+
+function cs_set_target_mouse()
+  st_targeter:set_target_mouse()
+end
+
+function cs_set_target_last()
+  st_targeter:set_last_target()
+end

@@ -913,20 +913,24 @@ main()
 
 
 -- PUBLIC
-function attack_action(name)
+function cs_attack_action(name)
   state_holder:attack_action(name)
 end
 
-function cast_heal(heal_cast)
+function cs_cast_heal(heal_cast)
   state_holder:heal_action(heal_cast)
 end
 
-function emegrancy()
+function cs_emegrancy()
   em_caster:em_cast(true)
 end
 
-function random_rebuff()
-  rebuff_anybody()
+function cs_rebuff_unit()
+  local unit = cs.u_target
+  if not cs.check_target(cs.t_exists) then
+    unit = cs.u_mouseover
+  end
+  rebuff_unit(unit)
 end
 
 
