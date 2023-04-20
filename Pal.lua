@@ -30,7 +30,8 @@ local seal_Righteousness = "Seal of Righteousness"
 local seal_Crusader = "Seal of the Crusader"
 local seal_Justice = "Seal of Justice"
 local seal_Light = "Seal of Light"
-local seal_list_all = { seal_Righteousness, seal_Crusader, seal_Justice, seal_Light }
+local seal_Wisdom = "Seal of Wisdom"
+local seal_list_all = { seal_Righteousness, seal_Crusader, seal_Justice, seal_Light, seal_Wisdom }
 
 local slot_TwoHand = 13
 local slot_OneHand = 14
@@ -50,10 +51,11 @@ to_short_list[bless_Wisdom] = cs.color_blue .. "BW" .. "|r"
 to_short_list[bless_Might] = cs.color_red .. "BM" .. "|r"
 to_short_list[bless_Salvation] = cs.color_yellow .. "BV" .. "|r"
 
-to_short_list[seal_Righteousness] = cs.color_green.."SR".."|r"
+to_short_list[seal_Righteousness] = cs.color_purple.."SR".."|r"
 to_short_list[seal_Crusader] = cs.color_orange_1.."SC".."|r"
 to_short_list[seal_Light] = cs.color_yellow.."SL".."|r"
-to_short_list[seal_Justice] = cs.color_blue.."SJ".."|r"
+to_short_list[seal_Justice] = cs.color_green.."SJ".."|r"
+to_short_list[seal_Wisdom] = cs.color_blue.."SW".."|r"
 
 local to_short = function(cast)
   if not cast then
@@ -143,11 +145,15 @@ end
 
 local function target_has_debuff_seal_Light()
   -- TODO: add remaining check time and recast below 4 sec
-  return cs.has_debuffs("target", "Spell_Holy_HealingAura")
+  return cs.has_debuffs(cs.u_target, "Spell_Holy_HealingAura")
+end
+
+local function has_debuff_seal_Wisdom()
+  return cs.has_debuffs(cs.u_target, "Spell_Holy_RighteousnessAura")
 end
 
 local function has_debuff_protection()
-  return cs.has_debuffs("player", "Spell_Holy_RemoveCurse")
+  return cs.has_debuffs(cs.u_target, "Spell_Holy_RemoveCurse")
 end
 
 
@@ -879,18 +885,12 @@ local on_load = function()
     end
   end)
 
-  state_holder:add_action( "null", function(state)
+  state_holder:add_action( "mana", function(state)
+    if not cs.check_target(cs.t_close) then return end
+
   end)
 
-  state_holder:add_action("mid", function(state)
-    if procast_on_seal_Light() then
-      return
-    end
 
-    seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
-  end)
-
-  em_caster = EmegryCaster.build()
 end
 
 

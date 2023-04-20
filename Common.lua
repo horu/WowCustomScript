@@ -882,16 +882,29 @@ function cs.rebuff(buff, custom_buff_check_list, unit)
   return cs.buff_Failed
 end
 
-function cs.has_buffs(unit, buff_str, b_fun)
-  if not unit then unit = "player" end
-  if not buff_str then buff_str = "" end
+cs.get_buff_list = function(unit, b_fun)
+  if not unit then unit = cs.u_player end
   if not b_fun then b_fun = UnitBuff end
 
+  local buff_list = {}
   for i=1, 100 do
     local buff = b_fun(unit, i)
     if not buff then break end
 
-    --print(buff)
+    table.insert(buff_list, buff)
+  end
+  return buff_list
+end
+
+cs.get_debuff_list = function(unit)
+  return cs.get_buff_list(unit, UnitDebuff)
+end
+
+function cs.has_buffs(unit, buff_str, b_fun)
+  if not buff_str then buff_str = "" end
+
+  local buff_list = cs.get_buff_list(unit, b_fun)
+  for _, buff in pairs(buff_list) do
     if string.find(buff, buff_str) then
       return true
     end
@@ -1261,8 +1274,8 @@ local function unit_dump_scan(name)
   local units = pfUI.api.GetScanDb()
   local m = units["mobs"][name]
   local p = units["players"][name]
-  local m_ut = time_to_str(m and m.updatetime or 0)
-  local p_ut = time_to_str(p and p.updatetime or 0)
+  local m_ut = cs.time_to_str(m and m.updatetime or 0)
+  local p_ut = cs.time_to_str(p and p.updatetime or 0)
   print("    M("..m_ut.."):"..ToString(m, 2, 10, 1))
   print("    P("..p_ut.."):"..ToString(p, 2, 10, 1))
 end
@@ -1350,26 +1363,6 @@ local function all_dump()
   end
 end
 
-function ud(name)
-  local cur_time = time_to_str(GetTime())
-  print("----- "..cur_time)
-  unit_dump(name)
-end
-
-
-function main_d()
-  local cur_time = time_to_str(GetTime())
-  print("----- "..cur_time)
-
-  if UnitExists("target") then
-    local name = UnitName("target")
-    unit_dump(name)
-  else
-    all_dump()
-  end
-
-end
-
 
 
 
@@ -1418,4 +1411,26 @@ end
 
 function cs_cast_helpful(heal_cast)
   cs.cast_helpful(heal_cast)
+end
+
+function cs_dump_unit()
+  local cur_time = cs.time_to_str(GetTime())
+  print("----- "..cur_time)
+
+  if cs.check_target(cs.t_exists) then
+    local buffs = cs.get_buff_list(cs.u_target)
+    local debuffs = cs.get_debuff_list(cs.u_target)
+    for t, list in pairs({buffs = buffs, debuffs = debuffs}) do
+      print(t)
+      for _, buff in pairs(list) do
+        cs.debug(buff)
+      end
+    end
+
+    --local name = UnitName("target")
+    --unit_dump(name)
+  else
+    all_dump()
+  end
+
 end
