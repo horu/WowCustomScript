@@ -236,7 +236,7 @@ function EmegryCaster:em_cast(lay)
   return true
 end
 
-local em_caster = EmegryCaster.build()
+local em_caster
 
 
 
@@ -817,10 +817,6 @@ end
 local state_holder
 
 local on_load = function()
-  if event ~= "VARIABLES_LOADED" then
-    return
-  end
-
   state_holder = StateHolder.build()
 
   local states = cs_states_config.states
@@ -894,6 +890,7 @@ local on_load = function()
     seal_and_cast(seal_Righteousness, build_cast_list({ cast_CrusaderStrike }))
   end)
 
+  em_caster = EmegryCaster.build()
 end
 
 
@@ -903,9 +900,16 @@ end
 
 
 local main = function()
+  -- defer load
   local main_frame = cs.create_simple_frame("pal_main_frame")
   main_frame:RegisterEvent("VARIABLES_LOADED")
-  main_frame:SetScript("OnEvent", on_load)
+  main_frame:SetScript("OnEvent", function()
+    if event ~= "VARIABLES_LOADED" then
+      return
+    end
+
+    cs.add_loop_event_once("main_frame", 0.2, nil, on_load)
+  end)
 end
 
 main()

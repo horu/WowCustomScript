@@ -243,6 +243,9 @@ cs.add_loop_event = function(name, period, obj, func, count)
   end
 end
 
+cs.add_loop_event_once = function(name, delay, obj, func)
+  cs.add_loop_event(name, delay, obj, func, 1)
+end
 
 
 cs.make_color = function(rgb)
@@ -781,7 +784,6 @@ cs.SpellOrder.build = function(list_name)
 
   order.spell_list = {}
   for _, name in pairs(list_name) do
-    cs.debug(name)
     local spell = cs.Spell.build(name)
     table.insert(order.spell_list, spell)
   end
@@ -1373,10 +1375,10 @@ end
 
 
 
-
+-- defer load
 local main = function()
 
-  local main_frame = cs.create_simple_frame("pal_main_frame")
+  local main_frame = cs.create_simple_frame("common_main_frame")
   main_frame:RegisterEvent("VARIABLES_LOADED")
   main_frame:SetScript("OnEvent", function()
     st_dps_target = cs.Dps.build("target", dps_frame.target)
@@ -1384,11 +1386,11 @@ local main = function()
   end)
 
   --PVP
-  local pvp = nil
-  if not UnitIsPVP("player") and pvp then
-    TogglePVP()
-    print("ENABLE PVP")
-  end
+  --local pvp = nil
+  --if not UnitIsPVP("player") and pvp then
+  --  TogglePVP()
+  --  print("ENABLE PVP")
+  --end
 end
 
 main()
@@ -1412,4 +1414,8 @@ end
 
 function cs_set_target_last()
   st_targeter:set_last_target()
+end
+
+function cs_cast_helpful(heal_cast)
+  cs.cast_helpful(heal_cast)
 end
