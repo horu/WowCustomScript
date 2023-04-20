@@ -170,6 +170,7 @@ end
 local Seal = cs.create_class()
 
 Seal.init = function()
+  -- TODO: dont debuff one unit with low hp ( dps and npc )
   Seal.seal_Righteousness = Seal.build(seal_Righteousness)
   Seal.seal_Crusader = Seal.build(seal_Crusader)
   Seal.seal_Light = Seal.build(seal_Light, "Spell_Holy_HealingAura")
@@ -244,30 +245,31 @@ EmegryCaster.build = function()
   return caster
 end
 
-function EmegryCaster:em_cast(lay)
+function EmegryCaster:em_buff(lay)
   local casted_shield = has_debuff_protection()
   if not casted_shield then
     local spell = self.spell_order:cast(cs.u_player)
     if spell then
       self.shield_ts = spell.cast_ts
+      return cs.Buff.success
     end
   end
 
   if cs.compare_time(8, self.shield_ts) or cs.find_buff({cast_DivineShield, cast_BlessingProtection}) then
-    return
+    return cs.Buff.exists
   end
 
   if cs.get_spell_cd(cast_LayOnHands) then
-    return
+    return cs.Buff.exists
   end
 
   if not lay then
-    return
+    return cs.Buff.exists
   end
 
   cs.debug("Lay")
   self.lay_spell:cast_to_unit(cs.u_player)
-  return true
+  return cs.Buff.success
 end
 
 local em_caster
@@ -841,11 +843,16 @@ end
 function StateHolder:_check_hp()
   local hp_level = cs.get_hp_level()
   if hp_level <= 0.2 then
-    em_caster:em_cast(hp_level <= 0.1)
-    return nil
+    if em_caster:em_buff(hp_level <= 0.1) ~= cs.Buff.exists then
+      return nil
+    end
   end
   return true
 end
+
+
+
+
 
 
 ---@type StateHolder
@@ -965,7 +972,7 @@ function cs_cast_heal(heal_cast)
 end
 
 function cs_emegrancy()
-  em_caster:em_cast(true)
+  em_caster:em_buff(true)
 end
 
 function cs_rebuff_unit()
