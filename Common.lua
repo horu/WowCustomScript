@@ -345,32 +345,31 @@ cs.t_fr_player = "t_fr_player"
 cs.t_en_player = "t_en_player"
 
 -- check condition by OR
-function cs.check_target(c1, c2, c3)
-  local check_list = { c1, c2, c3 }
-
-  for _, check in pairs(check_list) do
-
-    if check == cs.t_close then
-      if CheckInteractDistance("target", 2) then return true end
-    elseif check == cs.t_close_30 then
-      if CheckInteractDistance("target", 4) then return true end
-    elseif check == cs.t_fr_player then
-      return cs.check_target(cs.t_friend) and cs.check_target(cs.t_player)
-    elseif check == cs.t_en_player then
-      return cs.check_target(cs.t_enemy) and cs.check_target(cs.t_player)
-    elseif check == cs.t_attackable then
-      if cs.check_target(cs.t_exists) and
-              not cs.check_target(cs.t_friend) and
-              not cs.check_target(cs.t_dead) then
-        return true
-      end
-    elseif check(cs.u_target, cs.u_player) then
-      return true
-    end
+function cs.check_unit(check, unit)
+  if check == cs.t_close then
+    return CheckInteractDistance("target", 2)
+  elseif check == cs.t_close_30 then
+    return CheckInteractDistance("target", 4)
+  elseif check == cs.t_fr_player then
+    return cs.check_unit(cs.t_friend, unit) and cs.check_unit(cs.t_player, unit)
+  elseif check == cs.t_en_player then
+    return cs.check_unit(cs.t_enemy, unit) and cs.check_unit(cs.t_player, unit)
+  elseif check == cs.t_attackable then
+    return cs.check_unit(cs.t_exists, unit) and
+            not cs.check_unit(cs.t_friend, unit) and
+            not cs.check_unit(cs.t_dead, unit)
   end
+
+  return check(unit, cs.u_player)
 end
 
+function cs.check_target(check)
+  return cs.check_unit(check, cs.u_target)
+end
 
+function cs.check_mouse(check)
+  return cs.check_unit(check, cs.u_mouseover)
+end
 
 
 
@@ -711,31 +710,29 @@ end
 
 
 
--- cas
+-- spells
+---@class cs.Spell
+cs.Spell = cs.create_class()
 
-cs.cast = function(a1,a2,a3,a4,a5,a6,a7)
-  local cast_list
-  if type(a1) == "table" then
-    cast_list = a1
-  else
-    cast_list = { a1,a2,a3,a4,a5,a6,a7 }
-  end
+cs.Spell.build = function(id_name, book)
+  local spell = cs.Spell:new()
 
-  if table.getn(cast_list) == 1 then
-    cast(cast_list[1])
+  if type(id_name) == "string" then
+    spell.id, spell.book = cs.Spell._find_spell(id_name)
+    spell.name = id_name
   else
-    DoOrder(unpack(cast_list))
+    spell.id = id_name
+    spell.book = book
+    spell.name = GetSpellName(id_name, book)
   end
-  return true
+  spell.cast_ts = nil
+
+  return spell
 end
 
-cs.get_spell_cd = function(spell)
-  local i,a=0
-  while a~=spell do
-    i=i+1
-    a=GetSpellName(i,"spell")
-  end
-  local ts_start, duration = GetSpellCooldown(i,"spell")
+-- const
+function cs.Spell:get_cd()
+  local ts_start, duration = GetSpellCooldown(self.id, self.book)
   if ts_start == 0 then
     -- no cd
     return nil
@@ -745,6 +742,106 @@ cs.get_spell_cd = function(spell)
   return duration - ts + ts_start, ts_start, duration
 end
 
+function cs.Spell:cast(to_self)
+  if not self:get_cd() then
+    CastSpellByName(self.name, to_self);
+    self.cast_ts = GetTime()
+    return true
+  end
+end
+
+function cs.Spell:cast_to_unit(unit)
+  if self:cast(unit == cs.u_player) then
+    if (SpellIsTargeting()) then
+      SpellTargetUnit(unit)
+    end
+    return true
+  end
+end
+
+-- return spell_id, book
+cs.Spell._find_spell = function(name)
+  local id = 0
+  local it_name = ""
+  while it_name ~= name do
+    id = id+1
+    it_name = GetSpellName(id, "spell")
+  end
+  return id, "spell"
+end
+
+
+
+
+---@class cs.SpellOrder
+cs.SpellOrder = cs.create_class()
+
+cs.SpellOrder.build = function(list_name)
+  local order = cs.SpellOrder:new()
+
+  order.spell_list = {}
+  for _, name in pairs(list_name) do
+    cs.debug(name)
+    local spell = cs.Spell.build(name)
+    table.insert(order.spell_list, spell)
+  end
+
+  order.last_casted = 0
+
+  return order
+end
+
+function cs.SpellOrder:cast(unit_to)
+  for i, spell in pairs(self.spell_list) do
+    local casted
+    if unit_to then
+      casted = spell:cast_to_unit(unit_to)
+    else
+      casted = spell:cast()
+    end
+    if casted then
+      self.last_casted = i
+      return spell
+    end
+  end
+end
+
+
+
+
+
+cs.cast = function(a1,a2,a3,a4,a5,a6,a7)
+  local cast_list
+  if type(a1) == "table" then
+    cast_list = a1
+  else
+    cast_list = { a1,a2,a3,a4,a5,a6,a7 }
+  end
+
+  local order = cs.SpellOrder.build(cast_list)
+  return order:cast()
+end
+
+cs.get_spell_cd = function(spell_name)
+  return cs.Spell.build(spell_name):get_cd()
+end
+
+
+-- default to player
+cs.cast_helpful = function(name)
+  local unit = cs.u_player
+  if cs.check_target(cs.t_friend) then
+    unit = cs.u_target
+  elseif cs.check_mouse(cs.t_exists) and cs.check_mouse(cs.t_friend) then
+    unit = cs.u_mouseover
+  end
+
+  local spell = cs.Spell.build(name)
+  return spell:cast_to_unit(unit)
+end
+
+
+
 function cs.find_buff(check_list, unit)
   for i, check in pairs(cs.to_table(check_list)) do
     if FindBuff(check, unit) then
@@ -753,43 +850,34 @@ function cs.find_buff(check_list, unit)
   end
 end
 
--- return nil if rebuff no need
-function cs.rebuff(buff, custom_buff_check_list)
-  if cs.find_buff(custom_buff_check_list or buff) then
-    return
+cs.buff_Exists = nil
+cs.buff_Success = 1
+cs.buff_Failed = 2
+
+-- default to player
+function cs.rebuff(buff, custom_buff_check_list, unit)
+  unit = unit or cs.u_player
+
+  if unit ~= cs.u_player then
+    if not UnitExists(unit) or
+            not UnitIsConnected(unit) or
+            UnitIsDead(unit) or
+            not CheckInteractDistance(unit, 4) or
+            not UnitIsVisible(unit) then
+      return cs.buff_Failed
+    end
   end
 
-  if cs.check_target(cs.t_friend) and not cs.check_target(cs.t_self) then
-    return true
+  if cs.find_buff(custom_buff_check_list or buff, unit) then
+    return cs.buff_Exists
   end
 
-  cs.cast(buff)
-  return true
-end
-
-function cs.rebuff_unit(buff, check, unit)
-  if cs.find_buff(check or buff, unit) then
-    return
+  local spell = cs.Spell.build(buff)
+  if spell:cast_to_unit(unit) then
+    return cs.buff_Success
   end
 
-  if not UnitExists(unit) or
-          not UnitIsConnected(unit) or
-          UnitIsDead(unit) or
-          not CheckInteractDistance(unit, 4) or
-          not UnitIsVisible(unit) then
-    return 2
-  end
-
-  TargetUnit(unit)
-
-  if UnitIsUnit(unit, "target") then
-    -- SpellTargetUnit
-    cs.cast(buff)
-  end
-
-  TargetLastTarget()
-  --cs.auto_attack()
-  return 1
+  return cs.buff_Failed
 end
 
 function cs.has_buffs(unit, buff_str, b_fun)

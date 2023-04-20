@@ -89,7 +89,7 @@ local function rebuff_unit(unit)
     print("BUFF NOT FOUND FOR "..class)
     buff = bless_Might
   end
-  local result = cs.rebuff_unit(buff, bless_list_all, unit)
+  local result = cs.rebuff(buff, bless_list_all, unit)
 
   if result == 1 then
     print("BUFF: ".. to_short(buff) .. " FOR ".. pfUI.api.GetUnitColor(unit) .. class)
@@ -205,19 +205,17 @@ local EmegryCaster = cs.create_class()
 EmegryCaster.build = function()
   local caster = EmegryCaster:new()
   caster.shield_ts = 0
+  caster.spell_order = cs.SpellOrder.build(cast_shield_list)
+  caster.lay_spell = cs.Spell.build(cast_LayOnHands)
   return caster
 end
 
 function EmegryCaster:em_cast(lay)
   local casted_shield = has_debuff_protection()
-  local ts = GetTime()
   if not casted_shield then
-    for _, shield_spell in pairs(cast_shield_list) do
-      if not cs.get_spell_cd(shield_spell) then
-        cs.cast(shield_spell)
-        self.shield_ts = ts
-        return true
-      end
+    local spell = self.spell_order:cast(cs.u_player)
+    if spell then
+      self.shield_ts = spell.cast_ts
     end
   end
 
@@ -233,9 +231,8 @@ function EmegryCaster:em_cast(lay)
     return
   end
 
-  ClearTarget()
   cs.debug("Lay")
-  cs.cast(cast_LayOnHands)
+  self.lay_spell:cast_to_unit(cs.u_player)
   return true
 end
 
@@ -633,7 +630,9 @@ function State:_standard_rebuff_attack()
       buff_party()
     end
     if cs.check_target(cs.t_fr_player) then
-      rebuff_unit("target")
+      rebuff_unit(cs.u_target)
+    elseif cs.check_mouse(cs.t_fr_player) then
+      rebuff_unit(cs.u_mouseover)
     end
   end
 end
@@ -716,7 +715,7 @@ function StateHolder:heal_action(heal_cast)
   if self.cur_state.id == state_HEAL and self.cur_state:rebuff_aura() then
     return
   end
-  cs.cast(heal_cast)
+  cs.cast_helpful(heal_cast)
 
   cs.error_disabler:on()
 end
