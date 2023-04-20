@@ -640,7 +640,7 @@ end
 function State:_get_bless()
   local bless = nil
 
-  if not cs.check_target(cs.t_attackable) and not cs.check_combat(3, cs.c_affect) then -- 3 sec after combat
+  if not cs.check_target(cs.t_attackable) and not cs.check_combat(1, cs.c_affect) then -- 3 sec after combat
     bless = bless_Wisdom -- mana regen if not in combat
   end
 
@@ -872,7 +872,7 @@ local on_load = function()
     cs.cast(cast_HolyStrike)
 
     if state.id ~= state_RUSH then
-      if Seal.seal_Light:judgement_it() then
+      if Seal.seal_Light:judgement_it() or Seal.seal_Wisdom:judgement_it() then
         return
       end
     end
