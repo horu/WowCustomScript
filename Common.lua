@@ -74,16 +74,21 @@ end
 function cs.debug(...)
   local line = debugstack(2, 1, 1)
   local line_end = string.find(line, "in function")
-  line = string.sub(line, 32, line_end-1)
+  line_end = line_end and line_end -1
+  line = string.sub(line, 32, line_end)
 
-  local msg = ""
-  for i=2,7 do
-    msg = cs.ToString(arg, i, 20, true)
-    if strlen(msg) >= 120 then
-      break
+  for i, v in pairs(cs.to_table(arg)) do
+    if i ~= "n" then
+      local msg = ""
+      for i=2,7 do
+        msg = cs.ToString(v, i, 20, true)
+        if strlen(msg) >= 120 then
+          break
+        end
+      end
+      print(line..msg)
     end
   end
-  print(line..msg)
 end
 
 
@@ -808,6 +813,7 @@ function cs.auto_attack()
   if not cs.check_target(cs.t_exists) then
     TargetNearestEnemy()
   end
+  -- TODO disable autoattack on plater in zones ( Booty Bay )
   if not cs.check_combat(cs.c_normal) then
 
     if cs.check_target(cs.t_enemy) and cs.check_target(cs.t_player) then
