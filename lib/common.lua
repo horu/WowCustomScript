@@ -65,13 +65,9 @@ function cs.ToString(value, depth, itlimit, short)
 end
 
 
-function cs.ldebug(...)
-  local list = cs.to_table(unpack(arg))
-  local short = list.short
-  local stack_level = list.stack_level or 2
-  list.short = nil
-  list.stack_level = nil
-  list.n = nil
+function cs.debug(...)
+  local short = nil
+  local stack_level = 2
 
   local line = debugstack(stack_level, 1, 1)
   local line_end = string.find(line, "in function")
@@ -80,7 +76,7 @@ function cs.ldebug(...)
 
 
   local full_msg = ""
-  for _, v in pairs(list) do
+  for _, v in ipairs(arg) do
     local msg = ""
     for i=2,7 do
       msg = cs.ToString(v, i, 20, short)
@@ -93,13 +89,6 @@ function cs.ldebug(...)
   print(line..full_msg)
 end
 
-
-function cs.debug(...)
-  local list = cs.to_table(arg)
-  list.short = true
-  list.stack_level = 3
-  cs.ldebug(list)
-end
 
 
 

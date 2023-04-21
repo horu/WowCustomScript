@@ -10,7 +10,7 @@
 lib\common.lua
 lib\ui.lua
 lib\game.lua
-lib\service.lua
+lib\services.lua
 lib\spells.lua
 
 pal\common.lua

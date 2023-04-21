@@ -139,7 +139,7 @@ cs.SpellOrder.build = function(...)
   local order = cs.SpellOrder:new()
 
   order.spell_list = {}
-  for _, name in pairs(cs.to_table(unpack(arg))) do
+  for _, name in ipairs(arg) do
     local spell = cs.Spell.build(name)
     table.insert(order.spell_list, spell)
   end
@@ -170,15 +170,8 @@ end
 
 
 
-cs.cast = function(a1,a2,a3,a4,a5,a6,a7)
-  local cast_list
-  if type(a1) == "table" then
-    cast_list = a1
-  else
-    cast_list = { a1,a2,a3,a4,a5,a6,a7 }
-  end
-
-  local order = cs.SpellOrder.build(cast_list)
+cs.cast = function(...)
+  local order = cs.SpellOrder.build(unpack(arg))
   return order:cast()
 end
 

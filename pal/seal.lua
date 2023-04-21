@@ -34,7 +34,7 @@ end
 ---@class pal.Seal
 pal.Seal = cs.create_class()
 
-pal.Seal.build = function(buff, target_hp_limit, target_debuff)
+pal.Seal.build = function(buff, target_debuff, target_hp_limit)
     local seal = pal.Seal:new()
 
     seal.buff = cs.Buff.build(buff)
@@ -52,14 +52,15 @@ pal.Seal.init = function()
     pal.Seal.seal_Crusader = pal.Seal.build(seal_Crusader)
     pal.Seal.seal_Light = pal.Seal.build(
             seal_Light,
-            UnitHealthMax(cs.u_player) * 0.2,
-            "Spell_Holy_HealingAura"
+            "Spell_Holy_HealingAura",
+            UnitHealthMax(cs.u_player) * 0.2
     )
     pal.Seal.seal_Wisdom = pal.Seal.build(
             seal_Wisdom,
-            UnitHealthMax(cs.u_player) * 0.2,
-            "Spell_Holy_RighteousnessAura"
+            "Spell_Holy_RighteousnessAura",
+            UnitHealthMax(cs.u_player) * 0.2
     )
+    pal.Seal.seal_Justice = pal.Seal.build(seal_Justice,"Spell_Holy_SealOfWrath")
 end
 
 pal.Seal.to_string = function()
@@ -67,13 +68,14 @@ pal.Seal.to_string = function()
     return to_short(seal_name)
 end
 
+
 -- const
 function pal.Seal:is_judgement_available()
     if self:check_target_debuff() then
         return
     end
 
-    return self:is_available()
+    return self:is_reseal_available()
 end
 
 function pal.Seal:check_target_debuff()
@@ -89,8 +91,9 @@ function pal.Seal:check_exists()
     return self.buff:check_exists()
 end
 
+-- seal can be casted
 -- const
-function pal.Seal:is_available()
+function pal.Seal:is_reseal_available()
     if not cs.check_target(cs.t_attackable) then
         return
     end
@@ -100,7 +103,7 @@ function pal.Seal:is_available()
 end
 
 function pal.Seal:reseal()
-    if not self:is_available() then
+    if not self:is_reseal_available() then
         return cs.Buff.failed
     end
     return self.buff:rebuff()
@@ -116,6 +119,7 @@ function pal.Seal:reseal_and_cast(...)
     return order:cast()
 end
 
+-- check the seal exists and the target has no the seal debuff
 function pal.Seal:judgement_it()
     if self:check_exists() and self:is_judgement_available() then
         self.judgement:cast()

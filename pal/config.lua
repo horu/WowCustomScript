@@ -162,78 +162,99 @@ end
 
 
 
-pal.actions = {}
 
+-- ATTACKS
 
-local function build_cast_list(cast_list)
-  cast_list = cs.to_table(cast_list)
+local judgement_any = function(...)
+  for _, seal in ipairs(arg) do
+    if seal:judgement_it() then
+      return true
+    end
+  end
+end
+
+local build_cast_list = function(...)
+  local cast_list = arg
 
   local target = UnitCreatureType("target")
   if target == "Demon" or target == "Undead" then
     table.insert(cast_list, 1, cast.Exorcism)
   end
-  return cast_list
+  return unpack(cast_list)
 end
 
-  -- ATTACKS
-pal.actions.rush = function(state)
+---@param seal_list pal.Seal[]
+local seal_action = function(state, seal_list)
+  if not cs.check_target(cs.t_close) then
+    -- the target is far away
+    return
+  end
+
+  if not seal_list[1]:is_reseal_available() then
+    -- seal can not be casted with current situation, just cast other spells
+    cs.cast(cast.HolyStrike, cast.CrusaderStrike)
+    return
+  end
+
+  if judgement_any(pal.Seal.seal_Righteousness, seal_list[2], seal_list[3]) then
+    -- wait another seal to judgement on the target
+    return
+  end
+
+  for _, seal in pairs(seal_list) do
+    if not seal:is_judgement_available() then
+      -- it means the target already has other seal debuff. Reseal and cast other spells only
+      if state.id == state_RUSH then
+        cs.cast(cast.CrusaderStrike)
+        return
+      end
+
+      seal_list[1]:reseal_and_cast(cast.HolyStrike, cast.CrusaderStrike)
+      return
+    end
+  end
+
+  -- the target has no other seal debuff. Lets reseal and judgement it.
+  seal_list[1]:reseal_and_cast(cast.Judgement)
+end
+
+
+pal.actions = {}
+pal.actions.right = function(state)
   if not cs.check_target(cs.t_close_30) then return end
 
   cs.cast(cast.HolyStrike)
 
   if state.id ~= state_RUSH then
-    if pal.Seal.seal_Light:judgement_it() or pal.Seal.seal_Wisdom:judgement_it() then
+    if judgement_any(pal.Seal.seal_Light, pal.Seal.seal_Wisdom, pal.Seal.seal_Justice) then
       return
     end
   end
 
-  pal.Seal.seal_Righteousness:reseal_and_cast(build_cast_list({ cast.Judgement, cast.CrusaderStrike }))
+  pal.Seal.seal_Righteousness:reseal_and_cast(build_cast_list(cast.Judgement, cast.CrusaderStrike ))
 end
 
-pal.actions.fast = function(state)
+pal.actions.crusader = function(state)
   if not cs.check_target(cs.t_close) then return end
 
-  if pal.Seal.seal_Light:judgement_it() or pal.Seal.seal_Righteousness:judgement_it() or pal.Seal.seal_Wisdom:judgement_it() then
+  if judgement_any(pal.Seal.seal_Light, pal.Seal.seal_Wisdom, pal.Seal.seal_Justice, pal.Seal.seal_Righteousness) then
     return
   end
 
   pal.Seal.seal_Crusader:reseal_and_cast(cast.HolyStrike, cast.CrusaderStrike)
 end
 
-local def_mana_action = function(state, first_seal, second_seal)
-  if not cs.check_target(cs.t_close) then return end
-
-  if not first_seal:is_available() then
-    cs.cast(cast.HolyStrike, cast.CrusaderStrike)
-    return
-  end
-
-  if pal.Seal.seal_Righteousness:judgement_it() or second_seal:judgement_it() then
-    return
-  end
-
-  if first_seal:is_judgement_available() and second_seal:is_judgement_available() then
-    first_seal:reseal_and_cast(cast.Judgement)
-    return
-  end
-
-  if state.id == state_RUSH then
-    cs.cast(cast.CrusaderStrike)
-    return
-  end
-
-  first_seal:reseal_and_cast(cast.HolyStrike, cast.CrusaderStrike)
+pal.actions.wisdom = function(state)
+  seal_action(state, {pal.Seal.seal_Wisdom, pal.Seal.seal_Light, pal.Seal.seal_Justice})
 end
 
-pal.actions.def = function(state)
-  def_mana_action(state, pal.Seal.seal_Light, pal.Seal.seal_Wisdom)
+pal.actions.light = function(state)
+  seal_action(state, {pal.Seal.seal_Light, pal.Seal.seal_Wisdom, pal.Seal.seal_Justice})
 end
 
-pal.actions.mana = function(state)
-  def_mana_action(state, pal.Seal.seal_Wisdom, pal.Seal.seal_Light)
+pal.actions.justice = function(state)
+  seal_action(state, {pal.Seal.seal_Justice, pal.Seal.seal_Light, pal.Seal.seal_Wisdom})
 end
-
--- TODO: add SoJ
 
 
 

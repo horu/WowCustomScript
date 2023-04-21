@@ -155,7 +155,7 @@ local EmegryCaster = cs.create_class()
 EmegryCaster.build = function()
   local caster = EmegryCaster:new()
   caster.shield_ts = 0
-  caster.spell_order = cs.SpellOrder.build(cast.shield_list)
+  caster.spell_order = cs.SpellOrder.build(unpack(cast.shield_list))
   caster.lay_spell = cs.Spell.build(cast.LayOnHands)
   return caster
 end
