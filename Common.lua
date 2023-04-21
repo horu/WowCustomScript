@@ -1565,8 +1565,14 @@ end
 
 
 
+
 --speed check
-local function get_speed_mod()
+local speed_checker = {
+  x=0, y=0, calc = create_calc(0), map = "" , k = 1,
+  speed_table = cs.create_fix_table(15)
+}
+
+function speed_checker:_get_speed_mod()
   if UnitIsDeadOrGhost("player") then
     return 1.25
   end
@@ -1591,24 +1597,10 @@ local function get_speed_mod()
     end
   end
 
-  --if lvl < 40 then
-  --  -- tortle mount
-  --  if cs.has_buffs(cs.u_player, "inv_pet_speedy") or cs.has_buffs(cs.u_player) then
-  --    return 1.14 * class_speed * class_speed
-  --  end
-  --else
-  --  if
-  --end
-
   return speed
 end
 
-local speed_checker = {
-  x=0, y=0, calc = create_calc(0), map = "" , k = 1,
-  speed_table = cs.create_fix_table(15)
-}
-
-function speed_checker.get_k(self)
+function speed_checker:_get_k()
   local k = self.k
   local is_ghost = UnitIsDeadOrGhost("player")
   if cs.has_debuffs() and not is_ghost then
@@ -1635,7 +1627,7 @@ function speed_checker.get_k(self)
     return k
   end
 
-  avg = avg / get_speed_mod()
+  avg = avg / self:_get_speed_mod()
   if math.abs(avg - 1) < 0.005 then
     return k
   end
@@ -1647,8 +1639,7 @@ function speed_checker.get_k(self)
   return self.k
 end
 
-
-function speed_checker.get_speed(self)
+function speed_checker:get_speed()
   local x, y = GetPlayerMapPosition("player")
   local m = 82350
   local y_k = 1.5
@@ -1659,7 +1650,7 @@ function speed_checker.get_speed(self)
   self.x = x
   self.y = y
   local dist = math.sqrt(math.pow(diff_x, 2) + math.pow(diff_y, 2))
-  local k = self:get_k()
+  local k = self:_get_k()
   local speed = self.calc:get_avg_diff(dist)*k/100
   self.calc.value = 0
   self.speed_table:add(speed)

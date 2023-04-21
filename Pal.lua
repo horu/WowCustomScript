@@ -102,7 +102,7 @@ local function rebuff_unit(unit)
   local result = buff:rebuff()
 
   if result == cs.Buff.success then
-    print("BUFF: ".. to_short(buff) .. " FOR ".. pfUI.api.GetUnitColor(unit) .. class)
+    print("BUFF: ".. to_short(buff:get_name()) .. " FOR ".. pfUI.api.GetUnitColor(unit) .. class)
   end
   return result
 end
