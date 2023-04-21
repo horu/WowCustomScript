@@ -344,6 +344,101 @@ end
 
 
 
+
+
+
+---@class cs.ButtonChecker
+cs.ButtonChecker = cs.create_class()
+
+cs.ButtonChecker.build = function()
+  ---@type cs.ButtonChecker
+  local holder = cs.ButtonChecker:new()
+
+  holder.down_list = {}
+  holder.down_pattern_list = {}
+
+  holder.repeat_list = {}
+  holder.repeat_pattern_list = {}
+
+  cs.add_loop_event("cs.ButtonChecker",0.2, holder, holder._check_loop)
+
+  return holder
+end
+
+-- const
+function cs.ButtonChecker:add_button(longkey)
+  local bar = math.floor(longkey / 12 + 1)
+  local key = cs.fmod(longkey, 12)
+  cs.ActionBarProxy.add_proxy(bar, key, cs.ButtonChecker._button_callback, self)
+end
+
+-- callback_func = function(callback_obj, longkey, duration)
+function cs.ButtonChecker:add_down_pattern(down_duration, callback_obj, callback_func)
+  self.down_pattern_list[down_duration] = { obj = callback_obj, func = callback_func }
+end
+
+function cs.ButtonChecker:add_repeat_pattern(cps, callback_obj, callback_func)
+  self.repeat_pattern_list[cps] = { obj = callback_obj, func = callback_func }
+end
+
+
+function cs.ButtonChecker:_button_callback(bar, key)
+  --cs.debug({bar, key, keystate})
+  local longkey = bar * 12 + key - 12
+  local ts = GetTime()
+  local click_info = {longkey = longkey, keystate = keystate, ts = ts, handler = 0}
+
+  if click_info.keystate == cs.ActionBarProxy.key_state_up then
+    self.down_list[longkey] = nil
+    self.repeat_list[longkey] = self.repeat_list[longkey] or {}
+    table.insert(self.repeat_list[longkey] , click_info)
+    self:_check_repeat_patterns(longkey, self.repeat_list[longkey], ts)
+  else
+    self.down_list[longkey] = click_info
+  end
+end
+
+function cs.ButtonChecker:_check_down_patterns(click_info, ts)
+  for down_duration, callback in pairs(self.down_pattern_list) do
+    if not cs.compare_time(down_duration, click_info.ts, ts) and click_info.handler < down_duration then
+      click_info.handler = down_duration
+      callback.func(callback.obj, click_info.longkey, down_duration)
+    end
+  end
+end
+
+function cs.ButtonChecker:_check_repeat_patterns(longkey, key_clicks, ts)
+  local count = 0
+  for i, click_info in pairs(key_clicks) do
+    if cs.compare_time(1, click_info.ts, ts) then
+      count = count + 1
+    else
+      key_clicks[i] = nil
+    end
+  end
+
+  for cps, callback in pairs(self.repeat_pattern_list) do
+    if count >= cps then
+      callback.func(callback.obj, longkey, cps)
+    end
+  end
+end
+
+function cs.ButtonChecker:_check_loop()
+  local ts = GetTime()
+
+  for _, key_click in pairs(self.down_list) do
+    self:_check_down_patterns(key_click, ts)
+  end
+end
+
+---@type cs.ButtonChecker
+cs.st_button_checker = nil
+
+
+
+
+
 --units
 cs.u_mouseover = "mouseover"
 cs.u_target = "target"
@@ -665,6 +760,11 @@ function cs.auto_attack()
     AssistUnit("target")
   end
 end
+
+
+
+
+
 
 
 
@@ -1001,6 +1101,9 @@ cs.get_cast_info = function(unit)
     end
   end
 end
+
+
+
 
 
 
@@ -1439,6 +1542,8 @@ local main = function()
     st_dps_target = cs.Dps.build("target", dps_frame.target)
     st_dps_player = cs.Dps.build("player", dps_frame.player)
   end)
+
+  cs.st_button_checker = cs.ButtonChecker.build()
 
   --PVP
   --local pvp = nil

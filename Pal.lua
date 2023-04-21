@@ -692,6 +692,11 @@ end
 ---@class StateHolder
 local StateHolder = cs.create_class()
 
+StateHolder.handler_Change = 0.55
+StateHolder.handler_Save = 3
+StateHolder.handler_Reset = 6
+StateHolder.handler_FullReset = 10
+
 StateHolder.build = function()
   ---@type StateHolder
   local holder = StateHolder:new()
@@ -700,7 +705,6 @@ StateHolder.build = function()
   holder.cur_state = nil
   ---@type State[]
   holder.states = {}
-  holder.states_buttons = {}
 
   holder.actions = {}
 
@@ -720,11 +724,14 @@ function StateHolder:init()
   self:_change_state(get_state_holder_config().cur_state)
   cs.add_loop_event("StateHolder",0.2, self, self._check_loop)
 
-  for hotkey in pairs(self.states) do
-    local bar = math.floor(hotkey / 12 + 1)
-    local key = cs.fmod(hotkey, 12)
-    cs.ActionBarProxy.add_proxy(bar, key, StateHolder._button_callback, self)
+  for longkey in pairs(self.states) do
+    cs.st_button_checker:add_button(longkey)
   end
+
+  cs.st_button_checker:add_down_pattern(StateHolder.handler_Change, self, StateHolder._down_button_event)
+  cs.st_button_checker:add_down_pattern(StateHolder.handler_Save, self, StateHolder._down_button_event)
+  cs.st_button_checker:add_down_pattern(StateHolder.handler_Reset, self, StateHolder._down_button_event)
+  cs.st_button_checker:add_down_pattern(StateHolder.handler_FullReset, self, StateHolder._down_button_event)
 end
 
 -- const
@@ -764,52 +771,25 @@ function StateHolder:_rebuff_heal()
   end
 end
 
+function StateHolder:_down_button_event(longkey, duration)
+  local state = self.states[longkey]
 
-local handler_None = 0
-local handler_Change = 1
-local handler_Save = 2
-local handler_Reset = 3
-local handler_FullReset = 4
-
-function StateHolder:_button_callback(bar, key)
-  --cs.debug({bar, key, keystate})
-  local state_number = bar * 12 + key - 12
-  self.states_buttons[state_number] = {keystate = keystate, ts = GetTime(), handler = handler_None}
+  if duration >= StateHolder.handler_FullReset then
+    cs_states_dynamic_config = default_states_dynamic_config
+    state:reset_buffs()
+    print("RESET CONFIG!")
+  elseif duration >= StateHolder.handler_Reset then
+    state:reset_buffs()
+    print("RESET STATE: "..self.cur_state:get_name())
+  elseif duration >= StateHolder.handler_Save then
+    self.cur_state:save_buffs()
+    print("SAVE STATE: "..self.cur_state:get_name())
+  elseif duration >= StateHolder.handler_Change then
+    self:_change_state(longkey)
+  end
 end
 
 function StateHolder:_check_loop()
-  local ts = GetTime()
-
-  for but, keyinfo in pairs(self.states_buttons) do
-    if keyinfo.keystate == cs.ActionBarProxy.key_state_down then
-      local state = self.states[but]
-
-      if ts - keyinfo.ts >= 10 and keyinfo.handler < handler_FullReset then
-        keyinfo.handler = handler_FullReset
-        -- reset config
-        cs_states_dynamic_config = default_states_dynamic_config
-        state:reset_buffs()
-        print("RESET CONFIG!")
-      elseif ts - keyinfo.ts >= 6 and keyinfo.handler < handler_Reset then
-        keyinfo.handler = handler_Reset
-        -- reset state
-        state:reset_buffs()
-        print("RESET STATE: "..self.cur_state:get_name())
-      elseif ts - keyinfo.ts >= 3 and keyinfo.handler < handler_Save then
-        keyinfo.handler = handler_Save
-        self.cur_state:save_buffs()
-        print("SAVE STATE: "..self.cur_state:get_name())
-      elseif ts - keyinfo.ts >= 0.55 and keyinfo.handler < handler_Change then
-        keyinfo.handler = handler_Change
-        -- change
-        self:_change_state(but)
-      end
-
-    elseif keyinfo.keystate == cs.ActionBarProxy.key_state_up then
-      self.states_buttons[but] = nil
-    end
-  end
-
   -- TODO: optimize
   self.frame:CS_SetText(self.cur_state:to_string())
 
