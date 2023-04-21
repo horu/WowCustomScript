@@ -1099,6 +1099,8 @@ cs.get_spell_cd = function(spell_name)
 end
 
 
+
+
 -- default to player
 cs.cast_helpful = function(name)
   local unit = cs.u_player
@@ -1114,6 +1116,10 @@ end
 
 
 
+
+
+
+
 function cs.find_buff(check_list, unit)
   for i, check in pairs(cs.to_table(check_list)) do
     if FindBuff(check, unit) then
@@ -1121,6 +1127,40 @@ function cs.find_buff(check_list, unit)
     end
   end
 end
+
+cs.get_buff_list = function(unit, b_fun)
+  if not unit then unit = cs.u_player end
+  if not b_fun then b_fun = UnitBuff end
+
+  local buff_list = {}
+  for i=1, 100 do
+    local buff = b_fun(unit, i)
+    if not buff then break end
+
+    table.insert(buff_list, buff)
+  end
+  return buff_list
+end
+
+cs.has_buffs = function(unit, buff_str, b_fun)
+  if not buff_str then buff_str = "" end
+
+  local buff_list = cs.get_buff_list(unit, b_fun)
+  for _, buff in pairs(buff_list) do
+    if string.find(buff, buff_str) then
+      return true
+    end
+  end
+end
+
+cs.get_debuff_list = function(unit)
+  return cs.get_buff_list(unit, UnitDebuff)
+end
+
+cs.has_debuffs = function(unit, debuff_str)
+  return cs.has_buffs(unit, debuff_str, UnitDebuff)
+end
+
 
 
 
@@ -1140,6 +1180,11 @@ cs.Buff.build = function(name, unit)
   buff.spell = cs.Spell.build(name)
 
   return buff
+end
+
+-- const
+function cs.Buff:get_name()
+  return self.name
 end
 
 -- const
@@ -1174,65 +1219,7 @@ function cs.Buff:rebuff()
 end
 
 
--- TODO: remove
--- default to player
-function cs.rebuff(buff, custom_buff_check_list, unit)
-  unit = unit or cs.u_player
 
-  if unit ~= cs.u_player then
-    if not UnitExists(unit) or
-            not UnitIsConnected(unit) or
-            UnitIsDead(unit) or
-            not CheckInteractDistance(unit, 4) or
-            not UnitIsVisible(unit) then
-      return cs.Buff.failed
-    end
-  end
-
-  if cs.find_buff(custom_buff_check_list or buff, unit) then
-    return cs.Buff.exists
-  end
-
-  local spell = cs.Spell.build(buff)
-  if spell:cast_to_unit(unit) then
-    return cs.Buff.success
-  end
-
-  return cs.Buff.failed
-end
-
-cs.get_buff_list = function(unit, b_fun)
-  if not unit then unit = cs.u_player end
-  if not b_fun then b_fun = UnitBuff end
-
-  local buff_list = {}
-  for i=1, 100 do
-    local buff = b_fun(unit, i)
-    if not buff then break end
-
-    table.insert(buff_list, buff)
-  end
-  return buff_list
-end
-
-cs.get_debuff_list = function(unit)
-  return cs.get_buff_list(unit, UnitDebuff)
-end
-
-function cs.has_buffs(unit, buff_str, b_fun)
-  if not buff_str then buff_str = "" end
-
-  local buff_list = cs.get_buff_list(unit, b_fun)
-  for _, buff in pairs(buff_list) do
-    if string.find(buff, buff_str) then
-      return true
-    end
-  end
-end
-
-function cs.has_debuffs(unit, debuff_str)
-  return cs.has_buffs(unit, debuff_str, UnitDebuff)
-end
 
 
 

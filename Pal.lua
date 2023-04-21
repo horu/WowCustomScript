@@ -88,14 +88,20 @@ local function rebuff_unit(unit)
 
   local _, class = UnitClass(unit)
 
-  local buff = class and buffs[class] or bless_Might
-  if not buff then
+  local buff_name = class and buffs[class] or bless_Might
+  if not buff_name then
     print("BUFF NOT FOUND FOR "..class)
-    buff = bless_Might
+    buff_name = bless_Might
   end
-  local result = cs.rebuff(buff, bless_list_all, unit)
 
-  if result == 1 then
+  local buff = cs.Buff.build(buff_name, unit)
+  if cs.find_buff(bless_list_all, unit) then
+    return
+  end
+
+  local result = buff:rebuff()
+
+  if result == cs.Buff.success then
     print("BUFF: ".. to_short(buff) .. " FOR ".. pfUI.api.GetUnitColor(unit) .. class)
   end
   return result
@@ -485,7 +491,8 @@ StateBuff.build = function(state_id, buff_name)
   buff.name = buff_name
 
   buff:_get_config(1).current = buff:_get_config(1).current or buff:_get_config().default
-  buff.set = nil
+  ---@type cs.Buff
+  buff.current = nil
 
   return buff
 end
@@ -519,7 +526,7 @@ function StateBuff:get_status()
   local buffed = self:get_buffed()
   local config = self:_get_config(1).current
   local default = self:_get_config().default
-  local set = self.set
+  local current = self.current and self.current:get_name()
 
   if buffed == default then
     return status_DEFAULT
@@ -527,7 +534,7 @@ function StateBuff:get_status()
   if buffed == config then
     return status_MODIFIED
   end
-  if buffed == set then
+  if buffed == current then
     return status_TEMP
   end
   return status_NONE
@@ -535,19 +542,20 @@ end
 
 
 -- set temporary buff and dont save it to config
-function StateBuff:tmp_rebuff(value)
-  self.set = value
-  if not self.set or not self:_is_available(self.set) then
-    self.set = self:_get_config(1).current
+function StateBuff:tmp_rebuff(buff_name)
+  if not buff_name or not self:_is_available(buff_name) then
+    buff_name = self:_get_config(1).current
   end
 
-  return cs.rebuff(self.set)
+  self.current = cs.Buff.build(buff_name)
+
+  return self.current:rebuff()
 end
 
 -- set buff and save it to config
-function StateBuff:reset(value)
-  self:tmp_rebuff(value or self:_get_config().default)
-  self:_get_config(1).current = self.set
+function StateBuff:reset(buff_name)
+  self:tmp_rebuff(buff_name or self:_get_config().default)
+  self:_get_config(1).current = self.current:get_name()
 end
 
 function StateBuff:save_buffed_to_config()
@@ -699,7 +707,7 @@ function State:_standard_rebuff_attack()
   end
   if not cs.check_combat(1) then
     if cs.is_in_party() then
-      cs.rebuff(buff_Righteous)
+      cs.Buff.build(buff_Righteous):rebuff()
       buff_party()
     end
     if cs.check_target(cs.t_fr_player) then
@@ -806,7 +814,7 @@ end
 function StateHolder:_rebuff_heal()
   if cs.check_combat(1) then
     if self:_check_hp() then
-      cs.rebuff(aura_Concentration)
+      cs.Buff.build(aura_Concentration):rebuff()
     end
   end
 end
