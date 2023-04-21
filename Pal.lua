@@ -339,7 +339,7 @@ local default_states_config = {
     ---@type state_config
     RUSH = {
       name = "RUSH",
-      hotkey = 4,
+      hotkey = 1,
       color = cs.color_red_1,
 
       use_slots = { slot_TwoHand },
@@ -347,19 +347,6 @@ local default_states_config = {
       aura = {
         default = aura_Sanctity,
         list = { aura_Sanctity, aura_Devotion, aura_Retribution },
-      },
-      bless = {
-        default = bless_Might,
-        list = bless_list_all,
-      },
-    },
-    NORM = {
-      name = "NORM",
-      hotkey = 3,
-      color = cs.color_green,
-      aura = {
-        default = aura_Retribution,
-        list = aura_list_att,
       },
       bless = {
         default = bless_Might,
@@ -382,9 +369,22 @@ local default_states_config = {
         list = bless_list_all,
       },
     },
+    NORM = {
+      name = "NORM",
+      hotkey = 3,
+      color = cs.color_green,
+      aura = {
+        default = aura_Retribution,
+        list = aura_list_att,
+      },
+      bless = {
+        default = bless_Might,
+        list = bless_list_all,
+      },
+    },
     BASE = {
       name = "BASE",
-      hotkey = 1,
+      hotkey = 4,
       color = cs.color_blue,
 
       aura = {

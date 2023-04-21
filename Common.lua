@@ -690,6 +690,7 @@ cs.MapChecker.build = function()
   map_checker.f:RegisterEvent("ZONE_CHANGED")
   map_checker.f:SetScript("OnEvent", function()
     this.cs_parrent.zone_text = GetMinimapZoneText()
+    cs.debug(this.cs_parrent:get_zone_params())
   end)
 
   map_checker.params = {}
@@ -1168,6 +1169,8 @@ function cs.Buff:rebuff()
   return cs.Buff.failed
 end
 
+
+
 -- default to player
 function cs.rebuff(buff, custom_buff_check_list, unit)
   unit = unit or cs.u_player
@@ -1571,12 +1574,19 @@ local function get_speed_mod()
     return 1.25
   end
 
-  -- tortle mount
-  if cs.has_buffs("player", "inv_pet_speedy") then
-    return 1.14
+  local class_speed = 1
+  local _, class = UnitClass(cs.u_player)
+  if class == "PALADIN" then
+    local _, _, _, _, current_rank = GetTalentInfo(3, 9)
+    class_speed = 1 + current_rank * 0.04
   end
 
-  return 1
+  -- tortle mount
+  if cs.has_buffs("player", "inv_pet_speedy") then
+    return 1.14 * class_speed * class_speed
+  end
+
+  return 1 * class_speed
 end
 
 local speed_checker = {
