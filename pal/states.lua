@@ -319,6 +319,7 @@ end
 function StateHolder:attack_action(action_name)
   cs.error_disabler:off()
 
+  -- TODO: cast before change state and rebuf ?
   cs.auto_attack()
   self.cur_state:recheck()
   self:_update_frame()
