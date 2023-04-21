@@ -71,46 +71,39 @@ end
 
 
 function cs.ldebug(...)
-  local line = debugstack(2, 1, 1)
+  local list = cs.to_table(unpack(arg))
+  local short = list.short
+  local stack_level = list.stack_level or 2
+  list.short = nil
+  list.stack_level = nil
+  list.n = nil
+
+  local line = debugstack(stack_level, 1, 1)
   local line_end = string.find(line, "in function")
   line_end = line_end and line_end -1
   line = string.sub(line, 32, line_end)
 
-  for i, v in pairs(cs.to_table(arg)) do
-    if i ~= "n" then
-      local msg = ""
-      for i=2,7 do
-        msg = cs.ToString(v, i, 20)
-        if strlen(msg) >= 320 then
-          break
-        end
+
+  local full_msg = ""
+  for _, v in pairs(list) do
+    local msg = ""
+    for i=2,7 do
+      msg = cs.ToString(v, i, 20, short)
+      if strlen(msg) >= 120 then
+        break
       end
-      print(line..msg)
     end
+    full_msg = full_msg.."|"..msg
   end
+  print(line..full_msg)
 end
 
 
 function cs.debug(...)
-  local line = debugstack(2, 1, 1)
-  local line_end = string.find(line, "in function")
-  line_end = line_end and line_end -1
-  line = string.sub(line, 32, line_end)
-
-  local full_msg = ""
-  for i, v in pairs(cs.to_table(arg)) do
-    if i ~= "n" then
-      local msg = ""
-      for i=2,7 do
-        msg = cs.ToString(v, i, 20, true)
-        if strlen(msg) >= 120 then
-          break
-        end
-      end
-      full_msg = full_msg.."|"..msg
-    end
-  end
-  print(line..full_msg)
+  local list = cs.to_table(arg)
+  list.short = true
+  list.stack_level = 3
+  cs.ldebug(list)
 end
 
 
@@ -1181,7 +1174,7 @@ function cs.Buff:rebuff()
 end
 
 
-
+-- TODO: remove
 -- default to player
 function cs.rebuff(buff, custom_buff_check_list, unit)
   unit = unit or cs.u_player
@@ -1591,19 +1584,36 @@ local function get_speed_mod()
     return 1.25
   end
 
-  local class_speed = 1
+  local speed = 1
   local _, class = UnitClass(cs.u_player)
   if class == "PALADIN" then
     local _, _, _, _, current_rank = GetTalentInfo(3, 9)
-    class_speed = 1 + current_rank * 0.04
+    speed = speed + current_rank * 0.04
   end
 
-  -- tortle mount
-  if cs.has_buffs("player", "inv_pet_speedy") then
-    return 1.14 * class_speed * class_speed
+  local is_mounted = cs.has_buffs(cs.u_player, "inv_pet_speedy") or
+          cs.has_buffs(cs.u_player, "Spell_Nature_Swiftness")
+  if is_mounted then
+    local lvl = UnitLevel(cs.u_player)
+    if lvl < 40 then
+      speed = 1.14 * speed * speed -- ????
+    elseif lvl < 60 then
+      speed = 1.6 * speed
+    else
+      speed = 2 * speed
+    end
   end
 
-  return 1 * class_speed
+  --if lvl < 40 then
+  --  -- tortle mount
+  --  if cs.has_buffs(cs.u_player, "inv_pet_speedy") or cs.has_buffs(cs.u_player) then
+  --    return 1.14 * class_speed * class_speed
+  --  end
+  --else
+  --  if
+  --end
+
+  return speed
 end
 
 local speed_checker = {
