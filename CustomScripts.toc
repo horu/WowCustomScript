@@ -13,4 +13,7 @@ lib\game.lua
 lib\service.lua
 lib\spells.lua
 
-Pal.lua
+pal\common.lua
+pal\config.lua
+pal\seal.lua
+pal\states.lua
