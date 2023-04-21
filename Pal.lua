@@ -188,6 +188,13 @@ Seal.build = function(buff, target_debuff)
 end
 
 -- const
+function Seal:check_judgement_available()
+  if self:check_target_debuff() then
+    return
+  end
+
+end
+
 function Seal:check_target_debuff()
   if not self.target_debuff then
     return
@@ -605,11 +612,12 @@ end
 -- reacion for enenmy cast to change resist aura
 ---@param spell_data cs.SpellData
 function State:on_cast_detected(spell_data)
+  local spell_base = spell_data:get_base()
   if not spell_base then
     return
   end
 
-  self.enemy_spell_base.base = spell_data:get_base()
+  self.enemy_spell_base.base = spell_base
   self.enemy_spell_base.ts = GetTime()
 end
 

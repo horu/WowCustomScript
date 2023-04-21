@@ -1389,8 +1389,9 @@ end
 --end
 
 ---@type cs.Dps
-local st_dps_target
-local st_dps_player
+local st_dps_target -- target received damage
+---@type cs.Dps
+local st_dps_player -- player received damage
 
 
 
