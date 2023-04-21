@@ -24,7 +24,8 @@ local aura_list_def =                                    { aura_Devotion, aura_R
 local bless_Wisdom = "Blessing of Wisdom"
 local bless_Might = "Blessing of Might"
 local bless_Salvation = "Blessing of Salvation"
-local bless_list_all = { bless_Wisdom, bless_Might, bless_Salvation }
+local bless_Light = "Blessing of Light"
+local bless_list_all = { bless_Wisdom, bless_Might, bless_Salvation, bless_Light }
 
 local seal_Righteousness = "Seal of Righteousness"
 local seal_Crusader = "Seal of the Crusader"
@@ -49,7 +50,8 @@ to_short_list[aura_Fire] = cs.color_orange_1 .. "FI" .. "|r"
 
 to_short_list[bless_Wisdom] = cs.color_blue .. "BW" .. "|r"
 to_short_list[bless_Might] = cs.color_red .. "BM" .. "|r"
-to_short_list[bless_Salvation] = cs.color_yellow .. "BV" .. "|r"
+to_short_list[bless_Salvation] = cs.color_white .. "BV" .. "|r"
+to_short_list[bless_Light] = cs.color_yellow .. "BL" .. "|r"
 
 to_short_list[seal_Righteousness] = cs.color_purple.."SR".."|r"
 to_short_list[seal_Crusader] = cs.color_orange_1.."SC".."|r"
@@ -338,7 +340,7 @@ local default_states_config = {
   states = {
     ---@type state_config
     RUSH = {
-      name = "RUSH",
+      name = state_RUSH,
       hotkey = 1,
       color = cs.color_red_1,
 
@@ -354,7 +356,7 @@ local default_states_config = {
       },
     },
     DEF = {
-      name = "DEF",
+      name = state_DEF,
       hotkey = 2,
       color = cs.color_white,
 
@@ -370,7 +372,7 @@ local default_states_config = {
       },
     },
     NORM = {
-      name = "NORM",
+      name = state_NORM,
       hotkey = 3,
       color = cs.color_green,
       aura = {
@@ -383,7 +385,7 @@ local default_states_config = {
       },
     },
     BASE = {
-      name = "BASE",
+      name = state_BASE,
       hotkey = 4,
       color = cs.color_blue,
 
@@ -397,7 +399,7 @@ local default_states_config = {
       },
     },
     HEAL = {
-      name = "HEAL",
+      name = state_HEAL,
       hotkey = 12 * 5 + 2,
       color = cs.color_yellow,
 
@@ -406,7 +408,7 @@ local default_states_config = {
         list = { aura_Concentration },
       },
       bless = {
-        default = bless_Wisdom,
+        default = bless_Light,
         list = bless_list_all,
       },
     },
