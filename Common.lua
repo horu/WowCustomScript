@@ -86,7 +86,7 @@ function cs.debug(...)
           break
         end
       end
-      print(line..msg)
+      print(i..":"..line..msg)
     end
   end
 end
@@ -1390,7 +1390,7 @@ function cs.Dps.Data.build(unit)
   local ts = GetTime()
   -- remove expired sessions from saves
   for it in pairs(data.sessions) do
-    if not cs.compare_time(cs.Dps.session_store_limit_ts, it, ts) then
+    if not cs.compare_time(cs.Dps.session_store_limit_ts, it, ts) or it >= ts then
       data.sessions[it] = nil
     end
   end
@@ -1416,7 +1416,6 @@ function cs.Dps.Data:get_all(after_ts)
 end
 
 function cs.Dps.build(unit, frame_config)
-  -- TODO: fix bug
   ---@type cs.Dps
   local dps = cs.Dps:new()
   dps.unit = unit
@@ -1517,6 +1516,12 @@ end
 local st_dps_target -- target received damage
 ---@type cs.Dps
 local st_dps_player -- player received damage
+
+
+
+
+
+
 
 
 
