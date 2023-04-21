@@ -173,26 +173,38 @@ Seal.init = function()
   -- TODO: dont debuff one unit with low hp ( dps and npc )
   Seal.seal_Righteousness = Seal.build(seal_Righteousness)
   Seal.seal_Crusader = Seal.build(seal_Crusader)
-  Seal.seal_Light = Seal.build(seal_Light, "Spell_Holy_HealingAura")
-  Seal.seal_Wisdom = Seal.build(seal_Wisdom, "Spell_Holy_RighteousnessAura")
+  Seal.seal_Light = Seal.build(
+          seal_Light,
+          UnitHealthMax(cs.u_player) * 0.2,
+          "Spell_Holy_HealingAura"
+  )
+  Seal.seal_Wisdom = Seal.build(
+          seal_Wisdom,
+          UnitHealthMax(cs.u_player) * 0.2,
+          "Spell_Holy_RighteousnessAura"
+  )
 end
 
-Seal.build = function(buff, target_debuff)
+Seal.build = function(buff, target_hp_limit, target_debuff)
   local seal = Seal:new()
 
   seal.buff = cs.Buff.build(buff)
   seal.target_debuff = target_debuff
   seal.judgement = cs.Spell.build(cast_Judgement)
+  seal.target_hp_limit = target_hp_limit or 0
+
+  cs.debug(seal)
 
   return seal
 end
 
 -- const
-function Seal:check_judgement_available()
+function Seal:is_judgement_available()
   if self:check_target_debuff() then
     return
   end
 
+  return self:is_available()
 end
 
 function Seal:check_target_debuff()
@@ -208,8 +220,18 @@ function Seal:check_exists()
   return self.buff:check_exists()
 end
 
-function Seal:reseal()
+-- const
+function Seal:is_available()
   if not cs.check_target(cs.t_attackable) then
+    return
+  end
+
+  local target_hp = UnitHealth(cs.u_target) or 0
+  return target_hp >= self.target_hp_limit
+end
+
+function Seal:reseal()
+  if not self:is_available() then
     return cs.Buff.failed
   end
   return self.buff:rebuff()
@@ -226,7 +248,7 @@ function Seal:reseal_and_cast(...)
 end
 
 function Seal:judgement_it()
-  if self:check_exists() and not self:check_target_debuff() then
+  if self:check_exists() and self:is_judgement_available() then
     self.judgement:cast()
     return true
   end
@@ -617,6 +639,7 @@ function State:on_cast_detected(spell_data)
     return
   end
 
+  cs.debug(spell_data)
   self.enemy_spell_base.base = spell_base
   self.enemy_spell_base.ts = GetTime()
 end
@@ -888,15 +911,20 @@ local on_load = function()
     Seal.seal_Crusader:reseal_and_cast(cast_HolyStrike, cast_CrusaderStrike)
   end)
 
-  state_holder:add_action("def", function(state)
+  local def_mana_action = function(state, first_seal, second_seal)
     if not cs.check_target(cs.t_close) then return end
 
-    if Seal.seal_Righteousness:judgement_it() or Seal.seal_Wisdom:judgement_it() then
+    if not first_seal:is_available() then
+      cs.cast(cast_HolyStrike, cast_CrusaderStrike)
       return
     end
 
-    if not Seal.seal_Light:check_target_debuff() and not Seal.seal_Wisdom:check_target_debuff() then
-      Seal.seal_Light:reseal_and_cast(cast_Judgement)
+    if Seal.seal_Righteousness:judgement_it() or second_seal:judgement_it() then
+      return
+    end
+
+    if first_seal:is_judgement_available() and second_seal:is_judgement_available() then
+      first_seal:reseal_and_cast(cast_Judgement)
       return
     end
 
@@ -905,29 +933,16 @@ local on_load = function()
       return
     end
 
-    Seal.seal_Light:reseal_and_cast(cast_HolyStrike, cast_CrusaderStrike)
+    first_seal:reseal_and_cast(cast_HolyStrike, cast_CrusaderStrike)
+  end
+
+  state_holder:add_action("def", function(state)
+    def_mana_action(state, Seal.seal_Light, Seal.seal_Wisdom)
   end)
 
   state_holder:add_action( "mana", function(state)
-    if not cs.check_target(cs.t_close) then return end
-
-    if Seal.seal_Light:judgement_it() or Seal.seal_Righteousness:judgement_it() then
-      return
-    end
-
-    if not Seal.seal_Light:check_target_debuff() and not Seal.seal_Wisdom:check_target_debuff() then
-      Seal.seal_Wisdom:reseal_and_cast(cast_Judgement)
-      return
-    end
-
-    if state.id == state_RUSH then
-      cs.cast(cast_CrusaderStrike)
-      return
-    end
-
-    Seal.seal_Wisdom:reseal_and_cast(cast_HolyStrike, cast_CrusaderStrike)
+    def_mana_action(state, Seal.seal_Wisdom, Seal.seal_Light)
   end)
-
 
 end
 

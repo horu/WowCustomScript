@@ -76,7 +76,13 @@ function cs.debug(...)
   local line_end = string.find(line, "in function")
   line = string.sub(line, 32, line_end-1)
 
-  local msg = cs.ToString(arg, 4, 20, true)
+  local msg = ""
+  for i=2,7 do
+    msg = cs.ToString(arg, i, 20, true)
+    if strlen(msg) >= 120 then
+      break
+    end
+  end
   print(line..msg)
 end
 
@@ -1301,12 +1307,17 @@ function cs.Dps.build(unit, frame_config)
   local dps = cs.Dps:new()
   dps.unit = unit
   dps.data = cs.Dps.Data.build(unit)
-  dps:init(frame_config)
-  dps:handler("", unit, 0)
+  dps:_init(frame_config)
+  dps:_handler("", unit, 0)
   return dps
 end
 
-function cs.Dps:handler(event, target, damage)
+function cs.Dps:get_dps()
+  local session = self.data:get_all()
+  return session:get_avg()
+end
+
+function cs.Dps:_handler(event, target, damage)
   ---@type cs.Dps.Data
   local data = self.data
   local ts = GetTime()
@@ -1347,7 +1358,7 @@ function cs.Dps:handler(event, target, damage)
   self:_update_output()
 end
 
-function cs.Dps:init(dps_frame_config)
+function cs.Dps:_init(dps_frame_config)
   local f = cs.create_simple_text_frame(unpack(dps_frame_config))
   f:RegisterEvent("UNIT_COMBAT")
   f:RegisterEvent("PLAYER_TARGET_CHANGED")
@@ -1356,7 +1367,7 @@ function cs.Dps:init(dps_frame_config)
   f:RegisterEvent("SPELLCAST_START")
   f:SetScript("OnEvent", function()
     if arg2 and arg2 == "HEAL" then return end
-    this.cs_dps:handler(event, arg1, arg4)
+    this.cs_dps:_handler(event, arg1, arg4)
   end)
 
   self.frame = f
