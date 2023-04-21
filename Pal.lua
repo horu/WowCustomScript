@@ -858,6 +858,7 @@ end
 
 -- const
 function StateHolder:_check_hp()
+  -- TODO: fix bag
   local hp_level = cs.get_hp_level()
   if hp_level <= 0.2 then
     if em_caster:em_buff(hp_level <= 0.1) ~= cs.Buff.exists then

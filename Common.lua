@@ -689,8 +689,7 @@ cs.MapChecker.build = function()
   map_checker.f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
   map_checker.f:RegisterEvent("ZONE_CHANGED")
   map_checker.f:SetScript("OnEvent", function()
-    this.cs_parrent.zone_text = GetMinimapZoneText()
-    cs.debug(this.cs_parrent:get_zone_params())
+    cs.add_loop_event("map_checker.f:SetScript", 0.5, this.cs_parrent, cs.MapChecker.update_zone, 5)
   end)
 
   map_checker.params = {}
@@ -708,6 +707,11 @@ function cs.MapChecker:get_zone_params()
   local params = self.params[self.zone_text]
   return params or {}
 end
+
+function cs.MapChecker:update_zone()
+  self.zone_text = GetMinimapZoneText()
+end
+
 
 ---@type cs.MapChecker
 cs.st_map_checker = nil
@@ -1412,6 +1416,7 @@ function cs.Dps.Data:get_all(after_ts)
 end
 
 function cs.Dps.build(unit, frame_config)
+  -- TODO: fix bug
   ---@type cs.Dps
   local dps = cs.Dps:new()
   dps.unit = unit
