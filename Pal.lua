@@ -603,12 +603,13 @@ function State:rebuff_aura()
 end
 
 -- reacion for enenmy cast to change resist aura
-function State:on_cast_detected(spell_base)
+---@param spell_data cs.SpellData
+function State:on_cast_detected(spell_data)
   if not spell_base then
     return
   end
 
-  self.enemy_spell_base.base = spell_base
+  self.enemy_spell_base.base = spell_data:get_base()
   self.enemy_spell_base.ts = GetTime()
 end
 
@@ -622,8 +623,8 @@ end
 function State:_get_aura()
   local aura
   -- buff spell defended auras if enemy casts one
-  local spell_base = self.enemy_spell_base.base
   if self.enemy_spell_base:is_valid() then
+    local spell_base = self.enemy_spell_base.base
     if spell_base == cs.spell_base_Frost then
       aura = aura_Frost
     end
@@ -722,7 +723,6 @@ end
 
 function StateHolder:init()
   self:_change_state(get_state_holder_config().cur_state)
-  cs.add_loop_event("StateHolder",0.2, self, self._check_loop)
 
   for longkey in pairs(self.states) do
     cs.st_button_checker:add_button(longkey)
@@ -732,6 +732,8 @@ function StateHolder:init()
   cs.st_button_checker:add_down_pattern(StateHolder.handler_Save, self, StateHolder._down_button_event)
   cs.st_button_checker:add_down_pattern(StateHolder.handler_Reset, self, StateHolder._down_button_event)
   cs.st_button_checker:add_down_pattern(StateHolder.handler_FullReset, self, StateHolder._down_button_event)
+
+  cs.st_cast_checker:add_callback(self, self._on_cast_detected)
 end
 
 -- const
@@ -745,6 +747,7 @@ function StateHolder:attack_action(action_name)
   cs.auto_attack()
 
   self.cur_state:recheck()
+  self:_update_frame()
   self:_do_action(action_name)
 
   cs.error_disabler:on()
@@ -756,6 +759,7 @@ function StateHolder:heal_action(heal_cast)
 
   self:_rebuff_heal()
   if self.cur_state.id == state_HEAL and self.cur_state:rebuff_aura() then
+    self:_update_frame()
     return
   end
   cs.cast_helpful(heal_cast)
@@ -769,6 +773,12 @@ function StateHolder:_rebuff_heal()
       cs.rebuff(aura_Concentration)
     end
   end
+end
+
+function StateHolder:_update_frame()
+  cs.add_loop_event("StateHolder:_update_frame", 0.3, self, function(holder)
+    holder.frame:CS_SetText(holder.cur_state:to_string())
+  end, 5)
 end
 
 function StateHolder:_down_button_event(longkey, duration)
@@ -789,16 +799,8 @@ function StateHolder:_down_button_event(longkey, duration)
   end
 end
 
-function StateHolder:_check_loop()
-  -- TODO: optimize
-  self.frame:CS_SetText(self.cur_state:to_string())
-
-  if cs.check_target(cs.t_attackable) then
-    local data = cs.get_cast_info("target")
-    if data and data.spell_base then
-      self.cur_state:on_cast_detected(data.spell_base)
-    end
-  end
+function StateHolder:_on_cast_detected(spell_data)
+  self.cur_state:on_cast_detected(spell_data)
 end
 
 function StateHolder:_change_state(state_number)
@@ -807,6 +809,7 @@ function StateHolder:_change_state(state_number)
   if state ~= self.cur_state then
     self.cur_state = state
     self.cur_state:init()
+    self:_update_frame()
     get_state_holder_config().cur_state = state_number
     print("NEW STATE: "..self.cur_state:get_name())
     return true

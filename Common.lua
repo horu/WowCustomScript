@@ -8,17 +8,75 @@ local dps_frame = {
 }
 
 -- debug
-function cs.ToString(value, depth, itlimit, short)
-  return pfUI.api.ToString(value, depth, itlimit, short)
+
+
+cs.name_to_short = function(name)
+  if string.find(name, "[0-9]") then
+    return name
+  end
+
+  local i = 0
+  local short = ""
+  for k=1,10 do
+    i = i + 1
+    short = short..string.sub(name, i, i)
+    i = string.find(name, "_", i)
+    if not i then
+      break
+    end
+  end
+  return short
 end
 
-function cs.debug(msg, depth)
+
+function cs.ToString(value, depth, itlimit, short)
+  depth = depth or 3
+  itlimit = itlimit or 50
+  if type(value) == 'table' then
+    local str = '{'
+    if not short then
+      str = str .. tostring(value) .. ': '
+    end
+    if depth > 1 then
+      local count = 0
+      for ikey, ivalue in pairs(value) do
+        local str_key = cs.ToString(ikey, depth - 1, itlimit, short)
+        if short then
+          str_key = cs.name_to_short(str_key)
+        end
+        str = str ..str_key..' = ' .. cs.ToString(ivalue, depth - 1, itlimit, short) .. ','
+        count = count + 1
+        if count >= itlimit then
+          str = str .. '... '
+          break
+        end
+      end
+      str = str .. '}'
+      return str
+    else
+      local size = 0
+      for _ in pairs(value) do
+        size = size + 1
+      end
+      return str..size..'} '
+    end
+  elseif type(value) == 'string' then
+    if short then
+      return tostring(value)
+    end
+    return '"'..tostring(value)..'"'
+  end
+  return tostring(value)
+end
+
+
+
+function cs.debug(...)
   local line = debugstack(2, 1, 1)
   local line_end = string.find(line, "in function")
   line = string.sub(line, 32, line_end-1)
-  if type(msg) ~= "string" or msg == nil then
-    msg = cs.ToString(msg, depth, 20, true)
-  end
+
+  local msg = cs.ToString(arg, 4, 20, true)
   print(line..msg)
 end
 
@@ -1078,11 +1136,30 @@ function cs.has_debuffs(unit, debuff_str)
 end
 
 
+
+
+
+
+
+
+
+
 cs.spell_base_Shadow = "Shadow"
 cs.spell_base_Frost = "Frost"
 cs.spell_base_Fire = "Fire"
 
-cs.get_spell_base = function(spell_icon)
+---@class cs.SpellData
+cs.SpellData = cs.create_class()
+
+cs.SpellData.build = function(spell_data)
+  local data = cs.SpellData:new()
+  data.spell_data = spell_data
+  return data
+end
+
+function cs.SpellData:get_base()
+  local spell_icon = self.spell_data.icon
+
   if string.find(spell_icon, cs.spell_base_Shadow) then
     return cs.spell_base_Shadow
   elseif string.find(spell_icon, cs.spell_base_Frost) then
@@ -1092,12 +1169,13 @@ cs.get_spell_base = function(spell_icon)
   end
 end
 
+---@return cs.SpellData
 cs.get_cast_info = function(unit)
   local cast_db = pfUI.api.libcast.db
 
   for name, data in pairs(cast_db) do
     if UnitName(unit) == name and data.icon then
-      return { data = data, spell_base = cs.get_spell_base(data.icon) }
+      return cs.SpellData.build(data)
     end
   end
 end
@@ -1106,6 +1184,41 @@ end
 
 
 
+
+
+
+
+
+
+
+---@class cs.CastChecker
+cs.CastChecker = cs.create_class()
+
+cs.CastChecker.build = function()
+  local cast_checker = cs.CastChecker:new()
+
+  cast_checker.callback_list = {}
+  cs.add_loop_event("cs.CastChecker",0.2, cast_checker, cast_checker._check_loop)
+
+  return cast_checker
+end
+
+-- func = function(obj, cs.SpellData)
+function cs.CastChecker:add_callback(obj, func)
+  self.callback_list[obj] = func
+end
+
+function cs.CastChecker:_check_loop()
+  if cs.check_target(cs.t_attackable) then
+    local data = cs.get_cast_info(cs.u_target)
+    if data then
+      for obj, func in pairs(self.callback_list) do func(obj, data) end
+    end
+  end
+end
+
+---@type cs.CastChecker
+cs.st_cast_checker = nil
 
 
 
@@ -1544,6 +1657,7 @@ local main = function()
   end)
 
   cs.st_button_checker = cs.ButtonChecker.build()
+  cs.st_cast_checker = cs.CastChecker.build()
 
   --PVP
   --local pvp = nil
