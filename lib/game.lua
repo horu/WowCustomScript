@@ -90,7 +90,7 @@ function cs.auto_attack()
 
   if not cs.check_combat(cs.c_normal) then
 
-    if not cs.check_target(cs.t_close_30) then
+    if not cs.check_target(cs.t_close) then
       return
     end
 
