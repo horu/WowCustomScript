@@ -566,7 +566,7 @@ State.build = function(id)
 
   state.enemy_spell_base = { base = nil, ts = 0 }
   state.enemy_spell_base.is_valid = function(self)
-    return self.base and cs.compare_time(10, self.ts)
+    return self.base and cs.compare_time(7, self.ts)
   end
 
   return state
