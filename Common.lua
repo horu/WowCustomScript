@@ -70,27 +70,6 @@ function cs.ToString(value, depth, itlimit, short)
 end
 
 
-
-function cs.debug(...)
-  local line = debugstack(2, 1, 1)
-  local line_end = string.find(line, "in function")
-  line_end = line_end and line_end -1
-  line = string.sub(line, 32, line_end)
-
-  for i, v in pairs(cs.to_table(arg)) do
-    if i ~= "n" then
-      local msg = ""
-      for i=2,7 do
-        msg = cs.ToString(v, i, 20, true)
-        if strlen(msg) >= 120 then
-          break
-        end
-      end
-      print(i..":"..line..msg)
-    end
-  end
-end
-
 function cs.ldebug(...)
   local line = debugstack(2, 1, 1)
   local line_end = string.find(line, "in function")
@@ -109,6 +88,29 @@ function cs.ldebug(...)
       print(line..msg)
     end
   end
+end
+
+
+function cs.debug(...)
+  local line = debugstack(2, 1, 1)
+  local line_end = string.find(line, "in function")
+  line_end = line_end and line_end -1
+  line = string.sub(line, 32, line_end)
+
+  local full_msg = ""
+  for i, v in pairs(cs.to_table(arg)) do
+    if i ~= "n" then
+      local msg = ""
+      for i=2,7 do
+        msg = cs.ToString(v, i, 20, true)
+        if strlen(msg) >= 120 then
+          break
+        end
+      end
+      full_msg = full_msg.."|"..msg
+    end
+  end
+  print(line..full_msg)
 end
 
 
@@ -890,24 +892,29 @@ function cs.is_in_party()
 end
 
 function cs.auto_attack()
-  if not cs.check_target(cs.t_exists) then
-    TargetNearestEnemy()
-  end
+  local prev_target = cs.check_target(cs.t_exists)
 
-  if cs.check_target(cs.t_en_player) and cs.st_map_checker:get_zone_params().nopvp then
-    cs.debug(cs.st_map_checker:get_zone_text())
-    ClearTarget()
+  if not prev_target then
+    TargetNearestEnemy()
+
+    local i = 1
+    while cs.check_target(cs.t_en_player) do
+      if cs.st_map_checker:get_zone_params().nopvp or i > 5 then
+        cs.debug("CLEARTARGET", cs.st_map_checker:get_zone_text())
+        ClearTarget()
+        return
+      end
+
+      TargetNearestEnemy()
+
+      i = i + 1
+    end
   end
 
   if not cs.check_combat(cs.c_normal) then
 
-    if cs.check_target(cs.t_enemy) and cs.check_target(cs.t_player) then
-      -- prevent random pvp attack
-      return cs.t_en_player
-    end
-
-    if not cs.check_target(cs.t_close) then
-      return cs.t_close
+    if not cs.check_target(cs.t_close_30) then
+      return
     end
 
     AttackTarget()
