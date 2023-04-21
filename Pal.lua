@@ -775,10 +775,10 @@ end
 function StateHolder:attack_action(action_name)
   cs.error_disabler:off()
 
-  cs.auto_attack()
-
   self.cur_state:recheck()
   self:_update_frame()
+
+  cs.auto_attack()
   self:_do_action(action_name)
 
   cs.error_disabler:on()

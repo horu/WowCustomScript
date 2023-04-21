@@ -108,10 +108,6 @@ function cs.error_disabler.on(self)
 end
 
 
-
----@class cs.Class
-cs.Class = {}
-
 cs.create_class = function(class_tab)
   local class = class_tab or {}
   function class:new(tab)
@@ -120,6 +116,20 @@ cs.create_class = function(class_tab)
   end
   return class
 end
+
+---@class cs.Class
+cs.Class = cs.create_class()
+
+cs.Class.build = function()
+  local class = cs.Class:new()
+
+  return class
+end
+
+---@type cs.Class
+cs.st_class = nil
+
+
 
 cs.is_table = function(value)
   return type(value) == "table"
@@ -643,6 +653,51 @@ local st_targeter = cs.Targeter.build()
 
 
 
+
+---@class cs.MapChecker
+cs.MapChecker = cs.create_class()
+
+cs.MapChecker.build = function()
+  local map_checker = cs.MapChecker:new()
+
+  map_checker.zone_text = ""
+
+  map_checker.f = cs.create_simple_frame("cs.MapChecker.build")
+  map_checker.f.cs_parrent = map_checker
+
+  map_checker.f:RegisterEvent("PLAYER_ENTERING_WORLD")
+  map_checker.f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+  map_checker.f:RegisterEvent("ZONE_CHANGED")
+  map_checker.f:SetScript("OnEvent", function()
+    this.cs_parrent.zone_text = GetMinimapZoneText()
+  end)
+
+  map_checker.params = {}
+  map_checker.params["Booty Bay"] = { nopvp = true }
+
+  return map_checker
+end
+
+-- const
+function cs.MapChecker:get_zone_text()
+  return self.zone_text
+end
+
+function cs.MapChecker:get_zone_params()
+  local params = self.params[self.zone_text]
+  return params or {}
+end
+
+---@type cs.MapChecker
+cs.st_map_checker = nil
+
+
+
+
+
+
+
+
 ---@class cs.CombatChecker
 cs.CombatChecker = cs.create_class()
 
@@ -813,16 +868,21 @@ function cs.auto_attack()
   if not cs.check_target(cs.t_exists) then
     TargetNearestEnemy()
   end
-  -- TODO disable autoattack on plater in zones ( Booty Bay )
+
+  if cs.check_target(cs.t_en_player) and cs.st_map_checker:get_zone_params().nopvp then
+    cs.debug(cs.st_map_checker:get_zone_text())
+    ClearTarget()
+  end
+
   if not cs.check_combat(cs.c_normal) then
 
     if cs.check_target(cs.t_enemy) and cs.check_target(cs.t_player) then
       -- prevent random pvp attack
-      return
+      return cs.t_en_player
     end
 
     if not cs.check_target(cs.t_close) then
-      return
+      return cs.t_close
     end
 
     AttackTarget()
@@ -1676,6 +1736,7 @@ local main = function()
 
   cs.st_button_checker = cs.ButtonChecker.build()
   cs.st_cast_checker = cs.CastChecker.build()
+  cs.st_map_checker = cs.MapChecker.build()
 
   --PVP
   --local pvp = nil
