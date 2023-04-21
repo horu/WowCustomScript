@@ -18,7 +18,7 @@ cs.t_exists = UnitExists
 cs.t_dead = UnitIsDead
 cs.t_player = UnitIsPlayer
 cs.t_self = UnitIsUnit
-cs.t_close = "t_close"
+cs.t_close_10 = "t_close_10"
 cs.t_close_30 = "t_close_30"
 cs.t_attackable = "t_attackable"
 cs.t_fr_player = "t_fr_player"
@@ -26,7 +26,7 @@ cs.t_en_player = "t_en_player"
 
 -- check condition by OR
 function cs.check_unit(check, unit)
-  if check == cs.t_close then
+  if check == cs.t_close_10 then
     return CheckInteractDistance("target", 2)
   elseif check == cs.t_close_30 then
     return CheckInteractDistance("target", 4)
@@ -90,7 +90,7 @@ function cs.auto_attack()
 
   if not cs.check_combat(cs.c_normal) then
 
-    if not cs.check_target(cs.t_close) then
+    if not cs.check_target(cs.t_close_10) then
       return
     end
 

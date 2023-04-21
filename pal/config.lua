@@ -185,7 +185,7 @@ end
 
 ---@param seal_list pal.Seal[]
 local seal_action = function(state, seal_list)
-  if not cs.check_target(cs.t_close) then
+  if not cs.check_target(cs.t_close_10) then
     -- the target is far away
     return
   end
@@ -235,7 +235,7 @@ pal.actions.right = function(state)
 end
 
 pal.actions.crusader = function(state)
-  if not cs.check_target(cs.t_close) then return end
+  if not cs.check_target(cs.t_close_10) then return end
 
   if judgement_any(pal.Seal.seal_Light, pal.Seal.seal_Wisdom, pal.Seal.seal_Justice, pal.Seal.seal_Righteousness) then
     return
