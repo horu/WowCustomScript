@@ -91,6 +91,26 @@ function cs.debug(...)
   end
 end
 
+function cs.ldebug(...)
+  local line = debugstack(2, 1, 1)
+  local line_end = string.find(line, "in function")
+  line_end = line_end and line_end -1
+  line = string.sub(line, 32, line_end)
+
+  for i, v in pairs(cs.to_table(arg)) do
+    if i ~= "n" then
+      local msg = ""
+      for i=2,7 do
+        msg = cs.ToString(v, i, 20)
+        if strlen(msg) >= 320 then
+          break
+        end
+      end
+      print(line..msg)
+    end
+  end
+end
+
 
 
 
@@ -1223,14 +1243,15 @@ cs.spell_base_Fire = "Fire"
 ---@class cs.SpellData
 cs.SpellData = cs.create_class()
 
-cs.SpellData.build = function(spell_data)
+cs.SpellData.build = function(pfui_spell)
   local data = cs.SpellData:new()
-  data.spell_data = spell_data
+  data.pfui_spell = pfui_spell
+  data.ts_sec = math.floor(GetTime())
   return data
 end
 
 function cs.SpellData:get_base()
-  local spell_icon = self.spell_data.icon
+  local spell_icon = self.pfui_spell.icon
 
   if string.find(spell_icon, cs.spell_base_Shadow) then
     return cs.spell_base_Shadow
@@ -1241,13 +1262,20 @@ function cs.SpellData:get_base()
   end
 end
 
+function cs.SpellData:eq(other)
+  if not other then
+    return
+  end
+  return self.pfui_spell.cast == other.pfui_spell.cast and self.ts_sec == other.ts_sec
+end
+
 ---@return cs.SpellData
 cs.get_cast_info = function(unit)
   local cast_db = pfUI.api.libcast.db
 
-  for name, data in pairs(cast_db) do
-    if UnitName(unit) == name and data.icon then
-      return cs.SpellData.build(data)
+  for name, pfui_spell in pairs(cast_db) do
+    if UnitName(unit) == name and pfui_spell.icon then
+      return cs.SpellData.build(pfui_spell)
     end
   end
 end
@@ -1270,6 +1298,7 @@ cs.CastChecker.build = function()
   local cast_checker = cs.CastChecker:new()
 
   cast_checker.callback_list = {}
+  cast_checker.last_spell = nil
   cs.add_loop_event("cs.CastChecker",0.2, cast_checker, cast_checker._check_loop)
 
   return cast_checker
@@ -1281,11 +1310,22 @@ function cs.CastChecker:add_callback(obj, func)
 end
 
 function cs.CastChecker:_check_loop()
-  if cs.check_target(cs.t_attackable) then
-    local data = cs.get_cast_info(cs.u_target)
-    if data then
-      for obj, func in pairs(self.callback_list) do func(obj, data) end
-    end
+  if not cs.check_target(cs.t_attackable) then
+    return
+  end
+
+  local data = cs.get_cast_info(cs.u_target)
+  if not data then
+    return
+  end
+
+  if data:eq(self.last_spell) then
+    return
+  end
+
+  self.last_spell = data
+  for obj, func in pairs(self.callback_list)
+    do func(obj, data)
   end
 end
 

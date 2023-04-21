@@ -639,7 +639,10 @@ function State:on_cast_detected(spell_data)
     return
   end
 
-  cs.debug(spell_data)
+  if not self.enemy_spell_base:is_valid() or self.enemy_spell_base.base ~= spell_base then
+    cs.debug(spell_data)
+  end
+
   self.enemy_spell_base.base = spell_base
   self.enemy_spell_base.ts = GetTime()
 end
