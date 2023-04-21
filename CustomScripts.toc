@@ -7,10 +7,10 @@
 ## Version: 3.17.1
 ## RequiredDeps: pfUI
 ## SavedVariables: cs_states_dynamic_config cs_dps_sessions
-lib_common.lua
-lib_ui.lua
-lib_game.lua
-lib_service.lua
-lib_spells.lua
+lib\common.lua
+lib\ui.lua
+lib\game.lua
+lib\service.lua
+lib\spells.lua
 
 Pal.lua
