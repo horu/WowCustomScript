@@ -401,7 +401,7 @@ function speed_checker:_get_k()
 
     -- set new k
     self.k = k/avg
-    print(string.format("S: k:%.2f avg:%.2f", self.k, avg))
+    cs.print(string.format("S: k:%.2f avg:%.2f", self.k, avg))
 
     return self.k
 end
@@ -445,8 +445,8 @@ local function unit_dump_scan(name)
   local p = units["players"][name]
   local m_ut = cs.time_to_str(m and m.updatetime or 0)
   local p_ut = cs.time_to_str(p and p.updatetime or 0)
-  print("    M("..m_ut.."):"..ToString(m, 2, 10, 1))
-  print("    P("..p_ut.."):"..ToString(p, 2, 10, 1))
+  cs.print("    M("..m_ut.."):"..ToString(m, 2, 10, 1))
+  cs.print("    P("..p_ut.."):"..ToString(p, 2, 10, 1))
 end
 
 -- NAMEPLATES
@@ -498,15 +498,15 @@ local function unit_dump_np(name)
     local plate = frame.nameplate
     local np_name = plate.original.name:GetText()
     if np_name == name then
-      print("    NP: "..ToString(np_to_short(plate), 3, 20, nil))
+      cs.print("    NP: "..ToString(np_to_short(plate), 3, 20, nil))
     end
     count = count + 1
   end
-  print("NP COUNT: "..count)
+  cs.print("NP COUNT: "..count)
 end
 
 local function unit_dump(name)
-  print("  "..name..":")
+  cs.print("  "..name..":")
   unit_dump_scan(name)
   unit_dump_np(name)
 end
@@ -514,7 +514,7 @@ end
 
 local function all_dump()
   local units = pfUI.api.GetScanDb()
-  -- print(pfUI.api.ToString(units, 2))
+  -- cs.print(pfUI.api.ToString(units, 2))
   for type, type_g in pairs(units) do
 
     local count = 0
@@ -527,7 +527,7 @@ local function all_dump()
       end
       count = count + 1
     end
-    print(type..": count:"..count)
+    cs.print(type..": count:"..count)
 
   end
 end
@@ -585,14 +585,14 @@ end
 
 function cs_dump_unit()
   local cur_time = cs.time_to_str(GetTime())
-  print("----- "..cur_time)
+  cs.print("----- "..cur_time)
 
   if cs.check_target(cs.t_exists) then
     local buffs = cs.get_buff_list(cs.u_target)
     local debuffs = cs.get_debuff_list(cs.u_target)
     local casts = cs.get_cast_info(cs.u_target)
     for t, list in pairs({buffs = buffs, debuffs = debuffs, casts = casts}) do
-      print(t..":")
+      cs.print(t..":")
       for _, buff in pairs(list) do
         cs.debug(buff)
       end

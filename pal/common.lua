@@ -81,7 +81,7 @@ local rebuff_unit = function(unit)
 
   local buff_name = class and buffs[class] or bless.Might
   if not buff_name then
-    print("BUFF NOT FOUND FOR "..class)
+    cs.print("BUFF NOT FOUND FOR "..class)
     buff_name = bless.Might
   end
 
@@ -93,7 +93,7 @@ local rebuff_unit = function(unit)
   local result = buff:rebuff()
 
   if result == cs.Buff.success then
-    print("BUFF: ".. pal.to_short(buff:get_name()) .. " FOR ".. pfUI.api.GetUnitColor(unit) .. class)
+    cs.print("BUFF: ".. pal.to_short(buff:get_name()) .. " FOR ".. pfUI.api.GetUnitColor(unit) .. class)
   end
   return result
 end

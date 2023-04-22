@@ -364,13 +364,13 @@ function StateHolder:_down_button_event(longkey, duration)
   if duration >= StateHolder.handler_FullReset then
     pal.reset_dynamic_config()
     state:reset_buffs()
-    print("RESET CONFIG!")
+    cs.print("RESET CONFIG!")
   elseif duration >= StateHolder.handler_Reset then
     state:reset_buffs()
-    print("RESET STATE: "..self.cur_state:get_name())
+    cs.print("RESET STATE: "..self.cur_state:get_name())
   elseif duration >= StateHolder.handler_Save then
     self.cur_state:save_buffs()
-    print("SAVE STATE: "..self.cur_state:get_name())
+    cs.print("SAVE STATE: "..self.cur_state:get_name())
   elseif duration >= StateHolder.handler_Change then
     self:_change_state(longkey)
   end
@@ -388,7 +388,7 @@ function StateHolder:_change_state(state_number)
     self.cur_state:init()
     self:_update_frame()
     pal.get_state_holder_config().cur_state = state_number
-    print("NEW STATE: "..self.cur_state:get_name())
+    cs.print("NEW STATE: "..self.cur_state:get_name())
     return true
   end
 end
@@ -427,7 +427,7 @@ local on_load = function()
     st_state_holder:add_action(action_name, action)
   end
 
-  print(cs.color_green.."CS LOADED")
+  cs.print(cs.color_green.."CS LOADED")
 end
 
 

@@ -2,7 +2,55 @@
 cs_common = cs_common or {}
 local cs = cs_common
 
--- debug
+cs_print = function(msg)
+  DEFAULT_CHAT_FRAME:AddMessage("|cffcccc33CS: |cffffff55" .. ( msg or "nil" ))
+end
+
+
+local get_stack_line = function(stack_level)
+  local line = debugstack(stack_level, 1, 1)
+  local to_output = ""
+  if line then
+    local file_info_begin = 32
+    local file_info_end = string.find(line, " in function") or nil
+    to_output = to_output..string.sub(line, file_info_begin, file_info_end)
+
+    if file_info_end then
+      local fun_info_begin = file_info_end + 14
+      if fun_info_begin then
+        local fun_info_end = string.find(line, "[\n]", fun_info_begin)
+        to_output = to_output..string.sub(line, fun_info_begin, fun_info_end)
+      end
+    end
+  end
+  return string.sub(to_output, 1, strlen(to_output) - 1)
+end
+
+cs_stack = function(condition)
+  if not condition then
+    return
+  end
+  cs_print("STACK BEGIN")
+  for i=1,10 do
+    local line = get_stack_line(i)
+    if line then
+      cs_print(line)
+    else
+      break
+    end
+  end
+  cs_print("STACK END")
+end
+
+error = function(msg)
+  cs_stack(true)
+  cs_print("|cffcc3333ERROR: |cffff7777".. (msg or "nil" ))
+end
+seterrorhandler(error)
+
+
+cs.print = cs_print
+cs.stack = cs_stack
 
 
 cs.name_to_short = function(name)
@@ -24,7 +72,7 @@ cs.name_to_short = function(name)
 end
 
 
-function cs.ToString(value, depth, itlimit, short)
+function cs.to_string(value, depth, itlimit, short)
   depth = depth or 3
   itlimit = itlimit or 50
   if type(value) == 'table' then
@@ -35,11 +83,11 @@ function cs.ToString(value, depth, itlimit, short)
     if depth > 1 then
       local count = 0
       for ikey, ivalue in pairs(value) do
-        local str_key = cs.ToString(ikey, depth - 1, itlimit, short)
+        local str_key = cs.to_string(ikey, depth - 1, itlimit, short)
         if short then
           str_key = cs.name_to_short(str_key)
         end
-        str = str ..str_key..' = ' .. cs.ToString(ivalue, depth - 1, itlimit, short) .. ','
+        str = str ..str_key..' = ' .. cs.to_string(ivalue, depth - 1, itlimit, short) .. ','
         count = count + 1
         if count >= itlimit then
           str = str .. '... '
@@ -68,41 +116,6 @@ cs.print = function()
 
 end
 
-local get_stack_line = function(stack_level)
-  local line = debugstack(stack_level, 1, 1)
-  local to_output = ""
-  if line then
-    local file_info_begin = 32
-    local file_info_end = string.find(line, " in function") or nil
-    to_output = to_output..string.sub(line, file_info_begin, file_info_end)
-
-    if file_info_end then
-      local fun_info_begin = file_info_end + 14
-      if fun_info_begin then
-        local fun_info_end = string.find(line, "[\n]", fun_info_begin)
-        to_output = to_output..string.sub(line, fun_info_begin, fun_info_end)
-      end
-    end
-  end
-  return string.sub(to_output, 1, strlen(to_output) - 1)
-end
-
-cs.stack = function(condition)
-  if not condition then
-    return
-  end
-  print("STACK BEGIN")
-  for i=1,10 do
-    local line = get_stack_line(i)
-    if line then
-      print(line)
-    else
-      break
-    end
-  end
-  print("STACK END")
-end
-
 
 function cs.debug(...)
   local short = nil
@@ -114,14 +127,14 @@ function cs.debug(...)
   for _, v in ipairs(arg) do
     local msg = ""
     for i=2,7 do
-      msg = cs.ToString(v, i, 20, short)
+      msg = cs.to_string(v, i, 20, short)
       if strlen(msg) >= 120 then
         break
       end
     end
     full_msg = full_msg..msg.." | "
   end
-  print(line..": "..full_msg)
+  cs.print(line..": "..full_msg)
 end
 
 
