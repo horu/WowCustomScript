@@ -9,7 +9,7 @@ spell.Crusader = "Seal of the Crusader"
 spell.Justice = "Seal of Justice"
 spell.Light = "Seal of Light"
 spell.Wisdom = "Seal of Wisdom"
-spell.list_all = { spell.Righteousness, spell.Crusader, spell.Justice, spell.Light, spell.Wisdom }
+spell.list_all = cs.dict_to_list(spell)
 
 local to_short_list = {}
 to_short_list[spell.Righteousness] = cs.color_purple .. "SR" .. "|r"
@@ -126,5 +126,6 @@ cs.once_event(0.2, function()
           UnitHealthMax(cs.u_player) * 0.2
   )
   pal.seal.Justice = pal.Seal.build(spell.Justice, "Spell_Holy_SealOfWrath")
+  pal.seal.list_all = cs.dict_to_list(pal.seal)
 end)
 

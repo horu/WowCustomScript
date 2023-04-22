@@ -15,5 +15,6 @@ lib\spells.lua
 
 pal\common.lua
 pal\config.lua
+pal\actions.lua
 pal\seal.lua
 pal\states.lua

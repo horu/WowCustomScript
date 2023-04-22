@@ -102,7 +102,7 @@ end
 
 function cs.debug(...)
   local short = nil
-  local stack_level = 2
+  local stack_level = 3
 
   local line = get_stack_line(stack_level)
 
@@ -165,6 +165,7 @@ cs.is_table = function(value)
   return type(value) == "table"
 end
 
+-- TODO: fix this
 function cs.to_table(...)
   local tbl = {}
   for i, v in pairs(arg) do
@@ -178,6 +179,7 @@ function cs.to_table(...)
   return tbl
 end
 
+-- TODO: fix this
 cs.to_dict = function(list)
   local dict = {}
   list = not cs.is_table(list) and { list } or list
@@ -187,6 +189,13 @@ cs.to_dict = function(list)
   return dict
 end
 
+cs.dict_to_list = function(dict)
+  local list = {}
+  for _, value in pairs(dict) do
+    table.insert(list, value)
+  end
+  return list
+end
 
 function cs.fmod(v, d)
   while v >= d do
