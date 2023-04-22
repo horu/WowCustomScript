@@ -107,7 +107,7 @@ function cs.Spell:cast(to_self)
 end
 
 function cs.Spell:cast_to_unit(unit)
-  if self:cast(unit == cs.u_player) then
+  if self:cast(unit == cs.u.player) then
     if (SpellIsTargeting()) then
       SpellTargetUnit(unit)
     end
@@ -181,11 +181,11 @@ end
 
 -- default to player
 cs.cast_helpful = function(name)
-  local unit = cs.u_player
-  if cs.check_target(cs.t_friend) then
-    unit = cs.u_target
-  elseif cs.check_mouse(cs.t_exists) and cs.check_mouse(cs.t_friend) then
-    unit = cs.u_mouseover
+  local unit = cs.u.player
+  if cs.check_target(cs.t.friend) then
+    unit = cs.u.target
+  elseif cs.check_mouse(cs.t.exists) and cs.check_mouse(cs.t.friend) then
+    unit = cs.u.mouseover
   end
 
   local spell = cs.Spell.build(name)
@@ -208,7 +208,7 @@ function cs.find_buff(check_list, unit)
 end
 
 cs.get_buff_list = function(unit, b_fun)
-  if not unit then unit = cs.u_player end
+  if not unit then unit = cs.u.player end
   if not b_fun then b_fun = UnitBuff end
 
   local buff_list = {}
@@ -255,7 +255,7 @@ cs.Buff.build = function(name, unit)
   local buff = cs.Buff:new()
 
   buff.name = name
-  buff.unit = unit or cs.u_player
+  buff.unit = unit or cs.u.player
   buff.spell = cs.Spell.build(name)
 
   return buff
@@ -269,7 +269,7 @@ end
 -- const
 function cs.Buff:check_target_range()
   local unit = self.unit
-  if unit == cs.u_player then
+  if unit == cs.u.player then
     return true
   end
   return UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDead(unit) and
@@ -381,11 +381,11 @@ function cs.CastChecker:add_callback(obj, func)
 end
 
 function cs.CastChecker:_check_loop()
-  if not cs.check_target(cs.t_attackable) then
+  if not cs.check_target(cs.t.attackable) then
     return
   end
 
-  local data = cs.get_cast_info(cs.u_target)
+  local data = cs.get_cast_info(cs.u.target)
   if not data then
     return
   end

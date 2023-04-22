@@ -78,7 +78,7 @@ function pal.Seal:check_target_debuff()
     return
   end
 
-  return cs.has_debuffs(cs.u_target, self.target_debuff)
+  return cs.has_debuffs(cs.u.target, self.target_debuff)
 end
 
 -- const
@@ -89,11 +89,11 @@ end
 -- seal can be casted
 -- const
 function pal.Seal:is_reseal_available()
-  if not cs.check_target(cs.t_attackable) then
+  if not cs.check_target(cs.t.attackable) then
     return
   end
 
-  local target_hp = UnitHealth(cs.u_target) or 0
+  local target_hp = UnitHealth(cs.u.target) or 0
   return target_hp >= self.target_hp_limit
 end
 
@@ -143,13 +143,13 @@ pal.seal.init = function()
   pal.seal.Light = pal.Seal.build(
           sn_Light,
           "Spell_Holy_HealingAura",
-          UnitHealthMax(cs.u_player) * 0.2
+          UnitHealthMax(cs.u.player) * 0.2
   )
   ---@type pal.Seal
   pal.seal.Wisdom = pal.Seal.build(
           sn_Wisdom,
           "Spell_Holy_RighteousnessAura",
-          UnitHealthMax(cs.u_player) * 0.2
+          UnitHealthMax(cs.u.player) * 0.2
   )
   ---@type pal.Seal
   pal.seal.Justice = pal.Seal.build(sn_Justice, "Spell_Holy_SealOfWrath")

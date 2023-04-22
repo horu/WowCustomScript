@@ -28,13 +28,13 @@ EmegryCaster.build = function()
 end
 
 function EmegryCaster:has_debuff_protection()
-  return cs.has_debuffs(cs.u_player, "Spell_Holy_RemoveCurse")
+  return cs.has_debuffs(cs.u.player, "Spell_Holy_RemoveCurse")
 end
 
 function EmegryCaster:em_buff(lay)
   local casted_shield = self:has_debuff_protection()
   if not casted_shield then
-    local spell = self.spell_order:cast(cs.u_player)
+    local spell = self.spell_order:cast(cs.u.player)
     if spell then
       self.shield_ts = spell.cast_ts
       return cs.Buff.success
@@ -54,7 +54,7 @@ function EmegryCaster:em_buff(lay)
   end
 
   cs.print(cs.color_red.."CAST Lay on Hands")
-  self.lay_spell:cast_to_unit(cs.u_player)
+  self.lay_spell:cast_to_unit(cs.u.player)
   return cs.Buff.success
 end
 

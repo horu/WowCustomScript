@@ -112,11 +112,11 @@ end
 
 local alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 local function rebuff_anybody()
-  if not cs.check_combat(cs.c_affect) and not cs.check_target(cs.t_exists) then
+  if not cs.check_combat(cs.c.affect) and not cs.check_target(cs.t.exists) then
     for i=1,strlen(alphabet) do
       local name = string.sub(alphabet, i, i)
       TargetByName(name)
-      if cs.check_target(cs.t_fr_player) then
+      if cs.check_target(cs.t.fr_player) then
         rebuff_unit("target")
       end
       ClearTarget()
@@ -129,10 +129,10 @@ pal.blessing_everywhere = function()
     cs.Buff.build(cast.Righteous):rebuff()
     buff_party()
   end
-  if cs.check_target(cs.t_fr_player) then
-    rebuff_unit(cs.u_target)
-  elseif cs.check_mouse(cs.t_fr_player) then
-    rebuff_unit(cs.u_mouseover)
+  if cs.check_target(cs.t.fr_player) then
+    rebuff_unit(cs.u.target)
+  elseif cs.check_mouse(cs.t.fr_player) then
+    rebuff_unit(cs.u.mouseover)
   end
 end
 
@@ -147,9 +147,9 @@ end
 -- PUBLIC
 
 function cs_rebuff_unit()
-  local unit = cs.u_target
-  if not cs.check_target(cs.t_exists) then
-    unit = cs.u_mouseover
+  local unit = cs.u.target
+  if not cs.check_target(cs.t.exists) then
+    unit = cs.u.mouseover
   end
   rebuff_unit(unit)
 end

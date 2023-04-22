@@ -5,50 +5,53 @@ cs.game = {}
 
 
 
-
 --units
-cs.u_mouseover = "mouseover"
-cs.u_target = "target"
-cs.u_player = "player"
+cs.u = {}
+cs.u.mouseover = "mouseover"
+cs.u.target = "target"
+cs.u.player = "player"
+
 
 -- target
-cs.t_friend = UnitIsFriend
-cs.t_enemy = UnitIsEnemy
-cs.t_exists = UnitExists
-cs.t_dead = UnitIsDead
-cs.t_player = UnitIsPlayer
-cs.t_self = UnitIsUnit
-cs.t_close_10 = "t_close_10"
-cs.t_close_30 = "t_close_30"
-cs.t_attackable = "t_attackable"
-cs.t_fr_player = "t_fr_player"
-cs.t_en_player = "t_en_player"
+cs.t = {}
+cs.t.friend = UnitIsFriend
+cs.t.enemy = UnitIsEnemy
+cs.t.exists = UnitExists
+cs.t.dead = UnitIsDead
+cs.t.player = UnitIsPlayer
+cs.t.self = UnitIsUnit
+cs.t.close_10 = "t_close_10"
+cs.t.close_30 = "t_close_30"
+cs.t.attackable = "t_attackable"
+cs.t.fr_player = "t_fr_player"
+cs.t.en_player = "t_en_player"
+
 
 -- check condition by OR
 function cs.check_unit(check, unit)
-  if check == cs.t_close_10 then
+  if check == cs.t.close_10 then
     return CheckInteractDistance("target", 2)
-  elseif check == cs.t_close_30 then
+  elseif check == cs.t.close_30 then
     return CheckInteractDistance("target", 4)
-  elseif check == cs.t_fr_player then
-    return cs.check_unit(cs.t_friend, unit) and cs.check_unit(cs.t_player, unit)
-  elseif check == cs.t_en_player then
-    return cs.check_unit(cs.t_enemy, unit) and cs.check_unit(cs.t_player, unit)
-  elseif check == cs.t_attackable then
-    return cs.check_unit(cs.t_exists, unit) and
-            not cs.check_unit(cs.t_friend, unit) and
-            not cs.check_unit(cs.t_dead, unit)
+  elseif check == cs.t.fr_player then
+    return cs.check_unit(cs.t.friend, unit) and cs.check_unit(cs.t.player, unit)
+  elseif check == cs.t.en_player then
+    return cs.check_unit(cs.t.enemy, unit) and cs.check_unit(cs.t.player, unit)
+  elseif check == cs.t.attackable then
+    return cs.check_unit(cs.t.exists, unit) and
+            not cs.check_unit(cs.t.friend, unit) and
+            not cs.check_unit(cs.t.dead, unit)
   end
 
-  return check(unit, cs.u_player)
+  return check(unit, cs.u.player)
 end
 
 function cs.check_target(check)
-  return cs.check_unit(check, cs.u_target)
+  return cs.check_unit(check, cs.u.target)
 end
 
 function cs.check_mouse(check)
-  return cs.check_unit(check, cs.u_mouseover)
+  return cs.check_unit(check, cs.u.mouseover)
 end
 
 
@@ -68,19 +71,19 @@ function cs.is_in_party()
 end
 
 function cs.auto_attack()
-  if not cs.check_target(cs.t_exists) then
+  if not cs.check_target(cs.t.exists) then
     -- no auto check target
     return
   end
 
-  if cs.check_target(cs.t_en_player) and cs.st_map_checker:get_zone_params().nopvp then
+  if cs.check_target(cs.t.en_player) and cs.st_map_checker:get_zone_params().nopvp then
     ClearTarget()
     return
   end
 
-  if not cs.check_combat(cs.c_normal) then
+  if not cs.check_combat(cs.c.normal) then
     AttackTarget()
-  elseif cs.check_target(cs.t_friend) then
+  elseif cs.check_target(cs.t.friend) then
     AssistUnit("target")
   end
 end
@@ -266,9 +269,11 @@ function cs.get_affect_info()
   return st_combat_checker.data.affect
 end
 
-cs.c_normal = cs.get_combat_info
-cs.c_aggro = cs.get_aggro_info
-cs.c_affect = cs.get_affect_info
+-- combat
+cs.c = {}
+cs.c.normal = cs.get_combat_info
+cs.c.aggro = cs.get_aggro_info
+cs.c.affect = cs.get_affect_info
 
 function cs.check_combat(m0or, m1or, m2or, m3or)
   local to_check
@@ -283,7 +288,7 @@ function cs.check_combat(m0or, m1or, m2or, m3or)
 
   if not to_check[1] then
     -- default normal + agro
-    to_check = { cs.c_normal, cs.c_aggro }
+    to_check = { cs.c.normal, cs.c.aggro }
   end
 
   for _, check in pairs(to_check) do

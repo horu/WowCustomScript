@@ -225,7 +225,7 @@ end
 function State:_get_bless()
   local bless_name = nil
 
-  if not cs.check_target(cs.t_close_10) and not cs.check_combat(1, cs.c_affect) then -- 3 sec after combat
+  if not cs.check_target(cs.t.close_10) and not cs.check_combat(1, cs.c.affect) then -- 3 sec after combat
     -- TODO: chechn to nocombat_bless config option
     -- bless_name = bless.Wisdom -- mana regen if not in combat
   end

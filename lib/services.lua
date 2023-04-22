@@ -27,12 +27,12 @@ function cs.Targeter:set_target_mouse()
   end
   self.in_progress = 1
 
-  self.prev_target = cs.check_target(cs.t_exists)
-  self.prev_combat = cs.check_combat(cs.c_normal)
+  self.prev_target = cs.check_target(cs.t.exists)
+  self.prev_combat = cs.check_combat(cs.c.normal)
 
-  if UnitExists(cs.u_mouseover) then
-    self.cur_target = cs.u_mouseover
-    TargetUnit(cs.u_mouseover)
+  if UnitExists(cs.u.mouseover) then
+    self.cur_target = cs.u.mouseover
+    TargetUnit(cs.u.mouseover)
   else
     self.in_progress = 3
     self:completion()
@@ -68,7 +68,7 @@ function cs.Targeter:deffered_set_combat_mode()
   self.in_progress = 3
 
   if self.prev_combat then
-    if not cs.check_combat(cs.c_normal) then
+    if not cs.check_combat(cs.c.normal) then
       AttackTarget()
     end
   end
@@ -376,16 +376,16 @@ function cs.SpeedChecker:_get_speed_mod()
   end
 
   local speed = 1
-  local _, class = UnitClass(cs.u_player)
+  local _, class = UnitClass(cs.u.player)
   if class == "PALADIN" then
     local _, _, _, _, current_rank = GetTalentInfo(3, 9)
     speed = speed + current_rank * 0.04
   end
 
-  local is_mounted = cs.has_buffs(cs.u_player, "inv_pet_speedy") or
-          cs.has_buffs(cs.u_player, "Spell_Nature_Swiftness")
+  local is_mounted = cs.has_buffs(cs.u.player, "inv_pet_speedy") or
+          cs.has_buffs(cs.u.player, "Spell_Nature_Swiftness")
   if is_mounted then
-    local lvl = UnitLevel(cs.u_player)
+    local lvl = UnitLevel(cs.u.player)
     if lvl < 40 then
       speed = 1.14 * speed * speed -- ????
     elseif lvl < 60 then
@@ -612,10 +612,10 @@ function cs_dump_unit()
   local cur_time = cs.time_to_str(GetTime())
   cs.print("----- " .. cur_time)
 
-  if cs.check_target(cs.t_exists) then
-    local buffs = cs.get_buff_list(cs.u_target)
-    local debuffs = cs.get_debuff_list(cs.u_target)
-    local casts = cs.get_cast_info(cs.u_target)
+  if cs.check_target(cs.t.exists) then
+    local buffs = cs.get_buff_list(cs.u.target)
+    local debuffs = cs.get_debuff_list(cs.u.target)
+    local casts = cs.get_cast_info(cs.u.target)
     for t, list in pairs({ buffs = buffs, debuffs = debuffs, casts = casts }) do
       cs.print(t .. ":")
       for _, buff in pairs(list) do

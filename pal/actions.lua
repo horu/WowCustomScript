@@ -46,7 +46,7 @@ end
 
 ---@param seal_list pal.Seal[]
 function Action:seal_action(state, seal_list)
-  if not cs.check_target(cs.t_close_10) then
+  if not cs.check_target(cs.t.close_10) then
     -- the target is far away
     return
   end
@@ -98,7 +98,7 @@ pal.actions.init = function()
   Action.debuffed_seal_list = { seal.Light, seal.Wisdom, seal.Justice }
 
   pal.actions.right = Action.build(seal.Righteousness, function(self, state)
-    if not cs.check_target(cs.t_close_30) then return end
+    if not cs.check_target(cs.t.close_30) then return end
 
     cs.cast(cast.HolyStrike)
 
@@ -113,7 +113,7 @@ pal.actions.init = function()
   end)
 
   pal.actions.crusader = Action.build(seal.Crusader, function(self, state)
-    if not cs.check_target(cs.t_close_10) then return end
+    if not cs.check_target(cs.t.close_10) then return end
 
     if self:judgement_other() then
       return
