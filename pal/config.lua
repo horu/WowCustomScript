@@ -64,7 +64,7 @@ local default_states_config = {
         list = an.list_att,
       },
       bless = {
-        default = bn.Kings,
+        default = bn.Wisdom,
         list = bn.list_all,
       },
     },
@@ -78,7 +78,7 @@ local default_states_config = {
         list = an.list_att,
       },
       bless = {
-        default = bn.Kings,
+        default = bn.Might,
         list = bn.list_all,
       },
     },
@@ -92,7 +92,7 @@ local default_states_config = {
         list = an.list_att,
       },
       bless = {
-        default = bn.Kings,
+        default = bn.Wisdom,
         list = bn.list_all,
       },
     },

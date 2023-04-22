@@ -12,7 +12,7 @@ an.Retribution = "Retribution Aura"
 an.Shadow = "Shadow Resistance Aura"
 an.Frost = "Frost Resistance Aura"
 an.Fire = "Fire Resistance Aura"
-an.list_all = { an.Concentration, an.Sanctity, an.Devotion, an.Retribution, an.Shadow, an.Frost, an.Fire }
+an.list_all = cs.dict_to_list(an, "string")
 an.list_att =                   { an.Sanctity, an.Devotion, an.Retribution, an.Shadow, an.Frost, an.Fire }
 an.list_def =                                { an.Devotion, an.Retribution, an.Shadow, an.Frost, an.Fire }
 
@@ -24,7 +24,7 @@ bn.Might = "Blessing of Might"
 bn.Salvation = "Blessing of Salvation"
 bn.Light = "Blessing of Light"
 bn.Kings = "Blessing of Kings"
-bn.list_all = { bn.Wisdom, bn.Might, bn.Salvation, bn.Light, bn.Kings }
+bn.list_all = cs.dict_to_list(bn, "string")
 
 -- SPellName
 pal.spn = {}
@@ -68,23 +68,23 @@ end
 local rebuff_unit = function(unit)
   local buffs = {
     WARRIOR = bn.Might,
-    PALADIN = bn.Kings,
-    HUNTER = bn.Kings,
+    PALADIN = bn.Might,
+    HUNTER = bn.Might,
     ROGUE = bn.Might,
-    SHAMAN = bn.Kings,
+    SHAMAN = bn.Might,
 
-    DRUID = bn.Kings,
-    PRIEST = bn.Kings,
-    MAGE = bn.Kings,
-    WARLOCK = bn.Kings,
+    DRUID = bn.Wisdom,
+    PRIEST = bn.Wisdom,
+    MAGE = bn.Wisdom,
+    WARLOCK = bn.Wisdom,
   }
 
   local _, class = UnitClass(unit)
 
-  local buff_name = class and buffs[class] or bn.Kings
+  local buff_name = class and buffs[class] or bn.Might
   if not buff_name then
     cs.print("BUFF NOT FOUND FOR "..class)
-    buff_name = bn.Kings
+    buff_name = bn.Might
   end
 
   local buff = cs.Buff.build(buff_name, unit)
