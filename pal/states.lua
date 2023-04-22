@@ -1,7 +1,7 @@
 
 local cs = cs_common
 local pal = cs.pal
-local aura = pal.aura
+local an = pal.an
 local heal = pal.heal
 
 
@@ -181,13 +181,13 @@ function State:_get_aura()
   if self.enemy_spell_base:is_valid() then
     local spell_base = self.enemy_spell_base.base
     if spell_base == cs.spell_base_Frost then
-      aura_name = aura.Frost
+      aura_name = an.Frost
     end
     if spell_base == cs.spell_base_Shadow then
-      aura_name = aura.Shadow
+      aura_name = an.Shadow
     end
     if spell_base == cs.spell_base_Fire then
-      aura_name = aura.Fire
+      aura_name = an.Fire
     end
   end
 
@@ -200,7 +200,7 @@ function State:_get_bless()
 
   if not cs.check_target(cs.t.close_10) and not cs.check_combat(1, cs.c.affect) then -- 3 sec after combat
     -- TODO: chechn to nocombat_bless config option
-    -- bless_name = bless.Wisdom -- mana regen if not in combat
+    -- bless_name = bn.Wisdom -- mana regen if not in combat
   end
 
   return bless_name
@@ -311,7 +311,7 @@ function StateHolder:heal_action(heal_cast)
   cs.error_disabler:off()
 
   if cs.check_combat(1) then
-    cs.Buff.build(aura.Concentration):rebuff()
+    cs.Buff.build(an.Concentration):rebuff()
     if not pal.heal.check_hp() then
       return
     end

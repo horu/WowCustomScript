@@ -2,31 +2,31 @@ local cs = cs_common
 cs.pal = {}
 local pal = cs.pal
 
+-- AuraName
+pal.an = {}
+local an = pal.an
+an.Concentration = "Concentration Aura"
+an.Devotion = "Devotion Aura"
+an.Sanctity = "Sanctity Aura"
+an.Retribution = "Retribution Aura"
+an.Shadow = "Shadow Resistance Aura"
+an.Frost = "Frost Resistance Aura"
+an.Fire = "Fire Resistance Aura"
+an.list_all = { an.Concentration, an.Sanctity, an.Devotion, an.Retribution, an.Shadow, an.Frost, an.Fire }
+an.list_att =                   { an.Sanctity, an.Devotion, an.Retribution, an.Shadow, an.Frost, an.Fire }
+an.list_def =                                { an.Devotion, an.Retribution, an.Shadow, an.Frost, an.Fire }
 
-pal.aura = {}
-local aura = pal.aura
-aura.Concentration = "Concentration Aura"
-aura.Devotion = "Devotion Aura"
-aura.Sanctity = "Sanctity Aura"
-aura.Retribution = "Retribution Aura"
-aura.Shadow = "Shadow Resistance Aura"
-aura.Frost = "Frost Resistance Aura"
-aura.Fire = "Fire Resistance Aura"
-aura.list_all = { aura.Concentration, aura.Sanctity, aura.Devotion, aura.Retribution, aura.Shadow, aura.Frost, aura.Fire }
-aura.list_att =                     { aura.Sanctity, aura.Devotion, aura.Retribution, aura.Shadow, aura.Frost, aura.Fire }
-aura.list_def =                                    { aura.Devotion, aura.Retribution, aura.Shadow, aura.Frost, aura.Fire }
+-- BlessName
+pal.bn = {}
+local bn = pal.bn
+bn.Wisdom = "Blessing of Wisdom"
+bn.Might = "Blessing of Might"
+bn.Salvation = "Blessing of Salvation"
+bn.Light = "Blessing of Light"
+bn.Kings = "Blessing of Kings"
+bn.list_all = { bn.Wisdom, bn.Might, bn.Salvation, bn.Light, bn.Kings }
 
-
-pal.bless = {}
-local bless = pal.bless
-bless.Wisdom = "Blessing of Wisdom"
-bless.Might = "Blessing of Might"
-bless.Salvation = "Blessing of Salvation"
-bless.Light = "Blessing of Light"
-bless.Kings = "Blessing of Kings"
-bless.list_all = { bless.Wisdom, bless.Might, bless.Salvation, bless.Light, bless.Kings }
-
-
+-- SPellName
 pal.spn = {}
 local spn = pal.spn
 spn.Righteous = "Righteous Fury"
@@ -38,19 +38,19 @@ spn.Exorcism = "Exorcism"
 
 
 local to_short_list = {}
-to_short_list[aura.Concentration] = cs.color.yellow .. "CA" .. "|r"
-to_short_list[aura.Devotion] = cs.color.white .. "DA" .. "|r"
-to_short_list[aura.Sanctity] = cs.color.red .. "SA" .. "|r"
-to_short_list[aura.Retribution] = cs.color.purple .. "RA" .. "|r"
-to_short_list[aura.Shadow] = cs.color.purple .. "SH" .. "|r"
-to_short_list[aura.Frost] = cs.color.blue .. "FR" .. "|r"
-to_short_list[aura.Fire] = cs.color.orange_1 .. "FI" .. "|r"
+to_short_list[an.Concentration] = cs.color.yellow .. "CA" .. "|r"
+to_short_list[an.Devotion] = cs.color.white .. "DA" .. "|r"
+to_short_list[an.Sanctity] = cs.color.red .. "SA" .. "|r"
+to_short_list[an.Retribution] = cs.color.purple .. "RA" .. "|r"
+to_short_list[an.Shadow] = cs.color.purple .. "SH" .. "|r"
+to_short_list[an.Frost] = cs.color.blue .. "FR" .. "|r"
+to_short_list[an.Fire] = cs.color.orange_1 .. "FI" .. "|r"
 
-to_short_list[bless.Wisdom] = cs.color.blue .. "BW" .. "|r"
-to_short_list[bless.Might] = cs.color.red .. "BM" .. "|r"
-to_short_list[bless.Salvation] = cs.color.white .. "BV" .. "|r"
-to_short_list[bless.Light] = cs.color.yellow .. "BL" .. "|r"
-to_short_list[bless.Kings] = cs.color.purple .. "BK" .. "|r"
+to_short_list[bn.Wisdom] = cs.color.blue .. "BW" .. "|r"
+to_short_list[bn.Might] = cs.color.red .. "BM" .. "|r"
+to_short_list[bn.Salvation] = cs.color.white .. "BV" .. "|r"
+to_short_list[bn.Light] = cs.color.yellow .. "BL" .. "|r"
+to_short_list[bn.Kings] = cs.color.purple .. "BK" .. "|r"
 
 pal.to_short = function(spell_name)
   if not spell_name then
@@ -67,28 +67,28 @@ end
 
 local rebuff_unit = function(unit)
   local buffs = {
-    WARRIOR = bless.Might,
-    PALADIN = bless.Kings,
-    HUNTER = bless.Kings,
-    ROGUE = bless.Might,
-    SHAMAN = bless.Kings,
+    WARRIOR = bn.Might,
+    PALADIN = bn.Kings,
+    HUNTER = bn.Kings,
+    ROGUE = bn.Might,
+    SHAMAN = bn.Kings,
 
-    DRUID = bless.Kings,
-    PRIEST = bless.Kings,
-    MAGE = bless.Kings,
-    WARLOCK = bless.Kings,
+    DRUID = bn.Kings,
+    PRIEST = bn.Kings,
+    MAGE = bn.Kings,
+    WARLOCK = bn.Kings,
   }
 
   local _, class = UnitClass(unit)
 
-  local buff_name = class and buffs[class] or bless.Kings
+  local buff_name = class and buffs[class] or bn.Kings
   if not buff_name then
     cs.print("BUFF NOT FOUND FOR "..class)
-    buff_name = bless.Kings
+    buff_name = bn.Kings
   end
 
   local buff = cs.Buff.build(buff_name, unit)
-  if cs.find_buff(bless.list_all, unit) then
+  if cs.find_buff(bn.list_all, unit) then
     return
   end
 

@@ -1,8 +1,8 @@
 
 local cs = cs_common
 local pal = cs.pal
-local aura = pal.aura
-local bless = pal.bless
+local an = pal.an
+local bn = pal.bn
 local spn = pal.spn
 
 
@@ -24,10 +24,10 @@ local state_config = {
   name = "",
   hotkey = 1,
   color = cs.color.red_1,
-  default_aura = aura.Sanctity,
-  default_bless = bless.Might,
-  aura_list = { aura.Sanctity, aura.Devotion, aura.Retribution },
-  bless_list = bless.list_all,
+  default_aura = an.Sanctity,
+  default_bless = bn.Might,
+  aura_list = { an.Sanctity, an.Devotion, an.Retribution },
+  bless_list = bn.list_all,
 
   use_slots = { slot.TwoHand },
 }
@@ -44,12 +44,12 @@ local default_states_config = {
       use_slots = { slot.TwoHand },
 
       aura = {
-        default = aura.Sanctity,
-        list = { aura.Sanctity, aura.Devotion, aura.Retribution },
+        default = an.Sanctity,
+        list = { an.Sanctity, an.Devotion, an.Retribution },
       },
       bless = {
-        default = bless.Might,
-        list = bless.list_all,
+        default = bn.Might,
+        list = bn.list_all,
       },
     },
     DEF = {
@@ -60,12 +60,12 @@ local default_states_config = {
       use_slots = { slot.OneHand, slot.OffHand },
 
       aura = {
-        default = aura.Devotion,
-        list = aura.list_att,
+        default = an.Devotion,
+        list = an.list_att,
       },
       bless = {
-        default = bless.Kings,
-        list = bless.list_all,
+        default = bn.Kings,
+        list = bn.list_all,
       },
     },
     NORM = {
@@ -74,12 +74,12 @@ local default_states_config = {
       color = cs.color.green,
       use_slots = { slot.TwoHand },
       aura = {
-        default = aura.Retribution,
-        list = aura.list_att,
+        default = an.Retribution,
+        list = an.list_att,
       },
       bless = {
-        default = bless.Kings,
-        list = bless.list_all,
+        default = bn.Kings,
+        list = bn.list_all,
       },
     },
     BASE = {
@@ -88,12 +88,12 @@ local default_states_config = {
       color = cs.color.blue,
 
       aura = {
-        default = aura.Retribution,
-        list = aura.list_att,
+        default = an.Retribution,
+        list = an.list_att,
       },
       bless = {
-        default = bless.Kings,
-        list = bless.list_all,
+        default = bn.Kings,
+        list = bn.list_all,
       },
     },
     HEAL = {
@@ -102,12 +102,12 @@ local default_states_config = {
       color = cs.color.yellow,
 
       aura = {
-        default = aura.Concentration,
-        list = { aura.Concentration },
+        default = an.Concentration,
+        list = { an.Concentration },
       },
       bless = {
-        default = bless.Light,
-        list = bless.list_all,
+        default = bn.Light,
+        list = bn.list_all,
       },
     },
   }
