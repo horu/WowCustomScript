@@ -23,7 +23,8 @@ bless.Wisdom = "Blessing of Wisdom"
 bless.Might = "Blessing of Might"
 bless.Salvation = "Blessing of Salvation"
 bless.Light = "Blessing of Light"
-bless.list_all = { bless.Wisdom, bless.Might, bless.Salvation, bless.Light }
+bless.Kings = "Blessing of Kings"
+bless.list_all = { bless.Wisdom, bless.Might, bless.Salvation, bless.Light, bless.Kings }
 
 
 pal.cast = {}
@@ -49,6 +50,7 @@ to_short_list[bless.Wisdom] = cs.color_blue .. "BW" .. "|r"
 to_short_list[bless.Might] = cs.color_red .. "BM" .. "|r"
 to_short_list[bless.Salvation] = cs.color_white .. "BV" .. "|r"
 to_short_list[bless.Light] = cs.color_yellow .. "BL" .. "|r"
+to_short_list[bless.Kings] = cs.color_purple .. "BK" .. "|r"
 
 pal.to_short = function(spell_name)
   if not spell_name then
@@ -66,23 +68,23 @@ end
 local rebuff_unit = function(unit)
   local buffs = {
     WARRIOR = bless.Might,
-    PALADIN = bless.Might,
-    HUNTER = bless.Might,
+    PALADIN = bless.Kings,
+    HUNTER = bless.Kings,
     ROGUE = bless.Might,
-    SHAMAN = bless.Might,
+    SHAMAN = bless.Kings,
 
-    DRUID = bless.Wisdom,
-    PRIEST = bless.Wisdom,
-    MAGE = bless.Wisdom,
-    WARLOCK = bless.Wisdom,
+    DRUID = bless.Kings,
+    PRIEST = bless.Kings,
+    MAGE = bless.Kings,
+    WARLOCK = bless.Kings,
   }
 
   local _, class = UnitClass(unit)
 
-  local buff_name = class and buffs[class] or bless.Might
+  local buff_name = class and buffs[class] or bless.Kings
   if not buff_name then
     cs.print("BUFF NOT FOUND FOR "..class)
-    buff_name = bless.Might
+    buff_name = bless.Kings
   end
 
   local buff = cs.Buff.build(buff_name, unit)

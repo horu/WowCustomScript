@@ -63,7 +63,7 @@ local default_states_config = {
         list = aura.list_att,
       },
       bless = {
-        default = bless.Wisdom,
+        default = bless.Kings,
         list = bless.list_all,
       },
     },
@@ -71,12 +71,13 @@ local default_states_config = {
       name = pal.state_NORM,
       hotkey = 3,
       color = cs.color_green,
+      use_slots = { slot_TwoHand },
       aura = {
         default = aura.Retribution,
         list = aura.list_att,
       },
       bless = {
-        default = bless.Might,
+        default = bless.Kings,
         list = bless.list_all,
       },
     },
@@ -90,7 +91,7 @@ local default_states_config = {
         list = aura.list_att,
       },
       bless = {
-        default = bless.Wisdom,
+        default = bless.Kings,
         list = bless.list_all,
       },
     },
