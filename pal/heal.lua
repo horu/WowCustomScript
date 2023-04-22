@@ -1,18 +1,15 @@
 
-
 local cs = cs_common
 local pal = cs.pal
-local cast = pal.cast
-
-pal.heal = {}
 
 
-cast.DivineShield = "Divine Shield"
-cast.DivineProtection = "Divine Protection"
-cast.BlessingProtection = "Blessing of Protection"
-cast.LayOnHands = "Lay on Hands"
-cast.shield_list = {cast.DivineShield, cast.BlessingProtection}
-
+-- HealName
+local hn = {}
+hn.DivineShield = "Divine Shield"
+hn.DivineProtection = "Divine Protection"
+hn.BlessingProtection = "Blessing of Protection"
+hn.LayOnHands = "Lay on Hands"
+hn.shield_list = {hn.DivineShield, hn.BlessingProtection}
 
 
 
@@ -22,8 +19,8 @@ local EmegryCaster = cs.create_class()
 EmegryCaster.build = function()
   local caster = EmegryCaster:new()
   caster.shield_ts = 0
-  caster.spell_order = cs.SpellOrder.build(unpack(cast.shield_list))
-  caster.lay_spell = cs.Spell.build(cast.LayOnHands)
+  caster.spell_order = cs.SpellOrder.build(unpack(hn.shield_list))
+  caster.lay_spell = cs.Spell.build(hn.LayOnHands)
   return caster
 end
 
@@ -41,11 +38,11 @@ function EmegryCaster:em_buff(lay)
     end
   end
 
-  if cs.compare_time(8, self.shield_ts) or cs.find_buff(cast.shield_list) then
+  if cs.compare_time(8, self.shield_ts) or cs.find_buff(hn.shield_list) then
     return cs.Buff.exists
   end
 
-  if cs.get_spell_cd(cast.LayOnHands) then
+  if cs.get_spell_cd(hn.LayOnHands) then
     return cs.Buff.exists
   end
 
@@ -60,6 +57,7 @@ end
 
 
 
+pal.heal = {}
 pal.heal.check_hp = function()
   local hp_level = cs.get_hp_level()
   if hp_level > 0.2 then

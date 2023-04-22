@@ -3,19 +3,20 @@ local pal = cs.pal
 local cast = pal.cast
 
 -- SealName
-local sn_Righteousness = "Seal of Righteousness"
-local sn_Crusader = "Seal of the Crusader"
-local sn_Justice = "Seal of Justice"
-local sn_Light = "Seal of Light"
-local sn_Wisdom = "Seal of Wisdom"
-local sn_list_all = {sn_Righteousness, sn_Crusader, sn_Justice, sn_Light, sn_Wisdom}
+local sn = {}
+sn.Righteousness = "Seal of Righteousness"
+sn.Crusader = "Seal of the Crusader"
+sn.Justice = "Seal of Justice"
+sn.Light = "Seal of Light"
+sn.Wisdom = "Seal of Wisdom"
+sn.list_all = cs.dict_to_list(sn, "string")
 
 local to_short_list = {}
-to_short_list[sn_Righteousness] = cs.color.purple .. "SR" .. "|r"
-to_short_list[sn_Crusader] = cs.color.orange_1 .. "SC" .. "|r"
-to_short_list[sn_Light] = cs.color.yellow .. "SL" .. "|r"
-to_short_list[sn_Justice] = cs.color.green .. "SJ" .. "|r"
-to_short_list[sn_Wisdom] = cs.color.blue .. "SW" .. "|r"
+to_short_list[sn.Righteousness] = cs.color.purple .. "SR" .. "|r"
+to_short_list[sn.Crusader] = cs.color.orange_1 .. "SC" .. "|r"
+to_short_list[sn.Light] = cs.color.yellow .. "SL" .. "|r"
+to_short_list[sn.Justice] = cs.color.green .. "SJ" .. "|r"
+to_short_list[sn.Wisdom] = cs.color.blue .. "SW" .. "|r"
 
 local to_short = function(spell_name)
   if not spell_name then
@@ -46,11 +47,6 @@ pal.Seal.build = function(spell, target_debuff, target_hp_limit, no_judgement)
   --cs.debug(seal)
 
   return seal
-end
-
-pal.Seal.current_to_string = function()
-  local seal_name = cs.find_buff(sn_list_all)
-  return to_short(seal_name)
 end
 
 -- const
@@ -134,25 +130,31 @@ end
 
 
 pal.seal = {}
+
+pal.seal.current_to_string = function()
+  local seal_name = cs.find_buff(sn.list_all)
+  return to_short(seal_name)
+end
+
 pal.seal.init = function()
   ---@type pal.Seal
-  pal.seal.Righteousness = pal.Seal.build(sn_Righteousness)
+  pal.seal.Righteousness = pal.Seal.build(sn.Righteousness)
   ---@type pal.Seal
-  pal.seal.Crusader = pal.Seal.build(sn_Crusader, nil, nil, true)
+  pal.seal.Crusader = pal.Seal.build(sn.Crusader, nil, nil, true)
   ---@type pal.Seal
   pal.seal.Light = pal.Seal.build(
-          sn_Light,
+          sn.Light,
           "Spell_Holy_HealingAura",
           UnitHealthMax(cs.u.player) * 0.2
   )
   ---@type pal.Seal
   pal.seal.Wisdom = pal.Seal.build(
-          sn_Wisdom,
+          sn.Wisdom,
           "Spell_Holy_RighteousnessAura",
           UnitHealthMax(cs.u.player) * 0.2
   )
   ---@type pal.Seal
-  pal.seal.Justice = pal.Seal.build(sn_Justice, "Spell_Holy_SealOfWrath")
+  pal.seal.Justice = pal.Seal.build(sn.Justice, "Spell_Holy_SealOfWrath")
   ---@type pal.Seal[]
   pal.seal.list_all = cs.dict_to_list(pal.seal, "table")
 end

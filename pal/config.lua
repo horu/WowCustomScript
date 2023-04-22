@@ -6,17 +6,18 @@ local bless = pal.bless
 local cast = pal.cast
 
 
+local slot = {}
+slot.TwoHand = 13
+slot.OneHand = 14
+slot.OffHand = 15
 
-local slot_TwoHand = 13
-local slot_OneHand = 14
-local slot_OffHand = 15
-
--- ID
-pal.state_RUSH = "RUSH"
-pal.state_NORM = "NORM"
-pal.state_DEF = "DEF"
-pal.state_BASE = "BASE"
-pal.state_HEAL = "HEAL"
+-- STateName
+pal.stn = {}
+pal.stn.RUSH = "RUSH"
+pal.stn.NORM = "NORM"
+pal.stn.DEF = "DEF"
+pal.stn.BASE = "BASE"
+pal.stn.HEAL = "HEAL"
 
 ---@class state_config
 local state_config = {
@@ -28,7 +29,7 @@ local state_config = {
   aura_list = { aura.Sanctity, aura.Devotion, aura.Retribution },
   bless_list = bless.list_all,
 
-  use_slots = { slot_TwoHand },
+  use_slots = { slot.TwoHand },
 }
 
 ---@class states_config
@@ -36,11 +37,11 @@ local default_states_config = {
   states = {
     ---@type state_config
     RUSH = {
-      name = pal.state_RUSH,
+      name = pal.stn.RUSH,
       hotkey = 1,
       color = cs.color.red_1,
 
-      use_slots = { slot_TwoHand },
+      use_slots = { slot.TwoHand },
 
       aura = {
         default = aura.Sanctity,
@@ -52,11 +53,11 @@ local default_states_config = {
       },
     },
     DEF = {
-      name = pal.state_DEF,
+      name = pal.stn.DEF,
       hotkey = 2,
       color = cs.color.white,
 
-      use_slots = { slot_OneHand, slot_OffHand },
+      use_slots = { slot.OneHand, slot.OffHand },
 
       aura = {
         default = aura.Devotion,
@@ -68,10 +69,10 @@ local default_states_config = {
       },
     },
     NORM = {
-      name = pal.state_NORM,
+      name = pal.stn.NORM,
       hotkey = 3,
       color = cs.color.green,
-      use_slots = { slot_TwoHand },
+      use_slots = { slot.TwoHand },
       aura = {
         default = aura.Retribution,
         list = aura.list_att,
@@ -82,7 +83,7 @@ local default_states_config = {
       },
     },
     BASE = {
-      name = pal.state_BASE,
+      name = pal.stn.BASE,
       hotkey = 4,
       color = cs.color.blue,
 
@@ -96,7 +97,7 @@ local default_states_config = {
       },
     },
     HEAL = {
-      name = pal.state_HEAL,
+      name = pal.stn.HEAL,
       hotkey = 12 * 5 + 2,
       color = cs.color.yellow,
 

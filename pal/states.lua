@@ -4,17 +4,9 @@ local pal = cs.pal
 local aura = pal.aura
 local heal = pal.heal
 
-pal.states = {}
-
 
 
 local state_holder_frame = {"StateHolder.build", "BOTTOMLEFT",415, 69, "", "LEFT", true, false, }
-
-
-local status_NONE = "N"
-local status_DEFAULT = "D"
-local status_MODIFIED = "M"
-local status_TEMP = "T"
 
 
 ---@class StateBuff
@@ -56,25 +48,6 @@ function StateBuff:to_string()
   end
 
   return str
-end
-
--- const
-function StateBuff:get_status()
-  local buffed = self:get_buffed()
-  local config = self:_get_config(1).current
-  local default = self:_get_config().default
-  local current = self.current and self.current:get_name()
-
-  if buffed == default then
-    return status_DEFAULT
-  end
-  if buffed == config then
-    return status_MODIFIED
-  end
-  if buffed == current then
-    return status_TEMP
-  end
-  return status_NONE
 end
 
 
@@ -151,7 +124,7 @@ function State:to_string()
   local msg = self:_get_config().color..string.sub(self:_get_config().name, 1, 1).."|r "..
           self.buff_list.aura:to_string().." "..
           self.buff_list.bless:to_string().." "..
-          pal.Seal.current_to_string()
+          pal.seal.current_to_string()
   return msg
 end
 
@@ -344,7 +317,7 @@ function StateHolder:heal_action(heal_cast)
     end
   end
 
-  if self.cur_state.id == pal.state_HEAL and self.cur_state:rebuff_aura() then
+  if self.cur_state.id == pal.stn.HEAL and self.cur_state:rebuff_aura() then
     -- wait rebuff aura
     self:_update_frame()
     return
@@ -410,6 +383,7 @@ local st_state_holder
 
 
 
+pal.states = {}
 pal.states.init = function()
   st_state_holder = StateHolder.build()
 
