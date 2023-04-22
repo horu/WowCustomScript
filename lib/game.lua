@@ -1,6 +1,7 @@
 cs_common = cs_common or {}
 local cs = cs_common
 
+cs.game = {}
 
 
 
@@ -90,8 +91,6 @@ end
 
 
 
-
-
 ---@class cs.MapChecker
 cs.MapChecker = cs.create_class()
 
@@ -99,19 +98,22 @@ cs.MapChecker.build = function()
   local map_checker = cs.MapChecker:new()
 
   map_checker.zone_text = ""
+  map_checker.map_name = ""
 
-  map_checker.f = cs.create_simple_frame("cs.MapChecker.build")
-  map_checker.f.cs_parrent = map_checker
+  map_checker.zone_params = {}
+  map_checker.zone_params["Booty Bay"] = { nopvp = true }
 
-  map_checker.f:RegisterEvent("PLAYER_ENTERING_WORLD")
-  map_checker.f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-  map_checker.f:RegisterEvent("ZONE_CHANGED")
-  map_checker.f:SetScript("OnEvent", function()
-    cs.add_loop_event("map_checker.f:SetScript", 0.5, this.cs_parrent, cs.MapChecker.update_zone, 5)
+  local f = cs.create_simple_frame("cs.MapChecker.build")
+  f.cs_map_checker = map_checker
+
+  f:RegisterEvent("PLAYER_ENTERING_WORLD")
+  f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+  f:RegisterEvent("ZONE_CHANGED")
+  f:SetScript("OnEvent", function()
+    cs.once_event(2, this.cs_map_checker, cs.MapChecker._update)
   end)
 
-  map_checker.params = {}
-  map_checker.params["Booty Bay"] = { nopvp = true }
+  cs.once_event(2, map_checker, cs.MapChecker._update)
 
   return map_checker
 end
@@ -122,16 +124,17 @@ function cs.MapChecker:get_zone_text()
 end
 
 function cs.MapChecker:get_zone_params()
-  local params = self.params[self.zone_text]
+  local params = self.zone_params[self.zone_text]
   return params or {}
 end
 
-function cs.MapChecker:update_zone()
+function cs.MapChecker:_update()
   self.zone_text = GetMinimapZoneText()
+  self.map_name = GetMapInfo()
 end
 
 ---@type cs.MapChecker
-cs.st_map_checker = cs.MapChecker.build()
+cs.st_map_checker = nil
 
 
 
@@ -292,3 +295,6 @@ function cs.check_combat(m0or, m1or, m2or, m3or)
 end
 
 
+cs.game.init = function()
+  cs.st_map_checker = cs.MapChecker.build()
+end

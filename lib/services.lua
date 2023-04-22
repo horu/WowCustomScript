@@ -1,11 +1,13 @@
 cs_common = cs_common or {}
 local cs = cs_common
 
+cs.services = {}
+
 local dps_frame = {
   target = { "nibsrsCSdps", "BOTTOMLEFT", 1150, 94, "DPS", false, true },
   player = { "nibsrsCSdps", "BOTTOMLEFT", 347, 94, "DPS", "RIGHT", true },
 }
-
+local spd_checker_frame = { "speed_checker", "BOTTOMLEFT", 10, 94, "0", false, true }
 
 
 
@@ -343,18 +345,32 @@ end
 
 
 
-
---speed check
+---@class cs.SpeedChecker
 cs.SpeedChecker = cs.create_class_(function()
+  ---@type cs.SpeedChecker
+  local speed_checker = cs.SpeedChecker:new()
+  local period = 0.2
 
+  cs.debug(1)
+  speed_checker.x = 0
+  speed_checker.y = 0
+  speed_checker.calc = create_calc(0)
+  speed_checker.map = ""
+  speed_checker.k = 1
+  speed_checker.speed_table = cs.create_fix_table(3/period)
+
+  speed_checker.text = cs.create_simple_text_frame(unpack(spd_checker_frame))
+
+  cs.once_event(5, function()
+    cs.loop_event(period, speed_checker, speed_checker._loop)
+  end)
+
+  return speed_checker
 end)
 
-local speed_checker = {
-  x = 0, y = 0, calc = create_calc(0), map = "", k = 1,
-  speed_table = cs.create_fix_table(15)
-}
+--region
 
-function speed_checker:_get_speed_mod()
+function cs.SpeedChecker:_get_speed_mod()
   if UnitIsDeadOrGhost("player") then
     return 1.25
   end
@@ -382,7 +398,7 @@ function speed_checker:_get_speed_mod()
   return speed
 end
 
-function speed_checker:_get_k()
+function cs.SpeedChecker:_get_k()
   local k = self.k
   local is_ghost = UnitIsDeadOrGhost("player")
   if cs.has_debuffs() and not is_ghost then
@@ -416,12 +432,13 @@ function speed_checker:_get_k()
 
   -- set new k
   self.k = k / avg
+
   cs.print(string.format("S: k:%.2f avg:%.2f", self.k, avg))
 
   return self.k
 end
 
-function speed_checker:get_speed()
+function cs.SpeedChecker:get_speed()
   local x, y = GetPlayerMapPosition("player")
   local m = 82350
   local y_k = 1.5
@@ -438,6 +455,26 @@ function speed_checker:get_speed()
   self.speed_table:add(speed)
   return string.format("%1.2f", speed)
 end
+
+function cs.SpeedChecker:_loop()
+  local speed = self:get_speed()
+  self.text.cs_text:SetText(speed)
+end
+
+local st_speed_checker
+
+--endregion
+
+
+
+
+
+
+
+
+
+
+
 
 local function unit_dump_scan(name)
   local units = pfUI.api.GetScanDb()
@@ -545,17 +582,22 @@ end
 
 
 
+cs.services.init = function()
+  st_dps_target = cs.Dps.build("target", dps_frame.target)
+  st_dps_player = cs.Dps.build("player", dps_frame.player)
 
+  st_speed_checker = cs.SpeedChecker.build()
+end
 
-
+-- TODO: create single loader for all modules
 -- defer load
 local main = function()
 
   local main_frame = cs.create_simple_frame("common_main_frame")
   main_frame:RegisterEvent("VARIABLES_LOADED")
   main_frame:SetScript("OnEvent", function()
-    st_dps_target = cs.Dps.build("target", dps_frame.target)
-    st_dps_player = cs.Dps.build("player", dps_frame.player)
+    cs.services.init()
+    cs.game.init()
   end)
 
 end
