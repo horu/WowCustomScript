@@ -1,4 +1,4 @@
-cs_common = cs_common or {}
+
 local cs = cs_common
 
 
