@@ -395,7 +395,7 @@ end
 -- const
 function StateHolder:_do_action(name)
   local action = self.actions[name]
-  action(self.cur_state)
+  action:run(self.cur_state)
 end
 
 -- const
@@ -423,6 +423,9 @@ local state_holder
 local on_load = function()
   pal.common_init()
 
+  pal.seal.init()
+  pal.actions.init()
+
   state_holder = StateHolder.build()
 
   local states = cs_states_config.states
@@ -431,9 +434,11 @@ local on_load = function()
   end
   state_holder:init()
 
-  for action_name, action_call in pairs(pal.actions) do
-    state_holder:add_action(action_name, action_call)
+  for action_name, action in pairs(pal.actions) do
+    state_holder:add_action(action_name, action)
   end
+
+  print(cs.color_green.."CS LOADED")
 end
 
 

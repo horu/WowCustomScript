@@ -14,7 +14,7 @@ lib\services.lua
 lib\spells.lua
 
 pal\common.lua
+pal\seal.lua
 pal\config.lua
 pal\actions.lua
-pal\seal.lua
 pal\states.lua

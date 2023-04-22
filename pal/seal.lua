@@ -32,15 +32,17 @@ end
 ---@class pal.Seal
 pal.Seal = cs.create_class()
 
-pal.Seal.build = function(buff, target_debuff, target_hp_limit)
+pal.Seal.build = function(spell, target_debuff, target_hp_limit, no_judgement)
   local seal = pal.Seal:new()
 
-  seal.buff = cs.Buff.build(buff)
+  seal.buff = cs.Buff.build(spell)
   seal.target_debuff = target_debuff
-  seal.judgement = cs.Spell.build(cast.Judgement)
+  if not no_judgement then
+    seal.judgement = cs.Spell.build(cast.Judgement)
+  end
   seal.target_hp_limit = target_hp_limit or 0
 
-  cs.debug(seal)
+  --cs.debug(seal)
 
   return seal
 end
@@ -50,9 +52,18 @@ pal.Seal.current_to_string = function()
   return to_short(seal_name)
 end
 
+-- const
+function pal.Seal:get_name()
+  return self.buff:get_name()
+end
 
 -- const
 function pal.Seal:is_judgement_available()
+  if not self.judgement then
+    -- seal no need to judgement never
+    return
+  end
+
   if self:check_target_debuff() then
     return
   end
@@ -60,6 +71,7 @@ function pal.Seal:is_judgement_available()
   return self:is_reseal_available()
 end
 
+-- const
 function pal.Seal:check_target_debuff()
   if not self.target_debuff then
     return
@@ -92,6 +104,15 @@ function pal.Seal:reseal()
 end
 
 -- return true on success cast
+function pal.Seal:reseal_and_judgement()
+  if self:reseal() then
+    return
+  end
+
+  return self:judgement_it()
+end
+
+-- return true on success cast
 function pal.Seal:reseal_and_cast(...)
   if self:reseal() then
     return
@@ -112,9 +133,9 @@ end
 
 
 pal.seal = {}
-cs.once_event(0.2, function()
+pal.seal.init = function()
   pal.seal.Righteousness = pal.Seal.build(spell.Righteousness)
-  pal.seal.Crusader = pal.Seal.build(spell.Crusader)
+  pal.seal.Crusader = pal.Seal.build(spell.Crusader, nil, nil, true)
   pal.seal.Light = pal.Seal.build(
           spell.Light,
           "Spell_Holy_HealingAura",
@@ -126,6 +147,6 @@ cs.once_event(0.2, function()
           UnitHealthMax(cs.u_player) * 0.2
   )
   pal.seal.Justice = pal.Seal.build(spell.Justice, "Spell_Holy_SealOfWrath")
-  pal.seal.list_all = cs.dict_to_list(pal.seal)
-end)
+  pal.seal.list_all = cs.dict_to_list(pal.seal, "table")
+end
 

@@ -189,10 +189,12 @@ cs.to_dict = function(list)
   return dict
 end
 
-cs.dict_to_list = function(dict)
+cs.dict_to_list = function(dict, value_type)
   local list = {}
   for _, value in pairs(dict) do
-    table.insert(list, value)
+    if type(value) == value_type then
+      table.insert(list, value)
+    end
   end
   return list
 end
