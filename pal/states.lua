@@ -333,22 +333,21 @@ end
 function StateHolder:heal_action(heal_cast)
   cs.error_disabler:off()
 
-  self:_rebuff_heal()
+  if cs.check_combat(1) then
+    cs.Buff.build(aura.Concentration):rebuff()
+    if not pal.heal.check_hp() then
+      return
+    end
+  end
+
   if self.cur_state.id == pal.state_HEAL and self.cur_state:rebuff_aura() then
+    -- wait rebuff aura
     self:_update_frame()
     return
   end
   cs.cast_helpful(heal_cast)
 
   cs.error_disabler:on()
-end
-
-function StateHolder:_rebuff_heal()
-  if cs.check_combat(1) then
-    if self:_check_hp() then
-      cs.Buff.build(aura.Concentration):rebuff()
-    end
-  end
 end
 
 function StateHolder:_update_frame()
@@ -398,20 +397,9 @@ function StateHolder:_do_action(name)
   action:run(self.cur_state)
 end
 
--- const
-function StateHolder:_check_hp()
-  -- TODO: fix bag
-  local hp_level = cs.get_hp_level()
-  if hp_level <= 0.2 then
-    if pal.sl_em_caster:em_buff(hp_level <= 0.1) ~= cs.Buff.exists then
-      return nil
-    end
-  end
-  return true
-end
 
 ---@type StateHolder
-local state_holder
+local st_state_holder
 
 
 
@@ -421,21 +409,20 @@ local state_holder
 
 
 local on_load = function()
-  pal.common_init()
-
+  pal.heal.init()
   pal.seal.init()
   pal.actions.init()
 
-  state_holder = StateHolder.build()
+  st_state_holder = StateHolder.build()
 
   local states = cs_states_config.states
   for id in pairs(states) do
-    state_holder:add_state(id)
+    st_state_holder:add_state(id)
   end
-  state_holder:init()
+  st_state_holder:init()
 
   for action_name, action in pairs(pal.actions) do
-    state_holder:add_action(action_name, action)
+    st_state_holder:add_action(action_name, action)
   end
 
   print(cs.color_green.."CS LOADED")
@@ -466,9 +453,9 @@ main()
 
 -- PUBLIC
 function cs_attack_action(name)
-  state_holder:attack_action(name)
+  st_state_holder:attack_action(name)
 end
 
 function cs_cast_heal(heal_cast)
-  state_holder:heal_action(heal_cast)
+  st_state_holder:heal_action(heal_cast)
 end

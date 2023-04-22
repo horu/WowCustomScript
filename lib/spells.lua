@@ -199,7 +199,8 @@ end
 
 -- BUFFS
 function cs.find_buff(check_list, unit)
-  for i, check in pairs(cs.to_table(check_list)) do
+  check_list = cs.is_table(check_list) and check_list or {check_list}
+  for i, check in pairs(check_list) do
     if FindBuff(check, unit) then
       return check, i
     end
