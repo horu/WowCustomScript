@@ -580,35 +580,12 @@ end
 
 
 
-
-
 cs.services.init = function()
   st_dps_target = cs.Dps.build("target", dps_frame.target)
   st_dps_player = cs.Dps.build("player", dps_frame.player)
 
   st_speed_checker = cs.SpeedChecker.build()
 end
-
--- TODO: create single loader for all modules
--- defer load
-local main = function()
-
-  local main_frame = cs.create_simple_frame("common_main_frame")
-  main_frame:RegisterEvent("VARIABLES_LOADED")
-  main_frame:SetScript("OnEvent", function()
-    cs.services.init()
-    cs.game.init()
-  end)
-
-end
-
-main()
-
-
-
-
-
-
 
 
 

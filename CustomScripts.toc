@@ -19,3 +19,5 @@ pal\seal.lua
 pal\config.lua
 pal\actions.lua
 pal\states.lua
+
+loader.lua

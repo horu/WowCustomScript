@@ -2,7 +2,9 @@
 local cs = cs_common
 local pal = cs.pal
 local aura = pal.aura
-local bless = pal.bless
+local heal = pal.heal
+
+pal.states = {}
 
 
 
@@ -408,13 +410,7 @@ local st_state_holder
 
 
 
-
-
-local on_load = function()
-  pal.heal.init()
-  pal.seal.init()
-  pal.actions.init()
-
+pal.states.init = function()
   st_state_holder = StateHolder.build()
 
   local states = cs_states_config.states
@@ -430,25 +426,6 @@ local on_load = function()
   cs.print(cs.color_green.."CS LOADED")
 end
 
-
-
-
-
-
-local main = function()
-  -- defer load
-  local main_frame = cs.create_simple_frame("pal_main_frame")
-  main_frame:RegisterEvent("VARIABLES_LOADED")
-  main_frame:SetScript("OnEvent", function()
-    if event ~= "VARIABLES_LOADED" then
-      return
-    end
-
-    cs.once_event(0.2, on_load)
-  end)
-end
-
-main()
 
 
 

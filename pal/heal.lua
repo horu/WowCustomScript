@@ -4,6 +4,7 @@ local cs = cs_common
 local pal = cs.pal
 local cast = pal.cast
 
+pal.heal = {}
 
 
 cast.DivineShield = "Divine Shield"
@@ -58,11 +59,6 @@ function EmegryCaster:em_buff(lay)
 end
 
 
-pal.heal = {}
-pal.heal.init = function()
-  pal.st_em_caster = EmegryCaster.build()
-end
-
 
 pal.heal.check_hp = function()
   local hp_level = cs.get_hp_level()
@@ -73,6 +69,11 @@ pal.heal.check_hp = function()
   if pal.st_em_caster:em_buff(hp_level <= 0.1) == cs.Buff.exists then
     return true
   end
+end
+
+
+pal.heal.init = function()
+  pal.st_em_caster = EmegryCaster.build()
 end
 
 
