@@ -160,6 +160,19 @@ cs.create_class = function(class_tab)
   return class
 end
 
+cs.create_class_ = function(build_func)
+  local class = {}
+
+  class.new = function(self)
+    local obj = setmetatable({}, {__index = self})
+    return obj
+  end
+
+  class.build = build_func
+
+  return class
+end
+
 ---@class cs.Class
 cs.Class = cs.create_class()
 
@@ -178,7 +191,6 @@ cs.is_table = function(value)
   return type(value) == "table"
 end
 
--- TODO: fix this
 cs.list_to_dict = function(list, value_type)
   assert(value_type)
 
