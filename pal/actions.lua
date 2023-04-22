@@ -4,13 +4,6 @@ local pal = cs.pal
 local cast = pal.cast
 local seal = pal.seal
 
--- ID
-local state_RUSH = "RUSH"
-local state_NORM = "NORM"
-local state_DEF = "DEF"
-local state_BASE = "BASE"
-local state_HEAL = "HEAL"
-
 
 
 -- ATTACKS
@@ -72,7 +65,7 @@ function Action:seal_action(state, seal_list)
   if self:has_any_seal_debuff() then
     -- the target has no other seal debuff. Lets reseal and judgement it.
 
-    if state.id == state_RUSH then
+    if state.id == pal.state_RUSH then
       cs.cast(cast.CrusaderStrike)
       return
     end
@@ -109,7 +102,7 @@ pal.actions.init = function()
 
     cs.cast(cast.HolyStrike)
 
-    if state.id ~= state_RUSH then
+    if state.id ~= pal.state_RUSH then
       if self:judgement_other() then
         return
       end

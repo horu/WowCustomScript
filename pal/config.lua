@@ -12,11 +12,11 @@ local slot_OneHand = 14
 local slot_OffHand = 15
 
 -- ID
-local state_RUSH = "RUSH"
-local state_NORM = "NORM"
-local state_DEF = "DEF"
-local state_BASE = "BASE"
-local state_HEAL = "HEAL"
+pal.state_RUSH = "RUSH"
+pal.state_NORM = "NORM"
+pal.state_DEF = "DEF"
+pal.state_BASE = "BASE"
+pal.state_HEAL = "HEAL"
 
 ---@class state_config
 local state_config = {
@@ -36,7 +36,7 @@ local default_states_config = {
   states = {
     ---@type state_config
     RUSH = {
-      name = state_RUSH,
+      name = pal.state_RUSH,
       hotkey = 1,
       color = cs.color_red_1,
 
@@ -52,7 +52,7 @@ local default_states_config = {
       },
     },
     DEF = {
-      name = state_DEF,
+      name = pal.state_DEF,
       hotkey = 2,
       color = cs.color_white,
 
@@ -68,7 +68,7 @@ local default_states_config = {
       },
     },
     NORM = {
-      name = state_NORM,
+      name = pal.state_NORM,
       hotkey = 3,
       color = cs.color_green,
       aura = {
@@ -81,7 +81,7 @@ local default_states_config = {
       },
     },
     BASE = {
-      name = state_BASE,
+      name = pal.state_BASE,
       hotkey = 4,
       color = cs.color_blue,
 
@@ -95,7 +95,7 @@ local default_states_config = {
       },
     },
     HEAL = {
-      name = state_HEAL,
+      name = pal.state_HEAL,
       hotkey = 12 * 5 + 2,
       color = cs.color_yellow,
 

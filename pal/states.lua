@@ -334,7 +334,7 @@ function StateHolder:heal_action(heal_cast)
   cs.error_disabler:off()
 
   self:_rebuff_heal()
-  if self.cur_state.id == state_HEAL and self.cur_state:rebuff_aura() then
+  if self.cur_state.id == pal.state_HEAL and self.cur_state:rebuff_aura() then
     self:_update_frame()
     return
   end
