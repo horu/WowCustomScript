@@ -1,6 +1,6 @@
 local cs = cs_common
 local pal = cs.pal
-local cast = pal.cast
+local spn = pal.spn
 
 -- SealName
 local sn = {}
@@ -40,7 +40,7 @@ pal.Seal.build = function(spell, target_debuff, target_hp_limit, no_judgement)
   seal.buff = cs.Buff.build(spell)
   seal.target_debuff = target_debuff
   if not no_judgement then
-    seal.judgement = cs.Spell.build(cast.Judgement)
+    seal.judgement = cs.Spell.build(spn.Judgement)
   end
   seal.target_hp_limit = target_hp_limit or 0
 

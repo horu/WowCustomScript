@@ -3,7 +3,7 @@ local cs = cs_common
 local pal = cs.pal
 local aura = pal.aura
 local bless = pal.bless
-local cast = pal.cast
+local spn = pal.spn
 
 
 local slot = {}

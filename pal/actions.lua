@@ -1,7 +1,7 @@
 
 local cs = cs_common
 local pal = cs.pal
-local cast = pal.cast
+local spn = pal.spn
 local seal = pal.seal
 
 
@@ -58,7 +58,7 @@ function Action:seal_action(state, seal_list)
 
   if not self.main_seal:is_reseal_available() then
     -- seal can not be casted with current situation, just cast other spells
-    cs.cast(cast.HolyStrike, cast.CrusaderStrike)
+    cs.cast(spn.HolyStrike, spn.CrusaderStrike)
     return
   end
 
@@ -66,11 +66,11 @@ function Action:seal_action(state, seal_list)
     -- the target has no other seal debuff. Lets reseal and judgement it.
 
     if state.id == pal.stn.RUSH then
-      cs.cast(cast.CrusaderStrike)
+      cs.cast(spn.CrusaderStrike)
       return
     end
 
-    self.main_seal:reseal_and_cast(cast.HolyStrike, cast.CrusaderStrike)
+    self.main_seal:reseal_and_cast(spn.HolyStrike, spn.CrusaderStrike)
     return
   end
 
@@ -87,7 +87,7 @@ local build_cast_list = function(...)
 
   local target = UnitCreatureType("target")
   if target == "Demon" or target == "Undead" then
-    table.insert(cast_list, 1, cast.Exorcism)
+    table.insert(cast_list, 1, spn.Exorcism)
   end
   return unpack(cast_list)
 end
@@ -100,7 +100,7 @@ pal.actions.init = function()
   pal.actions.right = Action.build(seal.Righteousness, function(self, state)
     if not cs.check_target(cs.t.close_30) then return end
 
-    cs.cast(cast.HolyStrike)
+    cs.cast(spn.HolyStrike)
 
     if state.id ~= pal.stn.RUSH then
       if self:judgement_other() then
@@ -109,7 +109,7 @@ pal.actions.init = function()
     end
 
     self.main_seal:reseal_and_judgement()
-    cs.cast(build_cast_list(cast.CrusaderStrike))
+    cs.cast(build_cast_list(spn.CrusaderStrike))
   end)
 
   pal.actions.crusader = Action.build(seal.Crusader, function(self, state)
@@ -119,7 +119,7 @@ pal.actions.init = function()
       return
     end
 
-    self.main_seal:reseal_and_cast(cast.HolyStrike, cast.CrusaderStrike)
+    self.main_seal:reseal_and_cast(spn.HolyStrike, spn.CrusaderStrike)
   end)
 
   pal.actions.wisdom = Action.build(seal.Wisdom, function(self, state)

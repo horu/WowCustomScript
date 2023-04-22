@@ -27,14 +27,14 @@ bless.Kings = "Blessing of Kings"
 bless.list_all = { bless.Wisdom, bless.Might, bless.Salvation, bless.Light, bless.Kings }
 
 
-pal.cast = {}
-local cast = pal.cast
-cast.Righteous = "Righteous Fury"
+pal.spn = {}
+local spn = pal.spn
+spn.Righteous = "Righteous Fury"
 
-cast.Judgement = "Judgement"
-cast.CrusaderStrike = "Crusader Strike"
-cast.HolyStrike = "Holy Strike"
-cast.Exorcism = "Exorcism"
+spn.Judgement = "Judgement"
+spn.CrusaderStrike = "Crusader Strike"
+spn.HolyStrike = "Holy Strike"
+spn.Exorcism = "Exorcism"
 
 
 local to_short_list = {}
@@ -126,7 +126,7 @@ end
 
 pal.blessing_everywhere = function()
   if cs.is_in_party() then
-    cs.Buff.build(cast.Righteous):rebuff()
+    cs.Buff.build(spn.Righteous):rebuff()
     buff_party()
   end
   if cs.check_target(cs.t.fr_player) then
