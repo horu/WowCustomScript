@@ -1,7 +1,6 @@
 cs_common = cs_common or {}
 local cs = cs_common
 
-cs.game = {}
 
 
 
@@ -300,6 +299,7 @@ function cs.check_combat(m0or, m1or, m2or, m3or)
 end
 
 
+cs.game = {}
 cs.game.init = function()
   cs.st_map_checker = cs.MapChecker.build()
 end
