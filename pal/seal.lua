@@ -9,7 +9,7 @@ spell.Crusader = "Seal of the Crusader"
 spell.Justice = "Seal of Justice"
 spell.Light = "Seal of Light"
 spell.Wisdom = "Seal of Wisdom"
-spell.list_all = cs.dict_to_list(spell)
+spell.list_all = cs.dict_to_list(spell, "string")
 
 local to_short_list = {}
 to_short_list[spell.Righteousness] = cs.color_purple .. "SR" .. "|r"

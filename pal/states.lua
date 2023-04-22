@@ -106,7 +106,7 @@ end
 
 -- const
 function StateBuff:_is_available(value)
-  return cs.to_dict(self:_get_config().list)[value]
+  return cs.list_to_dict(self:_get_config().list, "string")[value]
 end
 
 
@@ -179,6 +179,7 @@ end
 -- reacion for enenmy cast to change resist aura
 ---@param spell_data cs.SpellData
 function State:on_cast_detected(spell_data)
+  -- TODO: add reaction on type damage
   local spell_base = spell_data:get_base()
   if not spell_base then
     return
@@ -324,6 +325,7 @@ function StateHolder:attack_action(action_name)
   self.cur_state:recheck()
   self:_update_frame()
 
+  -- TODO: add usage blessing of freedom on freeze
   self:_do_action(action_name)
 
   cs.error_disabler:on()
@@ -360,7 +362,7 @@ function StateHolder:_down_button_event(longkey, duration)
   local state = self.states[longkey]
 
   if duration >= StateHolder.handler_FullReset then
-    cs_states_dynamic_config = default_states_dynamic_config
+    pal.reset_dynamic_config()
     state:reset_buffs()
     print("RESET CONFIG!")
   elseif duration >= StateHolder.handler_Reset then

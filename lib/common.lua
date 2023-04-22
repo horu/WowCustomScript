@@ -170,21 +170,9 @@ cs.is_table = function(value)
 end
 
 -- TODO: fix this
-function cs.to_table(...)
-  local tbl = {}
-  for i, v in pairs(arg) do
-    if type(v) == "table" then
-      return v
-    end
-    if type(i) == "number" then
-      table.insert(tbl, v)
-    end
-  end
-  return tbl
-end
+cs.list_to_dict = function(list, value_type)
+  assert(value_type)
 
--- TODO: fix this
-cs.to_dict = function(list)
   local dict = {}
   list = not cs.is_table(list) and { list } or list
   for i, v in pairs(list) do
@@ -194,6 +182,8 @@ cs.to_dict = function(list)
 end
 
 cs.dict_to_list = function(dict, value_type)
+  assert(value_type)
+
   local list = {}
   for _, value in pairs(dict) do
     if type(value) == value_type then

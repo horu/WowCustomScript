@@ -146,6 +146,10 @@ local default_states_dynamic_config = {
 cs_states_config = default_states_config
 cs_states_dynamic_config = default_states_dynamic_config
 
+pal.reset_dynamic_config = function()
+  cs_states_dynamic_config = default_states_dynamic_config
+end
+
 pal.get_state_holder_config = function()
   return cs_states_dynamic_config.state_holder
 end
