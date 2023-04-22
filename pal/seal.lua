@@ -11,15 +11,15 @@ local sn_Wisdom = "Seal of Wisdom"
 local sn_list_all = {sn_Righteousness, sn_Crusader, sn_Justice, sn_Light, sn_Wisdom}
 
 local to_short_list = {}
-to_short_list[sn_Righteousness] = cs.color_purple .. "SR" .. "|r"
-to_short_list[sn_Crusader] = cs.color_orange_1 .. "SC" .. "|r"
-to_short_list[sn_Light] = cs.color_yellow .. "SL" .. "|r"
-to_short_list[sn_Justice] = cs.color_green .. "SJ" .. "|r"
-to_short_list[sn_Wisdom] = cs.color_blue .. "SW" .. "|r"
+to_short_list[sn_Righteousness] = cs.color.purple .. "SR" .. "|r"
+to_short_list[sn_Crusader] = cs.color.orange_1 .. "SC" .. "|r"
+to_short_list[sn_Light] = cs.color.yellow .. "SL" .. "|r"
+to_short_list[sn_Justice] = cs.color.green .. "SJ" .. "|r"
+to_short_list[sn_Wisdom] = cs.color.blue .. "SW" .. "|r"
 
 local to_short = function(spell_name)
   if not spell_name then
-    return cs.color_grey .. "XX" .. "|r"
+    return cs.color.grey .. "XX" .. "|r"
   end
   return to_short_list[spell_name]
 end

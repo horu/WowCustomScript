@@ -50,7 +50,7 @@ function StateBuff:to_string()
   if not buffed then
     str = str .. pal.to_short()
   elseif buffed ~= current then
-    str = str .. cs.color_green .. pal.to_short(buffed).."|r"
+    str = str .. cs.color.green .. pal.to_short(buffed).."|r"
   else
     str = str .. "  "
   end
@@ -423,7 +423,7 @@ pal.states.init = function()
     st_state_holder:add_action(action_name, action)
   end
 
-  cs.print(cs.color_green.."CS LOADED")
+  cs.print(cs.color.green.."CS LOADED")
 end
 
 

@@ -22,7 +22,7 @@ pal.state_HEAL = "HEAL"
 local state_config = {
   name = "",
   hotkey = 1,
-  color = cs.color_red_1,
+  color = cs.color.red_1,
   default_aura = aura.Sanctity,
   default_bless = bless.Might,
   aura_list = { aura.Sanctity, aura.Devotion, aura.Retribution },
@@ -38,7 +38,7 @@ local default_states_config = {
     RUSH = {
       name = pal.state_RUSH,
       hotkey = 1,
-      color = cs.color_red_1,
+      color = cs.color.red_1,
 
       use_slots = { slot_TwoHand },
 
@@ -54,7 +54,7 @@ local default_states_config = {
     DEF = {
       name = pal.state_DEF,
       hotkey = 2,
-      color = cs.color_white,
+      color = cs.color.white,
 
       use_slots = { slot_OneHand, slot_OffHand },
 
@@ -70,7 +70,7 @@ local default_states_config = {
     NORM = {
       name = pal.state_NORM,
       hotkey = 3,
-      color = cs.color_green,
+      color = cs.color.green,
       use_slots = { slot_TwoHand },
       aura = {
         default = aura.Retribution,
@@ -84,7 +84,7 @@ local default_states_config = {
     BASE = {
       name = pal.state_BASE,
       hotkey = 4,
-      color = cs.color_blue,
+      color = cs.color.blue,
 
       aura = {
         default = aura.Retribution,
@@ -98,7 +98,7 @@ local default_states_config = {
     HEAL = {
       name = pal.state_HEAL,
       hotkey = 12 * 5 + 2,
-      color = cs.color_yellow,
+      color = cs.color.yellow,
 
       aura = {
         default = aura.Concentration,

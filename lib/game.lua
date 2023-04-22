@@ -187,19 +187,19 @@ function cs.CombatChecker.build()
 
   data.aggro = {
     name = "aggro",
-    color = cs.color_red,
+    color = cs.color.red,
     text = cs.create_simple_text_frame("", "BOTTOMLEFT", x - 2 * diff_x, y + 2 * diff_y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }
   data.combat = {
     name = "combat",
-    color = cs.color_orange,
+    color = cs.color.orange,
     text = cs.create_simple_text_frame("", "BOTTOMLEFT", x - diff_x, y + diff_y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }
   data.affect = {
     name = "affect",
-    color = cs.color_yellow,
+    color = cs.color.yellow,
     text = cs.create_simple_text_frame("", "BOTTOMLEFT", x, y, "0", "CENTER", false),
     ts_enter = GetTime(),
   }

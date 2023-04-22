@@ -6,21 +6,21 @@ local cs = cs_common
 
 
 
-
-cs.make_color = function(rgb)
+cs.color = {}
+cs.color.make = function(rgb)
     return "|cff"..rgb
 end
 
-cs.color_red = cs.make_color("ff2020")
-cs.color_red_1 = cs.make_color("ff0000")
-cs.color_orange = cs.make_color("FF8000")
-cs.color_orange_1 = cs.make_color("FFB266")
-cs.color_yellow = cs.make_color("FFFF66")
-cs.color_blue = cs.make_color("20a0FF")
-cs.color_purple = cs.make_color("C086F9")
-cs.color_green = cs.make_color("00ff00")
-cs.color_white = cs.make_color("ffffFF")
-cs.color_grey = cs.make_color("A0A0A0")
+cs.color.red = cs.color.make("ff2020")
+cs.color.red_1 = cs.color.make("ff0000")
+cs.color.orange = cs.color.make("FF8000")
+cs.color.orange_1 = cs.color.make("FFB266")
+cs.color.yellow = cs.color.make("FFFF66")
+cs.color.blue = cs.color.make("20a0FF")
+cs.color.purple = cs.color.make("C086F9")
+cs.color.green = cs.color.make("00ff00")
+cs.color.white = cs.color.make("ffffFF")
+cs.color.grey = cs.color.make("A0A0A0")
 
 
 

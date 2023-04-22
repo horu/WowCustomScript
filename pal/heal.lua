@@ -53,7 +53,7 @@ function EmegryCaster:em_buff(lay)
     return cs.Buff.exists
   end
 
-  cs.print(cs.color_red.."CAST Lay on Hands")
+  cs.print(cs.color.red.."CAST Lay on Hands")
   self.lay_spell:cast_to_unit(cs.u.player)
   return cs.Buff.success
 end

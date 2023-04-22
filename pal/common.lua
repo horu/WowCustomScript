@@ -38,23 +38,23 @@ cast.Exorcism = "Exorcism"
 
 
 local to_short_list = {}
-to_short_list[aura.Concentration] = cs.color_yellow .. "CA" .. "|r"
-to_short_list[aura.Devotion] = cs.color_white .. "DA" .. "|r"
-to_short_list[aura.Sanctity] = cs.color_red .. "SA" .. "|r"
-to_short_list[aura.Retribution] = cs.color_purple .. "RA" .. "|r"
-to_short_list[aura.Shadow] = cs.color_purple .. "SH" .. "|r"
-to_short_list[aura.Frost] = cs.color_blue .. "FR" .. "|r"
-to_short_list[aura.Fire] = cs.color_orange_1 .. "FI" .. "|r"
+to_short_list[aura.Concentration] = cs.color.yellow .. "CA" .. "|r"
+to_short_list[aura.Devotion] = cs.color.white .. "DA" .. "|r"
+to_short_list[aura.Sanctity] = cs.color.red .. "SA" .. "|r"
+to_short_list[aura.Retribution] = cs.color.purple .. "RA" .. "|r"
+to_short_list[aura.Shadow] = cs.color.purple .. "SH" .. "|r"
+to_short_list[aura.Frost] = cs.color.blue .. "FR" .. "|r"
+to_short_list[aura.Fire] = cs.color.orange_1 .. "FI" .. "|r"
 
-to_short_list[bless.Wisdom] = cs.color_blue .. "BW" .. "|r"
-to_short_list[bless.Might] = cs.color_red .. "BM" .. "|r"
-to_short_list[bless.Salvation] = cs.color_white .. "BV" .. "|r"
-to_short_list[bless.Light] = cs.color_yellow .. "BL" .. "|r"
-to_short_list[bless.Kings] = cs.color_purple .. "BK" .. "|r"
+to_short_list[bless.Wisdom] = cs.color.blue .. "BW" .. "|r"
+to_short_list[bless.Might] = cs.color.red .. "BM" .. "|r"
+to_short_list[bless.Salvation] = cs.color.white .. "BV" .. "|r"
+to_short_list[bless.Light] = cs.color.yellow .. "BL" .. "|r"
+to_short_list[bless.Kings] = cs.color.purple .. "BK" .. "|r"
 
 pal.to_short = function(spell_name)
   if not spell_name then
-    return cs.color_grey.."XX".."|r"
+    return cs.color.grey.."XX".."|r"
   end
   return to_short_list[spell_name]
 end
