@@ -590,8 +590,9 @@ function cs_dump_unit()
   if cs.check_target(cs.t_exists) then
     local buffs = cs.get_buff_list(cs.u_target)
     local debuffs = cs.get_debuff_list(cs.u_target)
-    for t, list in pairs({buffs = buffs, debuffs = debuffs}) do
-      print(t)
+    local casts = cs.get_cast_info(cs.u_target)
+    for t, list in pairs({buffs = buffs, debuffs = debuffs, casts = casts}) do
+      print(t..":")
       for _, buff in pairs(list) do
         cs.debug(buff)
       end

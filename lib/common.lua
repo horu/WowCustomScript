@@ -64,6 +64,10 @@ function cs.ToString(value, depth, itlimit, short)
   return tostring(value)
 end
 
+cs.print = function()
+
+end
+
 local get_stack_line = function(stack_level)
   local line = debugstack(stack_level, 1, 1)
   local to_output = ""
@@ -80,7 +84,7 @@ local get_stack_line = function(stack_level)
       end
     end
   end
-  return to_output
+  return string.sub(to_output, 1, strlen(to_output) - 1)
 end
 
 cs.stack = function(condition)
@@ -115,9 +119,9 @@ function cs.debug(...)
         break
       end
     end
-    full_msg = full_msg.."|"..msg
+    full_msg = full_msg..msg.." | "
   end
-  print(line..full_msg)
+  print(line..": "..full_msg)
 end
 
 

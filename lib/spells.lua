@@ -306,7 +306,7 @@ end
 
 
 
-
+-- Spell data of some caster in ritgh now
 cs.spell_base_Shadow = "Shadow"
 cs.spell_base_Frost = "Frost"
 cs.spell_base_Fire = "Fire"
