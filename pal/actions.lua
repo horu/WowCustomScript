@@ -18,6 +18,7 @@ local state_HEAL = "HEAL"
 ---@class Action
 local Action = cs.create_class()
 
+---@type pal.Seal[]
 Action.debuffed_seal_list = {}
 
 ---@param main_seal pal.Seal
@@ -42,10 +43,23 @@ function Action:judgement_other()
   end
 end
 
+function Action:has_any_seal_debuff()
+  for _, it_seal in pairs(Action.debuffed_seal_list) do
+    if it_seal:check_target_debuff() then
+      return true
+    end
+  end
+end
+
 ---@param seal_list pal.Seal[]
 function Action:seal_action(state, seal_list)
   if not cs.check_target(cs.t_close_10) then
     -- the target is far away
+    return
+  end
+
+  if seal.Righteousness:judgement_it() then
+    -- wait another seal to judgement on the target
     return
   end
 
@@ -55,25 +69,23 @@ function Action:seal_action(state, seal_list)
     return
   end
 
+  if self:has_any_seal_debuff() then
+    -- the target has no other seal debuff. Lets reseal and judgement it.
+
+    if state.id == state_RUSH then
+      cs.cast(cast.CrusaderStrike)
+      return
+    end
+
+    self.main_seal:reseal_and_cast(cast.HolyStrike, cast.CrusaderStrike)
+    return
+  end
+
   if self:judgement_other() then
     -- wait another seal to judgement on the target
     return
   end
 
-  for _, seal_spell in pairs(seal_list) do
-    if not seal_spell:is_judgement_available() then
-      -- it means the target already has other seal debuff. Reseal and cast other spells only
-      if state.id == state_RUSH then
-        cs.cast(cast.CrusaderStrike)
-        return
-      end
-
-      self.main_seal:reseal_and_cast(cast.HolyStrike, cast.CrusaderStrike)
-      return
-    end
-  end
-
-  -- the target has no other seal debuff. Lets reseal and judgement it.
   self.main_seal:reseal_and_judgement()
 end
 

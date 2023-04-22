@@ -32,7 +32,9 @@ end
 ---@class pal.Seal
 pal.Seal = cs.create_class()
 
+
 pal.Seal.build = function(spell, target_debuff, target_hp_limit, no_judgement)
+  ---@type pal.Seal
   local seal = pal.Seal:new()
 
   seal.buff = cs.Buff.build(spell)
@@ -134,19 +136,25 @@ end
 
 pal.seal = {}
 pal.seal.init = function()
+  ---@type pal.Seal
   pal.seal.Righteousness = pal.Seal.build(spell.Righteousness)
+  ---@type pal.Seal
   pal.seal.Crusader = pal.Seal.build(spell.Crusader, nil, nil, true)
+  ---@type pal.Seal
   pal.seal.Light = pal.Seal.build(
           spell.Light,
           "Spell_Holy_HealingAura",
           UnitHealthMax(cs.u_player) * 0.2
   )
+  ---@type pal.Seal
   pal.seal.Wisdom = pal.Seal.build(
           spell.Wisdom,
           "Spell_Holy_RighteousnessAura",
           UnitHealthMax(cs.u_player) * 0.2
   )
+  ---@type pal.Seal
   pal.seal.Justice = pal.Seal.build(spell.Justice, "Spell_Holy_SealOfWrath")
+  ---@type pal.Seal[]
   pal.seal.list_all = cs.dict_to_list(pal.seal, "table")
 end
 
