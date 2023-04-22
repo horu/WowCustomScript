@@ -112,13 +112,7 @@ function cs.to_string(value, depth, itlimit, short)
   return tostring(value)
 end
 
-
-function cs.debug(...)
-  local short = nil
-  local stack_level = 3
-
-  local line = get_stack_line(stack_level)
-
+local to_string_best_d = function(...)
   local full_msg = ""
   for _, v in ipairs(arg) do
     local msg = ""
@@ -130,6 +124,20 @@ function cs.debug(...)
     end
     full_msg = full_msg..msg.." | "
   end
+  return full_msg
+end
+
+function cs.print_table(...)
+  local full_msg = to_string_best_d(unpack(arg))
+  cs.print(full_msg)
+end
+
+function cs.debug(...)
+  local stack_level = 3
+
+  local line = get_stack_line(stack_level)
+
+  local full_msg = to_string_best_d(unpack(arg))
   cs.print(line..": "..full_msg)
 end
 
