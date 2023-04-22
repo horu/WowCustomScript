@@ -2,19 +2,21 @@ local cs = cs_common
 local pal = cs.pal
 local cast = pal.cast
 
-local seal_Righteousness = "Seal of Righteousness"
-local seal_Crusader = "Seal of the Crusader"
-local seal_Justice = "Seal of Justice"
-local seal_Light = "Seal of Light"
-local seal_Wisdom = "Seal of Wisdom"
-local seal_list_all = { seal_Righteousness, seal_Crusader, seal_Justice, seal_Light, seal_Wisdom }
+-- cs.pal.seal.spell
+local spell = {}
+spell.Righteousness = "Seal of Righteousness"
+spell.Crusader = "Seal of the Crusader"
+spell.Justice = "Seal of Justice"
+spell.Light = "Seal of Light"
+spell.Wisdom = "Seal of Wisdom"
+spell.list_all = { spell.Righteousness, spell.Crusader, spell.Justice, spell.Light, spell.Wisdom }
 
 local to_short_list = {}
-to_short_list[seal_Righteousness] = cs.color_purple .. "SR" .. "|r"
-to_short_list[seal_Crusader] = cs.color_orange_1 .. "SC" .. "|r"
-to_short_list[seal_Light] = cs.color_yellow .. "SL" .. "|r"
-to_short_list[seal_Justice] = cs.color_green .. "SJ" .. "|r"
-to_short_list[seal_Wisdom] = cs.color_blue .. "SW" .. "|r"
+to_short_list[spell.Righteousness] = cs.color_purple .. "SR" .. "|r"
+to_short_list[spell.Crusader] = cs.color_orange_1 .. "SC" .. "|r"
+to_short_list[spell.Light] = cs.color_yellow .. "SL" .. "|r"
+to_short_list[spell.Justice] = cs.color_green .. "SJ" .. "|r"
+to_short_list[spell.Wisdom] = cs.color_blue .. "SW" .. "|r"
 
 local to_short = function(spell_name)
   if not spell_name then
@@ -44,7 +46,7 @@ pal.Seal.build = function(buff, target_debuff, target_hp_limit)
 end
 
 pal.Seal.current_to_string = function()
-  local seal_name = cs.find_buff(seal_list_all)
+  local seal_name = cs.find_buff(spell.list_all)
   return to_short(seal_name)
 end
 
@@ -107,20 +109,22 @@ function pal.Seal:judgement_it()
   end
 end
 
+
+
 pal.seal = {}
 cs.once_event(0.2, function()
-  pal.seal.Righteousness = pal.Seal.build(seal_Righteousness)
-  pal.seal.Crusader = pal.Seal.build(seal_Crusader)
+  pal.seal.Righteousness = pal.Seal.build(spell.Righteousness)
+  pal.seal.Crusader = pal.Seal.build(spell.Crusader)
   pal.seal.Light = pal.Seal.build(
-          seal_Light,
+          spell.Light,
           "Spell_Holy_HealingAura",
           UnitHealthMax(cs.u_player) * 0.2
   )
   pal.seal.Wisdom = pal.Seal.build(
-          seal_Wisdom,
+          spell.Wisdom,
           "Spell_Holy_RighteousnessAura",
           UnitHealthMax(cs.u_player) * 0.2
   )
-  pal.seal.Justice = pal.Seal.build(seal_Justice, "Spell_Holy_SealOfWrath")
+  pal.seal.Justice = pal.Seal.build(spell.Justice, "Spell_Holy_SealOfWrath")
 end)
 
