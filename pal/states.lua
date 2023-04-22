@@ -149,7 +149,7 @@ function State:to_string()
   local msg = self:_get_config().color..string.sub(self:_get_config().name, 1, 1).."|r "..
           self.buff_list.aura:to_string().." "..
           self.buff_list.bless:to_string().." "..
-          pal.Seal.to_string()
+          pal.Seal.current_to_string()
   return msg
 end
 
@@ -423,8 +423,6 @@ local state_holder
 local on_load = function()
   pal.common_init()
 
-  pal.Seal.init()
-
   state_holder = StateHolder.build()
 
   local states = cs_states_config.states
@@ -452,7 +450,7 @@ local main = function()
       return
     end
 
-    cs.add_loop_event_once("main_frame", 0.2, nil, on_load)
+    cs.once_event(0.2, on_load)
   end)
 end
 

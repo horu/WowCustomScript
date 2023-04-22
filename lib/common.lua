@@ -64,16 +64,47 @@ function cs.ToString(value, depth, itlimit, short)
   return tostring(value)
 end
 
+local get_stack_line = function(stack_level)
+  local line = debugstack(stack_level, 1, 1)
+  local to_output = ""
+  if line then
+    local file_info_begin = 32
+    local file_info_end = string.find(line, " in function") or nil
+    to_output = to_output..string.sub(line, file_info_begin, file_info_end)
+
+    if file_info_end then
+      local fun_info_begin = file_info_end + 14
+      if fun_info_begin then
+        local fun_info_end = string.find(line, "[\n]", fun_info_begin)
+        to_output = to_output..string.sub(line, fun_info_begin, fun_info_end)
+      end
+    end
+  end
+  return to_output
+end
+
+cs.stack = function(condition)
+  if not condition then
+    return
+  end
+  print("STACK BEGIN")
+  for i=1,10 do
+    local line = get_stack_line(i)
+    if line then
+      print(line)
+    else
+      break
+    end
+  end
+  print("STACK END")
+end
+
 
 function cs.debug(...)
   local short = nil
   local stack_level = 2
 
-  local line = debugstack(stack_level, 1, 1)
-  local line_end = string.find(line, "in function")
-  line_end = line_end and line_end -1
-  line = string.sub(line, 32, line_end)
-
+  local line = get_stack_line(stack_level)
 
   local full_msg = ""
   for _, v in ipairs(arg) do
@@ -300,10 +331,10 @@ end
 
 function Looper:main_loop()
   local count = 0
-  for name, event in pairs(self.event_list) do
+  for id, event in pairs(self.event_list) do
     local break_event = self:iterate_event(event)
     if break_event then
-      self.event_list[name] = nil
+      self.event_list[id] = nil
     end
     count = count + 1
   end
@@ -313,6 +344,11 @@ function Looper:main_loop()
 end
 
 cs.add_loop_event = function(name, period, obj, func, count)
+  if type(obj) == "function" then
+    func = obj
+    obj = nil
+  end
+
   local event = {}
   event.func = func
   event.obj = obj
@@ -320,15 +356,23 @@ cs.add_loop_event = function(name, period, obj, func, count)
   event.cur_period = period
   event.count = count
 
-  looper.event_list[name] = event
+  table.insert(looper.event_list, event)
 
   if not looper.timer then
     looper.delay_q(looper.main_loop, looper)
   end
 end
 
-cs.add_loop_event_once = function(name, delay, obj, func)
-  cs.add_loop_event(name, delay, obj, func, 1)
+cs.loop_event = function(period, obj, func)
+  cs.add_loop_event("", period, obj, func)
+end
+
+cs.repeat_event = function(period, count, obj, func)
+  cs.add_loop_event("", period, obj, func, count)
+end
+
+cs.once_event = function(delay, obj, func)
+  cs.add_loop_event("", delay, obj, func, 1)
 end
 
 

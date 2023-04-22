@@ -47,23 +47,7 @@ pal.Seal.build = function(buff, target_debuff, target_hp_limit)
     return seal
 end
 
-pal.Seal.init = function()
-    pal.Seal.seal_Righteousness = pal.Seal.build(seal_Righteousness)
-    pal.Seal.seal_Crusader = pal.Seal.build(seal_Crusader)
-    pal.Seal.seal_Light = pal.Seal.build(
-            seal_Light,
-            "Spell_Holy_HealingAura",
-            UnitHealthMax(cs.u_player) * 0.2
-    )
-    pal.Seal.seal_Wisdom = pal.Seal.build(
-            seal_Wisdom,
-            "Spell_Holy_RighteousnessAura",
-            UnitHealthMax(cs.u_player) * 0.2
-    )
-    pal.Seal.seal_Justice = pal.Seal.build(seal_Justice,"Spell_Holy_SealOfWrath")
-end
-
-pal.Seal.to_string = function()
+pal.Seal.current_to_string = function()
     local seal_name = cs.find_buff(seal_list_all)
     return to_short(seal_name)
 end
@@ -126,4 +110,22 @@ function pal.Seal:judgement_it()
         return true
     end
 end
+
+
+pal.seal = {}
+cs.once_event(0.2, function()
+  pal.seal.Righteousness = pal.Seal.build(seal_Righteousness)
+  pal.seal.Crusader = pal.Seal.build(seal_Crusader)
+  pal.seal.Light = pal.Seal.build(
+          seal_Light,
+          "Spell_Holy_HealingAura",
+          UnitHealthMax(cs.u_player) * 0.2
+  )
+  pal.seal.Wisdom = pal.Seal.build(
+          seal_Wisdom,
+          "Spell_Holy_RighteousnessAura",
+          UnitHealthMax(cs.u_player) * 0.2
+  )
+  pal.seal.Justice = pal.Seal.build(seal_Justice,"Spell_Holy_SealOfWrath")
+end)
 

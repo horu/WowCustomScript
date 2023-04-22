@@ -196,7 +196,7 @@ local seal_action = function(state, seal_list)
     return
   end
 
-  if judgement_any(pal.Seal.seal_Righteousness, seal_list[2], seal_list[3]) then
+  if judgement_any(pal.seal.Righteousness, seal_list[2], seal_list[3]) then
     -- wait another seal to judgement on the target
     return
   end
@@ -226,34 +226,34 @@ pal.actions.right = function(state)
   cs.cast(cast.HolyStrike)
 
   if state.id ~= state_RUSH then
-    if judgement_any(pal.Seal.seal_Light, pal.Seal.seal_Wisdom, pal.Seal.seal_Justice) then
+    if judgement_any(pal.seal.Light, pal.seal.Wisdom, pal.seal.Justice) then
       return
     end
   end
 
-  pal.Seal.seal_Righteousness:reseal_and_cast(build_cast_list(cast.Judgement, cast.CrusaderStrike ))
+  pal.seal.Righteousness:reseal_and_cast(build_cast_list(cast.Judgement, cast.CrusaderStrike ))
 end
 
 pal.actions.crusader = function(state)
   if not cs.check_target(cs.t_close_10) then return end
 
-  if judgement_any(pal.Seal.seal_Light, pal.Seal.seal_Wisdom, pal.Seal.seal_Justice, pal.Seal.seal_Righteousness) then
+  if judgement_any(pal.seal.Light, pal.seal.Wisdom, pal.seal.Justice, pal.seal.Righteousness) then
     return
   end
 
-  pal.Seal.seal_Crusader:reseal_and_cast(cast.HolyStrike, cast.CrusaderStrike)
+  pal.seal.Crusader:reseal_and_cast(cast.HolyStrike, cast.CrusaderStrike)
 end
 
 pal.actions.wisdom = function(state)
-  seal_action(state, {pal.Seal.seal_Wisdom, pal.Seal.seal_Light, pal.Seal.seal_Justice})
+  seal_action(state, {pal.seal.Wisdom, pal.seal.Light, pal.seal.Justice})
 end
 
 pal.actions.light = function(state)
-  seal_action(state, {pal.Seal.seal_Light, pal.Seal.seal_Wisdom, pal.Seal.seal_Justice})
+  seal_action(state, {pal.seal.Light, pal.seal.Wisdom, pal.seal.Justice})
 end
 
 pal.actions.justice = function(state)
-  seal_action(state, {pal.Seal.seal_Justice, pal.Seal.seal_Light, pal.Seal.seal_Wisdom})
+  seal_action(state, {pal.seal.Justice, pal.seal.Light, pal.seal.Wisdom})
 end
 
 
