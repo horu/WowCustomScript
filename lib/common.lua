@@ -42,11 +42,11 @@ cs_stack = function(condition)
   cs_print("STACK END")
 end
 
-error = function(msg)
+cs_error = function(msg)
   cs_stack(true)
   cs_print("|cffcc3333ERROR: |cffff7777".. (msg or "nil" ))
 end
-seterrorhandler(error)
+seterrorhandler(cs_error)
 
 
 cs.print = cs_print
@@ -110,10 +110,6 @@ function cs.to_string(value, depth, itlimit, short)
     return '"'..tostring(value)..'"'
   end
   return tostring(value)
-end
-
-cs.print = function()
-
 end
 
 

@@ -8,7 +8,7 @@ local sn_Crusader = "Seal of the Crusader"
 local sn_Justice = "Seal of Justice"
 local sn_Light = "Seal of Light"
 local sn_Wisdom = "Seal of Wisdom"
-local sn_list_all = cs.dict_to_list(spell, "string")
+local sn_list_all = {sn_Righteousness, sn_Crusader, sn_Justice, sn_Light, sn_Wisdom}
 
 local to_short_list = {}
 to_short_list[sn_Righteousness] = cs.color_purple .. "SR" .. "|r"

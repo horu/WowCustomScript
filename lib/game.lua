@@ -67,10 +67,13 @@ function cs.is_in_party()
 end
 
 function cs.auto_attack()
-  -- TODO: use map checker ?
-
   if not cs.check_target(cs.t_exists) then
     -- no auto check target
+    return
+  end
+
+  if cs.check_target(cs.t_en_player) and cs.st_map_checker:get_zone_params().nopvp then
+    ClearTarget()
     return
   end
 
