@@ -109,7 +109,8 @@ end
 
 pal.bless.blessing_everywhere = function()
   if cs.is_in_party() then
-    cs.Buff.build(spn.Righteous):rebuff()
+    -- TODO
+    --cs.Buff.build(spn.Righteous):rebuff()
     buff_party()
   end
   if cs.check_target(cs.t.fr_player) then
