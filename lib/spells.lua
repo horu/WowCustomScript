@@ -62,8 +62,19 @@ function cs.MultiSlot:use()
 end
 
 
-
-
+-- return spell_id, book
+local find_spell = function(name)
+  local id = 0
+  local it_name = ""
+  while it_name ~= name do
+    id = id+1
+    it_name = GetSpellName(id, "spell")
+    if not it_name then
+      return
+    end
+  end
+  return id, "spell"
+end
 
 -- spells
 ---@class cs.Spell
@@ -73,13 +84,14 @@ cs.Spell.build = function(id_name, book)
   local spell = cs.Spell:new()
 
   if type(id_name) == "string" then
-    spell.id, spell.book = cs.Spell._find_spell(id_name)
+    spell.id, spell.book = find_spell(id_name)
     spell.name = id_name
   else
     spell.id = id_name
     spell.book = book
     spell.name = GetSpellName(id_name, book)
   end
+  assert(spell.id)
   spell.cast_ts = nil
 
   return spell
@@ -114,16 +126,7 @@ function cs.Spell:cast_to_unit(unit)
   end
 end
 
--- return spell_id, book
-cs.Spell._find_spell = function(name)
-  local id = 0
-  local it_name = ""
-  while it_name ~= name do
-    id = id+1
-    it_name = GetSpellName(id, "spell")
-  end
-  return id, "spell"
-end
+
 
 
 
@@ -189,6 +192,10 @@ cs.cast_helpful = function(name)
 
   local spell = cs.Spell.build(name)
   return spell:cast_to_unit(unit)
+end
+
+cs.is_spell_available = function(name)
+  return find_spell(name)
 end
 
 

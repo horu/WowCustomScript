@@ -7,12 +7,17 @@ local spn = pal.spn
 
 
 
-
+---@class pal.Bless
 pal.Bless = cs.create_class()
 
 pal.Bless.rebuff_timeout = 250
 
-function pal.Bless.build(bless_name, unit)
+-- Bless can by anavailable, but buffed on the target.
+function pal.Bless.try_build(bless_name, unit)
+  if not cs.is_spell_available(bless_name) then
+    return
+  end
+
   local bless = cs.Buff.build(bless_name, unit, pal.Bless.rebuff_timeout)
 
   return bless
@@ -33,51 +38,60 @@ end
 
 -- party blessing
 
-local player_buffs = {}
+local players_bless_dict = {}
 
 local rebuff_unit = function(unit)
 
+  local _, class = UnitClass(unit)
   local player_name = UnitName(unit) or ""
-  local buff_name = cs.find_buff(bn.list_all, unit)
-  if buff_name then
-    player_buffs[player_name] = buff_name
-  else
-    buff_name = player_buffs[player_name]
+  local player_bless = players_bless_dict[player_name]
+
+  local exists_buff = cs.find_buff(bn.list_all, unit)
+  if exists_buff then
+    if not player_bless or player_bless:get_name() ~= exists_buff then
+      player_bless = pal.Bless.try_build(exists_buff, unit)
+      if not player_bless then
+        -- unavailable bless. can not rebuff it.
+        return
+      end
+
+      players_bless_dict[player_name] = player_bless
+    end
+
+    return
   end
 
-  local buffs = {
-    WARRIOR = bn.Might,
-    PALADIN = bn.Might,
-    HUNTER = bn.Might,
-    ROGUE = bn.Might,
-    SHAMAN = bn.Might,
+  if not player_bless then
+    local buff_map = {
+      WARRIOR = bn.Might,
+      PALADIN = bn.Might,
+      HUNTER = bn.Might,
+      ROGUE = bn.Might,
+      SHAMAN = bn.Might,
 
-    DRUID = bn.Wisdom,
-    PRIEST = bn.Wisdom,
-    MAGE = bn.Wisdom,
-    WARLOCK = bn.Wisdom,
-  }
+      DRUID = bn.Wisdom,
+      PRIEST = bn.Wisdom,
+      MAGE = bn.Wisdom,
+      WARLOCK = bn.Wisdom,
+    }
 
-  local _, class = UnitClass(unit)
 
-  if not buff_name then
-    buff_name = class and buffs[class] or bn.Might
+    local buff_name = class and buff_map[class] or bn.Might
     if not buff_name then
       cs.print("BUFF NOT FOUND FOR "..class)
       buff_name = bn.Might
     end
+
+    player_bless = pal.Bless.try_build(buff_name, unit)
+    players_bless_dict[player_name] = player_bless
   end
 
-  local buff = cs.Buff.build(buff_name, unit)
-  if cs.find_buff(bn.list_all, unit) then
-    return
-  end
-
-  local result = buff:rebuff()
+  local result = player_bless:rebuff()
 
   if result == cs.Buff.success then
-    cs.print("BUFF: ".. pal.to_short(buff:get_name()) .. " FOR ".. player_name..
-            " "..pfUI.api.GetUnitColor(unit) .. class)
+    local short = pal.to_short(player_bless:get_name())
+    local color = pfUI.api.GetUnitColor(unit)
+    cs.print("BUFF: ".. short .. " FOR ".. player_name.. " ".. color .. class)
   end
 
   return result
@@ -127,11 +141,10 @@ end
 pal.bless.init = function()
   -- self bless list
   for bless_name, spell_name in pairs(bn.dict_all) do
-
-    if spell_name ~= bn.Kings or cs.get_talent_rank("Blessing of Kings") == 1 then
-      cs.debug(spell_name)
-      local bless = pal.Bless.build(spell_name)
-      -- pal.bless[bless_name] = bless
+    local bless = pal.Bless.try_build(spell_name)
+    -- pal.bless[bless_name] = bless
+    if bless then
+      -- cs.print(bless:get_name())
       bless_dict[spell_name] = bless
     end
   end

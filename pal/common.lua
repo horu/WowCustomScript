@@ -20,11 +20,21 @@ an.list_def =                                { an.Devotion, an.Retribution, an.S
 -- BlessName
 pal.bn = {}
 local bn = pal.bn
+
 bn.Wisdom = "Blessing of Wisdom"
-bn.Might = "Blessing of Might"
 bn.Salvation = "Blessing of Salvation"
+bn.Sacrifice = "Blessing of Sacrifice"
+bn.Might = "Blessing of Might"
 bn.Light = "Blessing of Light"
 bn.Kings = "Blessing of Kings"
+
+bn.GreaterWisdom = "Greater Blessing of Wisdom"
+bn.GreaterSanctuary = "Greater Blessing of Sanctuary"
+bn.GreaterSalvation = "Greater Blessing of Salvation"
+bn.GreaterMight = "Greater Blessing of Might"
+bn.GreaterLight = "Greater Blessing of Light"
+bn.GreaterKings = "Greater Blessing of Kings"
+
 bn.list_all = cs.dict_to_list(bn, "string")
 bn.dict_all = cs.filter_dict(bn, "string")
 
