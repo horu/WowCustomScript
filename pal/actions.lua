@@ -133,6 +133,7 @@ pal.actions.init = function()
   pal.actions.justice = Action.build(seal.Justice, function(self, state)
     self:seal_action(state, {seal.Justice, seal.Light, seal.Wisdom})
   end)
+  -- TODO: add null attack on midle mouse
 end
 
 

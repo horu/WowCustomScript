@@ -1,8 +1,10 @@
 local cs = cs_common
 
 local main_load = function()
+  cs.damage.init()
   cs.game.init()
   cs.services.init()
+  cs.dps.init()
 
   cs.pal.heal.init()
   cs.pal.seal.init()

@@ -181,6 +181,18 @@ cs.create_class_ = function(build_func)
   return class
 end
 
+cs.create_class__ = function(build_func)
+  local class = {}
+  class.obj_build = build_func
+
+  class.build = function(self, ...)
+    local obj = setmetatable({}, {__index = self})
+    return self.obj_build(obj, unpack(arg))
+  end
+
+  return class
+end
+
 ---@class cs.Class
 cs.Class = cs.create_class()
 

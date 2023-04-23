@@ -8,10 +8,11 @@
 ## RequiredDeps: pfUI
 ## SavedVariables: cs_states_dynamic_config cs_dps_sessions cs_map_data
 lib\common.lua
-lib\damage.lua
 lib\ui.lua
+lib\damage.lua
 lib\game.lua
 lib\services.lua
+lib\dps.lua
 lib\spells.lua
 
 pal\common.lua
