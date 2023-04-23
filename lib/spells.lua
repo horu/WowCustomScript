@@ -281,6 +281,7 @@ function cs.Buff:check_exists()
 end
 
 function cs.Buff:rebuff()
+  -- TODO: time shift
   if not self:check_target_range() then
     return cs.Buff.failed
   end

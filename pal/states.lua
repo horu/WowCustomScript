@@ -302,6 +302,7 @@ end
 function StateHolder:heal_action(heal_cast)
   cs.error_disabler:off()
 
+  -- TODO cast aura on damage
   if cs.check_combat(1) then
     cs.Buff.build(an.Concentration):rebuff()
     if not pal.heal.check_hp() then
