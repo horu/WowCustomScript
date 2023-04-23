@@ -339,16 +339,21 @@ cs.damage.dt.damage = "damage"
 cs.damage.dt.heal = "heal"
 
 ---@class cs.damage.Event
-cs.damage.Event = cs.create_class__(function(event, result_list)
-  event.source, event.action, event.target, event.value, event.school, event.datatype = unpack(result_list)
+cs.damage.Event = cs.create_class()
 
+function cs.damage.Event.build(result_list)
+  local event = cs.damage.Event:new()
+
+  event.source, event.action, event.target, event.value, event.school, event.datatype = unpack(result_list)
   return event
-end)
+end
 
 
 
 ---@class cs.damage.Parser
-cs.damage.Parser = cs.create_class_1(function(damage_parser)
+cs.damage.Parser = cs.class()
+
+function cs.damage.Parser:build()
 
   local parser = cs.create_simple_frame("shagu_parser")
   -- register to all damage combat log events
@@ -386,7 +391,7 @@ cs.damage.Parser = cs.create_class_1(function(damage_parser)
   parser:RegisterEvent("CHAT_MSG_SPELL_PARTY_BUFF")
   parser:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_PARTY_BUFFS")
 
-  parser.cs_damage_parser = damage_parser
+  parser.cs_damage_parser = self
 
   -- cache default table
   local defaults = { }
@@ -412,21 +417,18 @@ cs.damage.Parser = cs.create_class_1(function(damage_parser)
 
       if result then
 
-        local event = cs.damage.Event:build({data[2](defaults, a1, a2, a3, a4, a5)})
+        local event = cs.damage.Event.build({data[2](defaults, a1, a2, a3, a4, a5)})
 
         return cs_damage_parser:_on_result(event)
       end
     end
   end)
 
-  damage_parser.player_name = UnitName(cs.u.player)
-  damage_parser.sub_list = {}
-end)
+  self.player_name = UnitName(cs.u.player)
+  self.sub_list = {}
+end
 
 function cs.damage.Parser:_check_filter(filters, event)
-  if event.target == "you" then
-    cs.debug(event)
-  end
 
   for param, value in pairs(filters) do
 

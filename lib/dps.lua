@@ -14,13 +14,15 @@ local dps_frame = {
 
 
 ---@class cs.DpsSession
-cs.DpsSession = cs.create_class_1(function(obj)
-  obj.damage_sum = 0
-  obj.ts_sum = 0
-  obj.first_ts = cs.max_number_32
-  obj.last_ts = 0
-end)
+cs.DpsSession = cs.class()
+
 --region
+function cs.DpsSession:build()
+  self.damage_sum = 0
+  self.ts_sum = 0
+  self.first_ts = cs.max_number_32
+  self.last_ts = 0
+end
 
 -- const
 function cs.DpsSession:get_avg()
@@ -51,20 +53,22 @@ end
 cs_dps_sessions = { target = {}, player = {} }
 
 ---@class cs.DpsData
-cs.DpsData = cs.create_class_1(function(data, unit)
-  data.sessions = cs_dps_sessions[unit]
+cs.DpsData = cs.class()
+
+--region
+function cs.DpsData:build(unit)
+  self.sessions = cs_dps_sessions[unit]
   local ts = GetTime()
   -- remove expired sessions from saves
-  for it in pairs(data.sessions) do
+  for it in pairs(self.sessions) do
     if not cs.compare_time(cs.Dps.session_store_limit_ts, it, ts) or it >= ts then
-      data.sessions[it] = nil
+      self.sessions[it] = nil
     end
   end
 
-  data.start_ts = nil
-  data.last_ts = nil
-end)
---region
+  self.start_ts = nil
+  self.last_ts = nil
+end
 
 function cs.DpsData:get_all(after_ts)
   if not after_ts then
@@ -91,12 +95,15 @@ end
 
 
 ---@class cs.Dps
-cs.Dps = cs.create_class_1(function(obj, unit, frame_config)
+cs.Dps = cs.class()
+
+--region
+function cs.Dps:build(unit, frame_config)
   ---@type cs.Dps
-  obj.unit = unit
-  obj.data = cs.DpsData:new(unit)
-  obj:_init(frame_config)
-  obj:_on_damage(0)
+  self.unit = unit
+  self.data = cs.DpsData:new(unit)
+  self:_init(frame_config)
+  self:_on_damage(0)
 
   local filter = {}
   if unit == cs.u.target then
@@ -105,9 +112,8 @@ cs.Dps = cs.create_class_1(function(obj, unit, frame_config)
     filter[damage.p.target] = damage.u.player
   end
   filter[damage.p.datatype] = damage.dt.damage
-  damage.parser:subscribe(filter, obj, obj._on_damage_parser_event)
-end)
---region
+  damage.parser:subscribe(filter, self, self._on_damage_parser_event)
+end
 
 cs.Dps.session_store_limit_ts = 3600 * 2
 

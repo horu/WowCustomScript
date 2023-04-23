@@ -149,7 +149,9 @@ end
 
 
 ---@class cs.SpeedChecker
-cs.SpeedChecker = cs.create_class_(function()
+cs.SpeedChecker = cs.create_class()
+
+cs.SpeedChecker.build = function()
   ---@type cs.SpeedChecker
   local speed_checker = cs.SpeedChecker:new()
   local period = 0.2
@@ -168,7 +170,7 @@ cs.SpeedChecker = cs.create_class_(function()
   end)
 
   return speed_checker
-end)
+end
 
 --region
 
