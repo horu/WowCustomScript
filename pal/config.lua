@@ -76,11 +76,11 @@ local default_states_config = {
       use_slots = { slot.TwoHand },
       aura = {
         default = an.Retribution,
-        no_combat = bn.Wisdom,
         list = an.list_att,
       },
       bless = {
         default = bn.Might,
+        no_combat = bn.Wisdom,
         list = bn.list_all,
       },
     },
@@ -91,11 +91,11 @@ local default_states_config = {
 
       aura = {
         default = an.Retribution,
-        no_combat = bn.Wisdom,
         list = an.list_att,
       },
       bless = {
         default = bn.Wisdom,
+        no_combat = bn.Wisdom,
         list = bn.list_all,
       },
     },

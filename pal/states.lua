@@ -52,7 +52,12 @@ end
 
 
 -- set temporary buff and dont save it to config
-function StateBuff:tmp_rebuff(buff_name)
+function StateBuff:rebuff(buff_name)
+  if not cs.check_target(cs.t.close_10) and not cs.check_combat(1, cs.c.affect) then
+    -- no combat
+    buff_name = self:_get_config().no_combat or buff_name
+  end
+
   if not buff_name or not self:_is_available(buff_name) then
     buff_name = self:_get_config(1).current
   end
@@ -63,14 +68,14 @@ function StateBuff:tmp_rebuff(buff_name)
 end
 
 -- set buff and save it to config
-function StateBuff:reset(buff_name)
-  self:tmp_rebuff(buff_name or self:_get_config().default)
+function StateBuff:set_current(buff_name)
+  self:rebuff(buff_name or self:_get_config().default)
   self:_get_config(1).current = self.current:get_name()
 end
 
 function StateBuff:save_buffed_to_config()
   local current = self:get_buffed()
-  self:reset(current)
+  self:set_current(current)
 end
 
 
@@ -83,7 +88,6 @@ end
 function StateBuff:_is_available(value)
   return cs.list_to_dict(self:_get_config().list, "string")[value]
 end
-
 
 
 
@@ -139,7 +143,7 @@ function State:save_buffs()
 end
 
 function State:reset_buffs()
-  self:_every_buff(StateBuff.reset)
+  self:_every_buff(StateBuff.set_current)
 end
 
 function State:recheck()
@@ -148,7 +152,7 @@ function State:recheck()
 end
 
 function State:rebuff_aura()
-  return self.buff_list.aura:tmp_rebuff(self:_get_aura())
+  return self.buff_list.aura:rebuff(self:_get_aura())
 end
 
 -- reacion for enenmy cast to change resist aura
@@ -194,22 +198,10 @@ function State:_get_aura()
   return aura_name
 end
 
--- const
-function State:_get_bless()
-  local bless_name = nil
-
-  if not cs.check_target(cs.t.close_10) and not cs.check_combat(1, cs.c.affect) then -- 3 sec after combat
-    -- TODO
-    -- bless_name = bn.Wisdom -- mana regen if not in combat
-  end
-
-  return bless_name
-end
-
 
 function State:_standard_rebuff_attack()
   self:rebuff_aura()
-  if self.buff_list.bless:tmp_rebuff(self:_get_bless()) then
+  if self.buff_list.bless:rebuff() then
     return
   end
   if not cs.check_combat(1) then
@@ -397,7 +389,7 @@ pal.states.init = function()
     st_state_holder:add_action(action_name, action)
   end
 
-  cs.print(cs.color.green.."CS LOADED")
+  cs.print(cs.color.green.."+++++++++++++++++++++++++++ CS LOADED +++++++++++++++++++++++++++")
 end
 
 
