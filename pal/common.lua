@@ -65,7 +65,18 @@ end
 
 -- party blessing
 
+local player_buffs = {}
+
 local rebuff_unit = function(unit)
+
+  local player_name = UnitName(unit) or ""
+  local buff_name = cs.find_buff(bn.list_all, unit)
+  if buff_name then
+    player_buffs[player_name] = buff_name
+  else
+    buff_name = player_buffs[player_name]
+  end
+
   local buffs = {
     WARRIOR = bn.Might,
     PALADIN = bn.Might,
@@ -81,10 +92,12 @@ local rebuff_unit = function(unit)
 
   local _, class = UnitClass(unit)
 
-  local buff_name = class and buffs[class] or bn.Might
   if not buff_name then
-    cs.print("BUFF NOT FOUND FOR "..class)
-    buff_name = bn.Might
+    buff_name = class and buffs[class] or bn.Might
+    if not buff_name then
+      cs.print("BUFF NOT FOUND FOR "..class)
+      buff_name = bn.Might
+    end
   end
 
   local buff = cs.Buff.build(buff_name, unit)
@@ -95,8 +108,10 @@ local rebuff_unit = function(unit)
   local result = buff:rebuff()
 
   if result == cs.Buff.success then
-    cs.print("BUFF: ".. pal.to_short(buff:get_name()) .. " FOR ".. pfUI.api.GetUnitColor(unit) .. class)
+    cs.print("BUFF: ".. pal.to_short(buff:get_name()) .. " FOR ".. player_name..
+            " "..pfUI.api.GetUnitColor(unit) .. class)
   end
+
   return result
 end
 
