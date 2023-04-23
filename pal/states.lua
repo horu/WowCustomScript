@@ -53,7 +53,7 @@ end
 
 -- set temporary buff and dont save it to config
 function StateBuff:rebuff(buff_name)
-  if not cs.check_target(cs.t.close_10) and not cs.check_combat(1, cs.c.affect) then
+  if not cs.check_target(cs.t.attackable) and not cs.check_combat(1, cs.c.affect) then
     -- no combat
     buff_name = self:_get_config().no_combat or buff_name
   end
