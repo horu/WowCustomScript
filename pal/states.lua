@@ -6,7 +6,7 @@ local heal = pal.heal
 
 
 
-local state_holder_frame = {"StateHolder.build", "BOTTOMLEFT",415, 69, "", "LEFT", true, false, }
+local state_holder_frame = {x=415, y=69, text_relative=cs.ui.r.LEFT, mono=true }
 
 
 ---@class StateBuff
@@ -259,7 +259,7 @@ StateHolder.build = function()
 
   holder.actions = {}
 
-  holder.frame = cs.create_simple_text_frame(unpack(state_holder_frame))
+  holder.frame = cs.ui.Text:build_from_config(state_holder_frame)
 
   return holder
 end
@@ -328,7 +328,7 @@ end
 
 function StateHolder:_update_frame()
   cs.add_loop_event("StateHolder:_update_frame", 0.3, self, function(holder)
-    holder.frame:CS_SetText(holder.cur_state:to_string())
+    holder.frame:SetText(holder.cur_state:to_string())
   end, 5)
 end
 

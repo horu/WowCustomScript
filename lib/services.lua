@@ -3,7 +3,7 @@ local damage = cs.damage
 
 cs.services = {}
 
-local spd_checker_frame = { "speed_checker", "BOTTOMLEFT", 10, 94, "0", false, true }
+local spd_checker_frame = { x=10, y=94, text="0", mono=true }
 
 
 
@@ -163,7 +163,7 @@ cs.SpeedChecker.build = function()
   speed_checker.k = 1
   speed_checker.speed_table = cs.create_fix_table(3/period)
 
-  speed_checker.text = cs.create_simple_text_frame(unpack(spd_checker_frame))
+  speed_checker.text = cs.ui.Text:build_from_config(spd_checker_frame)
 
   cs.once_event(5, function()
     cs.loop_event(period, speed_checker, speed_checker._loop)
@@ -262,7 +262,7 @@ end
 
 function cs.SpeedChecker:_loop()
   local speed = self:get_speed()
-  self.text.cs_text:SetText(speed)
+  self.text:SetText(speed)
 end
 
 local st_speed_checker

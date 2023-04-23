@@ -3,8 +3,8 @@ local damage = cs.damage
 
 
 local dps_frame = {
-  target = { "nibsrsCSdps", "BOTTOMLEFT", 1150, 94, "DPS", false, true },
-  player = { "nibsrsCSdps", "BOTTOMLEFT", 347, 94, "DPS", "RIGHT", true },
+  target = { x=1150, y=94, mono=true },
+  player = { x=347, y=94, text_relative=cs.ui.r.RIGHT, mono=true },
 }
 
 
@@ -102,8 +102,8 @@ function cs.Dps:build(unit, frame_config)
   ---@type cs.Dps
   self.unit = unit
   self.data = cs.DpsData:new(unit)
-  self:_init(frame_config)
-  self:_on_damage(0)
+  self.text = cs.ui.Text:build_from_config(frame_config)
+  self:_init_frame()
 
   local filter = {}
   if unit == cs.u.target then
@@ -113,6 +113,8 @@ function cs.Dps:build(unit, frame_config)
   end
   filter[damage.p.datatype] = damage.dt.damage
   damage.parser:subscribe(filter, self, self._on_damage_parser_event)
+
+  self:_on_damage(0)
 end
 
 cs.Dps.session_store_limit_ts = 3600 * 2
@@ -163,8 +165,9 @@ end
 
 
 
-function cs.Dps:_init(dps_frame_config)
-  local f = cs.create_simple_text_frame(unpack(dps_frame_config))
+function cs.Dps:_init_frame()
+  local f = cs.create_simple_frame()
+  f.cs_dps = self
   --f:RegisterEvent("UNIT_COMBAT")
   f:RegisterEvent("PLAYER_TARGET_CHANGED")
   -- f:RegisterEvent("PLAYER_ENTER_COMBAT")
@@ -182,10 +185,6 @@ function cs.Dps:_init(dps_frame_config)
     this.cs_dps:_on_damage(nil)
   end)
 
-  self.frame = f
-  f.cs_dps = self
-
-  --cs.add_loop_event("cs.Dps", 0.1, self, cs.Dps._loop)
 end
 
 function cs.Dps:_update_output()
@@ -199,7 +198,7 @@ function cs.Dps:_update_output()
   local dps_16 = data:get_all(ts - 60 * 16)
   local dps_64 = data:get_all(ts - 60 * 64)
 
-  self.frame.cs_text:SetText(string.format(
+  self.text:SetText(string.format(
           "DPS %3d [%3d%5d] / %3d / %3d / %3d",
           cur_dps:get_avg(), cur_dps.ts_sum, cur_dps.damage_sum, dps_4:get_avg(), dps_16:get_avg(), dps_64:get_avg()))
 end

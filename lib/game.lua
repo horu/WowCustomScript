@@ -187,19 +187,19 @@ function cs.CombatChecker.build()
   data.aggro = {
     name = "aggro",
     color = cs.color.red,
-    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x - 2 * diff_x, y + 2 * diff_y, "0", "CENTER", false),
+    text = cs.ui.Text:build_from_config({x=x - 2 * diff_x, y=y + 2 * diff_y, text_relative=cs.ui.r.CENTER}),
     ts_enter = GetTime(),
   }
   data.combat = {
     name = "combat",
     color = cs.color.orange,
-    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x - diff_x, y + diff_y, "0", "CENTER", false),
+    text = cs.ui.Text:build_from_config({x=x - diff_x, y=y + diff_y, text_relative=cs.ui.r.CENTER}),
     ts_enter = GetTime(),
   }
   data.affect = {
     name = "affect",
     color = cs.color.yellow,
-    text = cs.create_simple_text_frame("", "BOTTOMLEFT", x, y, "0", "CENTER", false),
+    text = cs.ui.Text:build_from_config({x=x, y=y, text_relative=cs.ui.r.CENTER}),
     ts_enter = GetTime(),
   }
 
@@ -219,9 +219,9 @@ function cs.CombatChecker:_report_status()
         dur = math.floor(dur / 60) .. "m"
       end
 
-      data.text.cs_text:SetText(data.color .. dur)
+      data.text:SetText(data.color .. dur)
     else
-      data.text.cs_text:SetText(" ")
+      data.text:SetText(" ")
     end
   end
 end
