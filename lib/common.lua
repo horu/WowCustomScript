@@ -199,6 +199,18 @@ cs.list_to_dict = function(list, value_type)
   return dict
 end
 
+cs.filter_dict = function(dict, value_type)
+  assert(value_type)
+
+  local result = {}
+  for name, value in pairs(dict) do
+    if type(value) == value_type then
+      result[name] = value
+    end
+  end
+  return result
+end
+
 cs.dict_to_list = function(dict, value_type)
   assert(value_type)
 

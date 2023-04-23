@@ -6,6 +6,7 @@ local main_load = function()
   cs.services.init()
   cs.dps.init()
 
+  cs.pal.bless.init()
   cs.pal.heal.init()
   cs.pal.seal.init()
   cs.pal.actions.init()

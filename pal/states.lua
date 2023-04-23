@@ -62,7 +62,8 @@ function StateBuff:rebuff(buff_name)
     buff_name = self:_get_config(1).current
   end
 
-  self.current = cs.Buff.build(buff_name)
+  -- aura/bless
+  self.current = pal[self.name].get_buff(buff_name)
 
   return self.current:rebuff()
 end
@@ -205,7 +206,7 @@ function State:_standard_rebuff_attack()
     return
   end
   if not cs.check_combat(1) then
-    pal.blessing_everywhere()
+    pal.bless.blessing_everywhere()
   end
 end
 

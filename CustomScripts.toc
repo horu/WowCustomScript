@@ -16,6 +16,8 @@ lib\dps.lua
 lib\spells.lua
 
 pal\common.lua
+pal\aura.lua
+pal\bless.lua
 pal\heal.lua
 pal\seal.lua
 pal\config.lua

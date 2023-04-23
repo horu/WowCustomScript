@@ -55,7 +55,20 @@ end
 
 
 
+function cs.get_talent_rank(name)
+  for page = 1,3 do
+    for id = 1, 50 do
+      local it_name, _, _, _, rank = GetTalentInfo(page, id)
+      if not it_name then
+        break
+      end
 
+      if it_name == name then
+        return rank
+      end
+    end
+  end
+end
 
 
 

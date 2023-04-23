@@ -250,12 +250,15 @@ cs.Buff.exists = nil
 cs.Buff.success = 1
 cs.Buff.failed = 2
 
-cs.Buff.build = function(name, unit)
+--region
+cs.Buff.build = function(name, unit, rebuff_timeout)
   local buff = cs.Buff:new()
 
   buff.name = name
   buff.unit = unit or cs.u.player
   buff.spell = cs.Spell.build(name)
+  buff.cast_ts = 0
+  buff.rebuff_timeout = rebuff_timeout
 
   return buff
 end
@@ -280,22 +283,33 @@ function cs.Buff:check_exists()
   return cs.find_buff(self.name, self.unit)
 end
 
+-- const
+function cs.Buff:is_expired()
+  if not self.rebuff_timeout then
+    return
+  end
+
+  return not cs.compare_time(self.rebuff_timeout, self.cast_ts)
+end
+
 function cs.Buff:rebuff()
-  -- TODO: time shift
   if not self:check_target_range() then
     return cs.Buff.failed
   end
 
-  if self:check_exists() then
+  if self:check_exists() and not self:is_expired() then
     return cs.Buff.exists
   end
 
   if self.spell:cast_to_unit(self.unit) then
+    self.cast_ts = GetTime()
     return cs.Buff.success
   end
 
   return cs.Buff.failed
 end
+
+--endregion
 
 
 

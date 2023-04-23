@@ -182,8 +182,8 @@ function cs.SpeedChecker:_get_speed_mod()
   local speed = 1
   local _, class = UnitClass(cs.u.player)
   if class == "PALADIN" then
-    local _, _, _, _, current_rank = GetTalentInfo(3, 9)
-    speed = speed + current_rank * 0.04
+    local rank = cs.get_talent_rank("Pursuit of Justice")
+    speed = speed + rank * 0.04
   end
 
   local is_mounted = cs.has_buffs(cs.u.player, "inv_pet_speedy") or
