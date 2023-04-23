@@ -325,6 +325,14 @@ cs.damage.p.value = "value"
 cs.damage.p.school = "school"
 cs.damage.p.datatype = "datatype"
 
+-- Unit
+cs.damage.u = {}
+cs.damage.u.player = "u.player"
+
+-- Target
+cs.damage.t = {}
+cs.damage.t.you = "you"
+
 -- DataType
 cs.damage.dt = {}
 cs.damage.dt.damage = "damage"
@@ -340,7 +348,7 @@ end)
 
 
 ---@class cs.damage.Parser
-cs.damage.Parser = cs.create_class__(function(damage_parser)
+cs.damage.Parser = cs.create_class_1(function(damage_parser)
 
   local parser = cs.create_simple_frame("shagu_parser")
   -- register to all damage combat log events
@@ -411,16 +419,26 @@ cs.damage.Parser = cs.create_class__(function(damage_parser)
     end
   end)
 
+  damage_parser.player_name = UnitName(cs.u.player)
   damage_parser.sub_list = {}
-
-  return damage_parser
 end)
 
 function cs.damage.Parser:_check_filter(filters, event)
+  if event.target == "you" then
+    cs.debug(event)
+  end
+
   for param, value in pairs(filters) do
-    if event[param] ~= value then
+
+    if value == cs.damage.u.player then
+      -- check "player"
+      if event[param] ~= self.player_name and event[param] ~= cs.damage.t.you then
+        return
+      end
+    elseif event[param] ~= value then
       return
     end
+
   end
   return true
 end
@@ -444,7 +462,7 @@ end
 cs.damage.parser = nil
 
 cs.damage.init = function()
-  cs.damage.parser = cs.damage.Parser:build()
+  cs.damage.parser = cs.damage.Parser:new()
 end
 
 

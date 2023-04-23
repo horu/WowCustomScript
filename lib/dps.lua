@@ -12,15 +12,13 @@ local dps_frame = {
 
 
 
+
 ---@class cs.DpsSession
-cs.DpsSession = cs.create_class_(function()
-  ---@type cs.DpsSession
-  local session = cs.DpsSession:new()
-  session.damage_sum = 0
-  session.ts_sum = 0
-  session.first_ts = cs.max_number_32
-  session.last_ts = 0
-  return session
+cs.DpsSession = cs.create_class_1(function(obj)
+  obj.damage_sum = 0
+  obj.ts_sum = 0
+  obj.first_ts = cs.max_number_32
+  obj.last_ts = 0
 end)
 --region
 
@@ -45,12 +43,15 @@ end
 --endregion
 
 
+
+
+
+
+
 cs_dps_sessions = { target = {}, player = {} }
 
 ---@class cs.DpsData
-cs.DpsData = cs.create_class_(function(unit)
-  ---@type cs.DpsData
-  local data = cs.DpsData:new()
+cs.DpsData = cs.create_class_1(function(data, unit)
   data.sessions = cs_dps_sessions[unit]
   local ts = GetTime()
   -- remove expired sessions from saves
@@ -62,8 +63,6 @@ cs.DpsData = cs.create_class_(function(unit)
 
   data.start_ts = nil
   data.last_ts = nil
-
-  return data
 end)
 --region
 
@@ -73,7 +72,7 @@ function cs.DpsData:get_all(after_ts)
   end
 
   ---@type cs.DpsSession
-  local session = cs.DpsSession.build()
+  local session = cs.DpsSession:new()
   for start_ts, it in pairs(self.sessions) do
     local session_time = it.last_ts
     if session_time >= after_ts then
@@ -84,21 +83,29 @@ function cs.DpsData:get_all(after_ts)
 end
 --endregion
 
----@class cs.Dps
-cs.Dps = cs.create_class_(function(unit, frame_config)
-  ---@type cs.Dps
-  local dps = cs.Dps:new()
-  dps.unit = unit
-  dps.data = cs.DpsData.build(unit)
-  dps:_init(frame_config)
-  dps:_on_damage(0)
 
-  local player_name = UnitName(cs.u.player)
+
+
+
+
+
+
+---@class cs.Dps
+cs.Dps = cs.create_class_1(function(obj, unit, frame_config)
+  ---@type cs.Dps
+  obj.unit = unit
+  obj.data = cs.DpsData:new(unit)
+  obj:_init(frame_config)
+  obj:_on_damage(0)
+
   local filter = {}
-  filter[unit == cs.u.target and damage.p.source or damage.p.target] = player_name
+  if unit == cs.u.target then
+    filter[damage.p.source] = damage.u.player
+  else
+    filter[damage.p.target] = damage.u.player
+  end
   filter[damage.p.datatype] = damage.dt.damage
-  damage.parser:subscribe(filter, dps, dps._on_damage_parser_event)
-  return dps
+  damage.parser:subscribe(filter, obj, obj._on_damage_parser_event)
 end)
 --region
 
@@ -133,7 +140,7 @@ function cs.Dps:_on_damage(damage_value)
   if not data.start_ts then
     -- combat first damage. create session
 
-    data.sessions[ts] = data.sessions[ts] or cs.DpsSession.build()
+    data.sessions[ts] = data.sessions[ts] or cs.DpsSession:new()
 
     data.start_ts = ts
     data.last_ts = ts
@@ -210,6 +217,6 @@ local st_dps_player -- player received damage
 
 cs.dps = {}
 cs.dps.init = function()
-  st_dps_target = cs.Dps.build("target", dps_frame.target)
-  st_dps_player = cs.Dps.build("player", dps_frame.player)
+  st_dps_target = cs.Dps:new("target", dps_frame.target)
+  st_dps_player = cs.Dps:new("player", dps_frame.player)
 end

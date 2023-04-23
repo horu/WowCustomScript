@@ -159,6 +159,13 @@ function cs.error_disabler.on(self)
 end
 
 
+cs.class = function()
+  local class = {}
+
+  return class
+end
+
+
 cs.create_class = function(class_tab)
   local class = class_tab or {}
   function class:new(tab)
@@ -188,6 +195,19 @@ cs.create_class__ = function(build_func)
   class.build = function(self, ...)
     local obj = setmetatable({}, {__index = self})
     return self.obj_build(obj, unpack(arg))
+  end
+
+  return class
+end
+
+cs.create_class_1 = function(constructor)
+  local class = {}
+  class.constructor = constructor
+
+  class.new = function(self, ...)
+    local obj = setmetatable({}, {__index = self})
+    self.constructor(obj, unpack(arg))
+    return obj
   end
 
   return class
