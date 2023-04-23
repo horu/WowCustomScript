@@ -219,9 +219,9 @@ function cs.CombatChecker:_report_status()
         dur = math.floor(dur / 60) .. "m"
       end
 
-      data.text:SetText(data.color .. dur)
+      data.text:set_text(data.color .. dur)
     else
-      data.text:SetText(" ")
+      data.text:set_text(" ")
     end
   end
 end

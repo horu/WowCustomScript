@@ -45,12 +45,16 @@ cs.ui.r.CENTER = "CENTER"
 cs.ui.Text = cs.create_class()
 
 --region
-function cs.ui.Text:build(x, y, frame_relative, text, text_relative, mono, font_size, background)
+function cs.ui.Text:build(x, y, frame_relative, text_relative, mono, font_size, background)
+
+  local obj = self:new()
 
   local f = cs.create_simple_frame()
   f:SetHeight(10)
   f:SetWidth(20)
   f:SetPoint(frame_relative or cs.ui.r.BOTTOMLEFT, x, y)
+
+  obj.frame = f
 
   local font = "Fonts\\FRIZQT__.TTF"
   if mono then
@@ -60,38 +64,49 @@ function cs.ui.Text:build(x, y, frame_relative, text, text_relative, mono, font_
     font_size = font_size or 12
   end
 
-  local text_frame = f:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
-  text_frame:SetFont(font, font_size, "OUTLINE")
-  text_frame:SetPoint(text_relative or cs.ui.r.BOTTOMLEFT, 0, 0)
-  text_frame:SetJustifyH(cs.ui.r.LEFT)
-  if text then
-    text_frame:SetText(text)
-  end
+  obj.font = font
+  obj.font_size = font_size
+  obj.text_relative = text_relative or cs.ui.r.BOTTOMLEFT
 
-  local obj = self:new()
+  obj.lines = {}
+
+  obj:add_line(0)
+
   if background then
     obj.texture_frame = f:CreateTexture(nil, "BACKGROUND")
     obj.texture_frame:SetTexture(unpack(background))
   end
 
-  obj.frame = f
-  obj.text_frame = text_frame
-
   return obj
 end
 
 function cs.ui.Text:build_from_config(c)
-  return cs.ui.Text:build(c.x, c.y, c.frame_relative, c.text, c.text_relative, c.mono, c.font_size, c.background)
+  return cs.ui.Text:build(c.x, c.y, c.frame_relative, c.text_relative, c.mono, c.font_size, c.background)
 end
 
-function cs.ui.Text:SetText(text)
-  self.text_frame:SetText(text)
+function cs.ui.Text:set_text(text, line_number)
+  line_number = line_number or 0
+
+  self.lines[line_number]:SetText(text)
   if self.texture_frame then
+    -- TODO: fix for multi line
     self.texture_frame:SetHeight(self.cs_text:GetHeight() + 2)
     self.texture_frame:SetWidth(self.cs_text:GetWidth() + 2)
     self.texture_frame:ClearAllPoints()
     self.texture_frame:SetPoint("CENTER", self.cs_text, "CENTER", 0, -1)
   end
+end
+
+function cs.ui.Text:get_text(line_number)
+  return self.lines[line_number]:GetText()
+end
+
+function cs.ui.Text:add_line(number)
+  local text_frame = self.frame:CreateFontString("Status", nil, "GameFontHighlightSmallOutline")
+  text_frame:SetFont(self.font, self.font_size, "OUTLINE")
+  text_frame:SetPoint(self.text_relative or cs.ui.r.BOTTOMLEFT, 0, number * self.font_size)
+  text_frame:SetJustifyH(cs.ui.r.LEFT)
+  table.insert(self.lines, number, text_frame)
 end
 --endregion
 

@@ -3,7 +3,7 @@ local damage = cs.damage
 
 cs.services = {}
 
-local spd_checker_frame = { x=10, y=94, text="0", mono=true }
+local spd_checker_frame = { x=10, y=94, mono=true }
 
 
 
@@ -262,7 +262,7 @@ end
 
 function cs.SpeedChecker:_loop()
   local speed = self:get_speed()
-  self.text:SetText(speed)
+  self.text:set_text(speed)
 end
 
 local st_speed_checker

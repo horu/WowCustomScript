@@ -199,6 +199,7 @@ function State:_get_bless()
   local bless_name = nil
 
   if not cs.check_target(cs.t.close_10) and not cs.check_combat(1, cs.c.affect) then -- 3 sec after combat
+    -- TODO
     -- bless_name = bn.Wisdom -- mana regen if not in combat
   end
 
@@ -328,7 +329,7 @@ end
 
 function StateHolder:_update_frame()
   cs.add_loop_event("StateHolder:_update_frame", 0.3, self, function(holder)
-    holder.frame:SetText(holder.cur_state:to_string())
+    holder.frame:set_text(holder.cur_state:to_string())
   end, 5)
 end
 

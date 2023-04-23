@@ -198,7 +198,7 @@ function cs.Dps:_update_output()
   local dps_16 = data:get_all(ts - 60 * 16)
   local dps_64 = data:get_all(ts - 60 * 64)
 
-  self.text:SetText(string.format(
+  self.text:set_text(string.format(
           "DPS %3d [%3d%5d] / %3d / %3d / %3d",
           cur_dps:get_avg(), cur_dps.ts_sum, cur_dps.damage_sum, dps_4:get_avg(), dps_16:get_avg(), dps_64:get_avg()))
 end
