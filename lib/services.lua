@@ -300,12 +300,12 @@ function cs.SpeedChecker:get_speed()
   local speed = self.calc:get_avg_diff(dist) * map_ratio / 100
   self.calc.value = 0
   self.speed_table:add(speed)
-  return speed
+  return self.map_params.size_ratio and speed
 end
 
 function cs.SpeedChecker:_loop()
   local speed = self:get_speed()
-  self.text:set_text(string.format("%1.2f", speed))
+  self.text:set_text(string.format("%1.2f", speed or -1))
 end
 
 local st_speed_checker
