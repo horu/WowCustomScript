@@ -96,8 +96,17 @@ local function unit_dump(name)
   unit_dump_np(name)
 end
 
+local dump_table = function(name, tbl)
+  cs.print(name)
+  for name, data in pairs(tbl) do
+    cs.print(name..": "..cs.to_string_best_d(data))
+  end
+end
+
 local function all_dump()
-  cs.print_table(cs_map_data)
+  --dump_table("cs_map_data", cs_map_data)
+  dump_table("cs_players_bless_dict", cs_players_bless_dict)
+  dump_table("bless", cs.pal.bless)
 end
 
 

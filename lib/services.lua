@@ -96,7 +96,6 @@ local st_targeter = cs.Targeter.build()
 
 
 
--- mana check
 local function create_calc(start_value)
   local calc = { value = start_value, ts = GetTime() }
   function calc.get_avg_diff(self, value)
@@ -111,6 +110,15 @@ local function create_calc(start_value)
   return calc
 end
 
+
+
+
+
+
+
+
+
+-- mana check
 local function create_mana_checker(period, size)
   local mana_checker = {
     calc = create_calc(UnitMana("player")),

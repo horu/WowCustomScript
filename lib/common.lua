@@ -112,7 +112,7 @@ function cs.to_string(value, depth, itlimit, short)
   return tostring(value)
 end
 
-local to_string_best_d = function(...)
+cs.to_string_best_d = function(...)
   local full_msg = ""
   for _, v in ipairs(arg) do
     local msg = ""
@@ -128,7 +128,7 @@ local to_string_best_d = function(...)
 end
 
 function cs.print_table(...)
-  local full_msg = to_string_best_d(unpack(arg))
+  local full_msg = cs.to_string_best_d(unpack(arg))
   cs.print(full_msg)
 end
 
@@ -137,7 +137,7 @@ function cs.debug(...)
 
   local line = get_stack_line(stack_level)
 
-  local full_msg = to_string_best_d(unpack(arg))
+  local full_msg = cs.to_string_best_d(unpack(arg))
   cs.print(line..": "..full_msg)
 end
 

@@ -50,13 +50,13 @@ end
 
 -- party blessing
 
-local players_bless_dict = {}
+cs_players_bless_dict = {}
 
 local rebuff_unit = function(unit)
 
   local _, class = UnitClass(unit)
   local player_name = UnitName(unit) or ""
-  local player_bless = players_bless_dict[player_name]
+  local player_bless = cs_players_bless_dict[player_name]
 
   local exists_buff = cs.find_buff(bn.list_all, unit)
   if exists_buff then
@@ -67,7 +67,7 @@ local rebuff_unit = function(unit)
         return
       end
 
-      players_bless_dict[player_name] = player_bless
+      cs_players_bless_dict[player_name] = player_bless
     end
 
     return
@@ -96,7 +96,7 @@ local rebuff_unit = function(unit)
     end
 
     player_bless = pal.Bless.try_build(buff_name, unit)
-    players_bless_dict[player_name] = player_bless
+    cs_players_bless_dict[player_name] = player_bless
   end
 
   local result = player_bless:rebuff()
