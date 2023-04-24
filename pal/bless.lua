@@ -67,9 +67,10 @@ local rebuff_unit = function(unit)
       PALADIN = bn.Might,
       HUNTER = bn.Might,
       ROGUE = bn.Might,
+      
       SHAMAN = bn.Might,
+      DRUID = bn.Might,
 
-      DRUID = bn.Wisdom,
       PRIEST = bn.Wisdom,
       MAGE = bn.Wisdom,
       WARLOCK = bn.Wisdom,

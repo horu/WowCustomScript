@@ -274,120 +274,9 @@ local st_speed_checker
 
 
 
-
-
-
-
-
-
-local function unit_dump_scan(name)
-  local units = pfUI.api.GetScanDb()
-  local m = units["mobs"][name]
-  local p = units["players"][name]
-  local m_ut = cs.time_to_str(m and m.updatetime or 0)
-  local p_ut = cs.time_to_str(p and p.updatetime or 0)
-  cs.print("    M(" .. m_ut .. "):" .. ToString(m, 2, 10, 1))
-  cs.print("    P(" .. p_ut .. "):" .. ToString(p, 2, 10, 1))
-end
-
-
-
-
-
-
-
-
--- NAMEPLATES
-
-PLAYER_UNIT_TYPE = "players"
-NPC_UNIT_TYPE = "mobs"
-
-local function GetReactionAndPlayerType(plate)
-  local red, green, blue = plate.original.healthbar:GetStatusBarColor()
-
-  if red > .9 and green < .2 and blue < .2 then
-    return "ENEMY", nil
-  elseif red > .9 and green > .9 and blue < .2 then
-    return "NEUTRAL", "mobs"
-  elseif red < .2 and green < .2 and blue > 0.9 then
-    return "FRIENDLY", "players"
-  elseif red < .2 and green > .9 and blue < .2 then
-    return "FRIENDLY", "mobs"
-  end
-  return "ENEMY", nil
-end
-
-local function GetUnitType(reaction, player)
-  if player == PLAYER_UNIT_TYPE then
-    if reaction == "NEUTRAL" then
-      return nil
-    end
-    return reaction .. "_PLAYER"
-  else
-    return reaction .. "_NPC"
-  end
-end
-
-local function np_to_short(plate)
-  local r, p = GetReactionAndPlayerType(plate)
-  local cache_player = plate.cache and plate.cache.player
-  return {
-    CACHE = plate.cache,
-    CACHE_P = cache_player,
-  }
-end
-
-local function unit_dump_np(name)
-  -- pfUI.api.GetNPList()
-
-  local np_list = pfUI.api.GetNPList()
-  local count = 0
-  for frame in pairs(np_list) do
-    local plate = frame.nameplate
-    local np_name = plate.original.name:GetText()
-    if np_name == name then
-      cs.print("    NP: " .. ToString(np_to_short(plate), 3, 20, nil))
-    end
-    count = count + 1
-  end
-  cs.print("NP COUNT: " .. count)
-end
-
-local function unit_dump(name)
-  cs.print("  " .. name .. ":")
-  unit_dump_scan(name)
-  unit_dump_np(name)
-end
-
-local function all_dump()
-  local units = pfUI.api.GetScanDb()
-  -- cs.print(pfUI.api.ToString(units, 2))
-  for type, type_g in pairs(units) do
-
-    local count = 0
-    for name, u in pairs(type_g) do
-      if type == "mobs" then
-        local p = units["players"][name]
-        if p then
-          unit_dump(name)
-        end
-      end
-      count = count + 1
-    end
-    cs.print(type .. ": count:" .. count)
-
-  end
-end
-
-
-
-
-
-
 cs.services.init = function()
   st_speed_checker = cs.SpeedChecker.build()
 end
-
 
 
 
@@ -409,25 +298,4 @@ function cs_set_target_last()
   st_targeter:set_last_target()
 end
 
-function cs_dump_unit()
-  local cur_time = cs.time_to_str(GetTime())
-  cs.print("----- " .. cur_time)
 
-  if cs.check_target(cs.t.exists) then
-    local buffs = cs.get_buff_list(cs.u.target)
-    local debuffs = cs.get_debuff_list(cs.u.target)
-    local casts = cs.get_cast_info(cs.u.target)
-    for t, list in pairs({ buffs = buffs, debuffs = debuffs, casts = casts }) do
-      cs.print(t .. ":")
-      for _, buff in pairs(list) do
-        cs.debug(buff)
-      end
-    end
-
-    --local name = UnitName("target")
-    --unit_dump(name)
-  else
-    all_dump()
-  end
-
-end

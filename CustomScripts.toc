@@ -25,3 +25,4 @@ pal\actions.lua
 pal\states.lua
 
 loader.lua
+dump.lua
