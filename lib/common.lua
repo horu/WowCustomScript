@@ -118,7 +118,7 @@ local to_string_best_d = function(...)
     local msg = ""
     for i=2,7 do
       msg = cs.to_string(v, i, 20, short)
-      if strlen(msg) >= 120 then
+      if strlen(msg) >= 220 then
         break
       end
     end

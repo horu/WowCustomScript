@@ -18,11 +18,23 @@ function pal.Bless.try_build(bless_name, unit)
     return
   end
 
-  local bless = cs.Buff.build(bless_name, unit, pal.Bless.rebuff_timeout)
+  local bless = pal.Bless:new()
+  bless.buff = cs.Buff.build(bless_name, unit, pal.Bless.rebuff_timeout)
 
   return bless
 end
 
+function pal.Bless:get_name()
+  return self.buff:get_name()
+end
+
+function pal.Bless:rebuff()
+  if cs.check_combat() and self.buff:check_exists() then
+    return cs.Buff.exists
+  end
+
+  return self.buff:rebuff()
+end
 
 local bless_dict = {}
 
@@ -67,7 +79,7 @@ local rebuff_unit = function(unit)
       PALADIN = bn.Might,
       HUNTER = bn.Might,
       ROGUE = bn.Might,
-      
+
       SHAMAN = bn.Might,
       DRUID = bn.Might,
 
