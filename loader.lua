@@ -11,6 +11,9 @@ local main_load = function()
   cs.pal.seal.init()
   cs.pal.actions.init()
   cs.pal.states.init()
+
+  -- test
+  cs.damage.test()
 end
 
 local main_frame = cs.create_simple_frame()

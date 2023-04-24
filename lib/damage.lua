@@ -88,11 +88,14 @@ local combatlog_strings = {
     return d.source, attack, d.target, value, d.school, "damage"
   end
   },
+
+
   { -- You suffer %d %s damage from your %s.
     PERIODICAURADAMAGESELFSELF, function(d, value, school, attack)
     return d.source, attack, d.target, value, school, "damage"
   end
   },
+
 
   --[[ me source ]]--
   { -- Your %s hits %s for %d %s damage.
@@ -115,9 +118,23 @@ local combatlog_strings = {
     return d.source, attack, target, value, d.school, "damage"
   end
   },
+
+
   { -- %s suffers %d %s damage from your %s.
     PERIODICAURADAMAGESELFOTHER, function(d, target, value, school, attack)
     return d.source, attack, target, value, school, "damage"
+  end
+  },
+
+
+  { -- You hit %s for %d %s damage.
+    COMBATHITSCHOOLSELFOTHER, function(d, target, value, school)
+    return d.source, d.attack, target, value, school, "damage"
+  end
+  },
+  { -- You crit %s for %d %s damage.
+    COMBATHITCRITSCHOOLSELFOTHER, function(d, target, value, school)
+    return d.source, d.attack, target, value, school, "damage"
   end
   },
   { -- You hit %s for %d.
@@ -130,21 +147,14 @@ local combatlog_strings = {
     return d.source, d.attack, target, value, d.school, "damage"
   end
   },
-  { -- You hit %s for %d %s damage.
-    COMBATHITSCHOOLSELFOTHER, function(d, target, value, school)
-    return d.source, d.attack, target, value, school, "damage"
-  end
-  },
-  { -- You crit %s for %d %s damage.
-    COMBATHITCRITSCHOOLSELFOTHER, function(d, target, value, school)
-    return d.source, d.attack, target, value, school, "damage"
-  end
-  },
+
+
   { -- You reflect %d %s damage to %s.
     DAMAGESHIELDSELFOTHER, function(d, value, school, target)
     return d.source, "Reflect (" .. school .. ")", target, value, school, "damage"
   end
   },
+
 
   --[[ me target ]]--
   { -- %s's %s hits you for %d %s damage.
@@ -167,21 +177,15 @@ local combatlog_strings = {
     return source, attack, d.target, value, d.school, "damage"
   end
   },
+
+
   { -- You suffer %d %s damage from %s's %s.
     PERIODICAURADAMAGEOTHERSELF, function(d, value, school, source, attack)
     return source, attack, d.target, value, school, "damage"
   end
   },
-  { -- %s hits you for %d.
-    COMBATHITOTHERSELF, function(d, source, value)
-    return source, d.attack, d.target, value, d.school, "damage"
-  end
-  },
-  { -- %s crits you for %d.
-    COMBATHITCRITOTHERSELF, function(d, source, value)
-    return source, d.attack, d.target, value, d.school, "damage"
-  end
-  },
+
+
   { -- %s hits you for %d %s damage.
     COMBATHITSCHOOLOTHERSELF, function(d, source, value, school)
     return source, d.attack, d.target, value, school, "damage"
@@ -190,6 +194,17 @@ local combatlog_strings = {
   { -- %s crits you for %d %s damage.
     COMBATHITCRITSCHOOLOTHERSELF, function(d, source, value, school)
     return source, d.attack, d.target, value, school, "damage"
+  end
+  },
+
+  { -- %s hits you for %d.
+    COMBATHITOTHERSELF, function(d, source, value)
+    return source, d.attack, d.target, value, d.school, "damage"
+  end
+  },
+  { -- %s crits you for %d.
+    COMBATHITCRITOTHERSELF, function(d, source, value)
+    return source, d.attack, d.target, value, d.school, "damage"
   end
   },
 
@@ -214,9 +229,23 @@ local combatlog_strings = {
     return source, attack, target, value, school, "damage"
   end
   },
+
+
   { -- %s suffers %d %s damage from %s's %s.
     PERIODICAURADAMAGEOTHEROTHER, function(d, target, value, school, source, attack)
     return source, attack, target, value, school, "damage"
+  end
+  },
+
+
+  { -- %s hits %s for %d %s damage.
+    COMBATHITSCHOOLOTHEROTHER, function(d, source, target, value, school)
+    return source, d.attack, target, value, school, "damage"
+  end
+  },
+  { -- %s crits %s for %d %s damage.
+    COMBATHITCRITSCHOOLOTHEROTHER, function(d, source, target, value, school)
+    return source, d.attack, target, value, school, "damage"
   end
   },
   { -- %s hits %s for %d.
@@ -229,16 +258,8 @@ local combatlog_strings = {
     return source, d.attack, target, value, d.school, "damage"
   end
   },
-  { -- %s hits %s for %d %s damage.
-    COMBATHITSCHOOLOTHEROTHER, function(d, source, target, value, school)
-    return source, d.attack, target, value, school, "damage"
-  end
-  },
-  { -- %s crits %s for %d %s damage.
-    COMBATHITCRITSCHOOLOTHEROTHER, function(d, source, target, value, school)
-    return source, d.attack, target, value, school, "damage"
-  end
-  },
+
+
   { -- %s reflects %d %s damage to %s.
     DAMAGESHIELDOTHEROTHER, function(d, source, value, school, target)
     return source, "Reflect (" .. school .. ")", target, value, school, "damage"
@@ -340,6 +361,12 @@ cs.damage.dt.damage = "damage"
 cs.damage.dt.heal = "heal"
 
 ---@class cs.damage.Event
+---@field public source
+---@field public action
+---@field public target
+---@field public value
+---@field public school
+---@field public datatype
 cs.damage.Event = cs.create_class()
 
 function cs.damage.Event.build(result_list)
@@ -394,9 +421,6 @@ function cs.damage.Parser:build()
 
   parser.cs_damage_parser = self
 
-  -- cache default table
-  local defaults = { }
-
   -- call all datasources on each event
   parser:SetScript("OnEvent", function()
     local cs_damage_parser = this.cs_damage_parser
@@ -405,29 +429,40 @@ function cs.damage.Parser:build()
       return
     end
 
-    defaults.source = UnitName("player")
-    defaults.target = UnitName("player")
-    defaults.school = "physical"
-    defaults.attack = "Auto Hit"
-    defaults.spell = "UNKNOWN"
-    defaults.value = 0
-
-    -- detection on all damage sources
-    for id, data in pairs(combatlog_strings) do
-      local result, _, a1, a2, a3, a4, a5 = cfind(arg1, data[1])
-
-      if result then
-
-        local event = cs.damage.Event.build({data[2](defaults, a1, a2, a3, a4, a5)})
-
-        return cs_damage_parser:_on_result(event)
-      end
+    local event = cs_damage_parser:parse(arg1)
+    if event then
+      return cs_damage_parser:on_parsed(event)
     end
   end)
 
   self.player_name = UnitName(cs.u.player)
   self.sub_list = {}
 end
+
+-- cache default table
+local defaults = { }
+
+---@return cs.damage.Event
+function cs.damage.Parser:parse(msg)
+  defaults.source = UnitName("player")
+  defaults.target = UnitName("player")
+  defaults.school = "physical"
+  defaults.attack = "Auto Hit"
+  defaults.spell = "UNKNOWN"
+  defaults.value = 0
+
+  -- detection on all damage sources
+  for id, data in pairs(combatlog_strings) do
+    local result, _, a1, a2, a3, a4, a5 = cfind(msg, data[1])
+
+    if result then
+      local event = cs.damage.Event.build({data[2](defaults, a1, a2, a3, a4, a5)})
+
+      return event
+    end
+  end
+end
+
 
 function cs.damage.Parser:_check_value(param, value, event)
   if value == cs.damage.u.player then
@@ -462,9 +497,7 @@ function cs.damage.Parser:_check_filter_list(filters, event)
 end
 
 ---@param event cs.damage.Event
-function cs.damage.Parser:_on_result(event)
-  --cs.print_table(event)
-
+function cs.damage.Parser:on_parsed(event)
   for _, sub in pairs(self.sub_list) do
     if self:_check_filter_list(sub.filters, event) then
       sub.func(sub.obj, event)
@@ -484,4 +517,15 @@ cs.damage.init = function()
 end
 
 
+cs.damage.test = function()
+  local event = cs.damage.parser:parse("Burning Ravager hits you for 24 Fire damage.")
+  cs.debug(event)
+  assert(event.action == "Auto Hit")
+  assert(event.source == "Burning Ravager")
+  assert(event.value == "24")
+  assert(event.school == cs.ss.Fire)
+  assert(event.datatype == cs.damage.dt.damage)
+
+  cs.damage.parser:on_parsed(event)
+end
 
