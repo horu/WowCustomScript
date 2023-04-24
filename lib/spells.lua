@@ -327,10 +327,11 @@ end
 
 
 
--- Spell data of some caster in ritgh now
-cs.spell_base_Shadow = "Shadow"
-cs.spell_base_Frost = "Frost"
-cs.spell_base_Fire = "Fire"
+-- SpellSchool data of some caster in ritgh now
+cs.ss = {}
+cs.ss.Shadow = "Shadow"
+cs.ss.Frost = "Frost"
+cs.ss.Fire = "Fire"
 
 ---@class cs.SpellData
 cs.SpellData = cs.create_class()
@@ -342,15 +343,15 @@ cs.SpellData.build = function(pfui_spell)
   return data
 end
 
-function cs.SpellData:get_base()
+function cs.SpellData:get_school()
   local spell_icon = self.pfui_spell.icon
 
-  if string.find(spell_icon, cs.spell_base_Shadow) then
-    return cs.spell_base_Shadow
-  elseif string.find(spell_icon, cs.spell_base_Frost) then
-    return cs.spell_base_Frost
-  elseif string.find(spell_icon, cs.spell_base_Fire) then
-    return cs.spell_base_Fire
+  if string.find(spell_icon, cs.ss.Shadow) then
+    return cs.ss.Shadow
+  elseif string.find(spell_icon, cs.ss.Frost) then
+    return cs.ss.Frost
+  elseif string.find(spell_icon, cs.ss.Fire) then
+    return cs.ss.Fire
   end
 end
 

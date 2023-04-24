@@ -328,6 +328,7 @@ cs.damage.p.datatype = "datatype"
 -- Unit
 cs.damage.u = {}
 cs.damage.u.player = "u.player"
+cs.damage.u.party = "u.party"
 
 -- Target
 cs.damage.t = {}
@@ -428,19 +429,34 @@ function cs.damage.Parser:build()
   self.sub_list = {}
 end
 
-function cs.damage.Parser:_check_filter(filters, event)
+function cs.damage.Parser:_check_value(param, value, event)
+  if value == cs.damage.u.player then
+    -- check "player"
+    return event[param] == self.player_name or event[param] == cs.damage.t.you
+  end
 
-  for param, value in pairs(filters) do
+  if value == cs.damage.u.party then
+    return cs.is_party_player_exists(event[param])
+  end
 
-    if value == cs.damage.u.player then
-      -- check "player"
-      if event[param] ~= self.player_name and event[param] ~= cs.damage.t.you then
-        return
-      end
-    elseif event[param] ~= value then
+  return event[param] == value
+end
+
+function cs.damage.Parser:_check_filter(param, value_list, event)
+  value_list = type(value_list) == "table" and value_list or { value_list }
+  for _, value in pairs(value_list) do
+    if self:_check_value(param, value, event) then
+      return true
+    end
+  end
+end
+
+function cs.damage.Parser:_check_filter_list(filters, event)
+
+  for param, value_list in pairs(filters) do
+    if not self:_check_filter(param, value_list, event) then
       return
     end
-
   end
   return true
 end
@@ -450,7 +466,7 @@ function cs.damage.Parser:_on_result(event)
   --cs.print_table(event)
 
   for _, sub in pairs(self.sub_list) do
-    if self:_check_filter(sub.filters, event) then
+    if self:_check_filter_list(sub.filters, event) then
       sub.func(sub.obj, event)
     end
   end

@@ -35,7 +35,6 @@ cs.ui.Point.build = function(x, y, to_point, relative_frame, relative_point)
 end
 
 function cs.ui.Point:unpack()
-  cs.debug(self.impl)
   return unpack(self.impl)
 end
 

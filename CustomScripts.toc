@@ -10,8 +10,8 @@
 lib\common.lua
 lib\console.lua
 lib\ui.lua
-lib\damage.lua
 lib\game.lua
+lib\damage.lua
 lib\services.lua
 lib\dps.lua
 lib\spells.lua

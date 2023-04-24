@@ -332,6 +332,20 @@ function cs.check_combat(m0or, m1or, m2or, m3or)
 end
 
 
+
+cs.is_party_player_exists = function(player_name)
+  local size = GetNumPartyMembers()
+  for i=1, size do
+    local unit = "party"..i
+    if UnitName(unit) == player_name then
+      return true
+    end
+  end
+end
+
+
+
+
 cs.game = {}
 cs.game.init = function()
   cs.st_map_checker = cs.MapChecker.build()

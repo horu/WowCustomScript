@@ -113,6 +113,7 @@ function cs.to_string(value, depth, itlimit, short)
 end
 
 cs.to_string_best_d = function(...)
+  local short = nil
   local full_msg = ""
   for _, v in ipairs(arg) do
     local msg = ""

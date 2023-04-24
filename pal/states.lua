@@ -112,9 +112,9 @@ State.build = function(id)
 
   state.slot_to_use = state:_get_config().use_slots and cs.MultiSlot.build(state:_get_config().use_slots)
 
-  state.enemy_spell_base = { base = nil, ts = 0 }
-  state.enemy_spell_base.is_valid = function(self)
-    return self.base and cs.compare_time(7, self.ts)
+  state.enemy_attack = { base = nil, ts = 0 }
+  state.enemy_attack.is_valid = function(self)
+    return self.school and cs.compare_time(7, self.ts)
   end
 
   return state
@@ -158,20 +158,13 @@ function State:rebuff_aura()
 end
 
 -- reacion for enenmy cast to change resist aura
----@param spell_data cs.SpellData
-function State:on_cast_detected(spell_data)
-  -- TODO: add reaction on type damage
-  local spell_base = spell_data:get_base()
-  if not spell_base then
-    return
+---@param spell_school cs.ss
+function State:on_enemy_attack_school(spell_school)
+  if not self.enemy_attack:is_valid() or self.enemy_attack.school ~= spell_school then
+    cs.print("SPELL DETECTED: ".. spell_school)
   end
-
-  if not self.enemy_spell_base:is_valid() or self.enemy_spell_base.base ~= spell_base then
-    cs.debug(spell_data)
-  end
-
-  self.enemy_spell_base.base = spell_base
-  self.enemy_spell_base.ts = GetTime()
+  self.enemy_attack.school = spell_school
+  self.enemy_attack.ts = GetTime()
 end
 
 
@@ -184,15 +177,15 @@ end
 function State:_get_aura()
   local aura_name
   -- buff spell defended auras if enemy casts one
-  if self.enemy_spell_base:is_valid() then
-    local spell_base = self.enemy_spell_base.base
-    if spell_base == cs.spell_base_Frost then
+  if self.enemy_attack:is_valid() then
+    local spell_school = self.enemy_attack.school
+    if spell_school == cs.ss.Frost then
       aura_name = an.Frost
     end
-    if spell_base == cs.spell_base_Shadow then
+    if spell_school == cs.ss.Shadow then
       aura_name = an.Shadow
     end
-    if spell_base == cs.spell_base_Fire then
+    if spell_school == cs.ss.Fire then
       aura_name = an.Fire
     end
   end
@@ -279,6 +272,11 @@ function StateHolder:init()
   cs.st_button_checker:add_down_pattern(StateHolder.handler_FullReset, self, StateHolder._down_button_event)
 
   cs.st_cast_checker:add_callback(self, self._on_cast_detected)
+
+  local filter = {}
+  filter[cs.damage.p.school] = cs.dict_to_list(cs.ss, "string")
+  filter[cs.damage.p.target] = { cs.damage.u.player, cs.damage.u.party }
+  cs.damage.parser:subscribe(filter, self, self._on_damage_detected)
 end
 
 -- const
@@ -347,7 +345,19 @@ function StateHolder:_down_button_event(longkey, duration)
 end
 
 function StateHolder:_on_cast_detected(spell_data)
-  self.cur_state:on_cast_detected(spell_data)
+
+  local spell_school = spell_data:get_school()
+  if not spell_school then
+    return
+  end
+
+  self.cur_state:on_enemy_attack_school(spell_school)
+end
+
+---@param event cs.damage.Event
+function StateHolder:_on_damage_detected(event)
+  local spell_school = event.school
+  self.cur_state:on_enemy_attack_school(spell_school)
 end
 
 function StateHolder:_change_state(state_number)
