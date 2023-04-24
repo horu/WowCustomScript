@@ -2,29 +2,7 @@ local cs = cs_common
 local pal = cs.pal
 local spn = pal.spn
 
--- SealName
-local sn = {}
-sn.Righteousness = "Seal of Righteousness"
-sn.Crusader = "Seal of the Crusader"
-sn.Justice = "Seal of Justice"
-sn.Light = "Seal of Light"
-sn.Wisdom = "Seal of Wisdom"
-sn.list_all = cs.dict_to_list(sn, "string")
-
-local to_short_list = {}
-to_short_list[sn.Righteousness] = cs.color.purple .. "SR" .. "|r"
-to_short_list[sn.Crusader] = cs.color.orange_1 .. "SC" .. "|r"
-to_short_list[sn.Light] = cs.color.yellow .. "SL" .. "|r"
-to_short_list[sn.Justice] = cs.color.green .. "SJ" .. "|r"
-to_short_list[sn.Wisdom] = cs.color.blue .. "SW" .. "|r"
-
-local to_short = function(spell_name)
-  if not spell_name then
-    return cs.color.grey .. "XX" .. "|r"
-  end
-  return to_short_list[spell_name]
-end
-
+local sn = pal.sn
 
 
 
@@ -133,7 +111,7 @@ pal.seal = {}
 
 pal.seal.current_to_string = function()
   local seal_name = cs.find_buff(sn.list_all)
-  return to_short(seal_name)
+  return pal.to_print(seal_name)
 end
 
 pal.seal.init = function()

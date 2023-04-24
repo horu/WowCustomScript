@@ -102,7 +102,7 @@ local rebuff_unit = function(unit)
   local result = player_bless:rebuff()
 
   if result == cs.Buff.success then
-    local short = pal.to_short(player_bless:get_name())
+    local short = pal.to_print(player_bless:get_name())
     local color = pfUI.api.GetUnitColor(unit)
     cs.print("BUFF: ".. short .. " FOR ".. player_name.. " ".. color .. class)
   end

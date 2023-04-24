@@ -40,7 +40,8 @@ bn.dict_all = cs.filter_dict(bn, "string")
 
 
 -- SealName
-local sn = {}
+pal.sn = {}
+local sn = pal.sn
 sn.Righteousness = "Seal of Righteousness"
 sn.Crusader = "Seal of the Crusader"
 sn.Justice = "Seal of Justice"
@@ -62,26 +63,32 @@ spn.Exorcism = "Exorcism"
 
 
 
-local to_short_list = {}
-to_short_list[an.Concentration] = cs.color.yellow .. "CA" .. "|r"
-to_short_list[an.Devotion] = cs.color.white .. "DA" .. "|r"
-to_short_list[an.Sanctity] = cs.color.red .. "SA" .. "|r"
-to_short_list[an.Retribution] = cs.color.purple .. "RA" .. "|r"
-to_short_list[an.Shadow] = cs.color.purple .. "SH" .. "|r"
-to_short_list[an.Frost] = cs.color.blue .. "FR" .. "|r"
-to_short_list[an.Fire] = cs.color.orange_1 .. "FI" .. "|r"
+local to_print_list = {}
+to_print_list[an.Concentration] = cs.color.yellow .. "CA" .. "|r"
+to_print_list[an.Devotion] = cs.color.white .. "DA" .. "|r"
+to_print_list[an.Sanctity] = cs.color.red .. "SA" .. "|r"
+to_print_list[an.Retribution] = cs.color.purple .. "RA" .. "|r"
+to_print_list[an.Shadow] = cs.color.purple .. "SH" .. "|r"
+to_print_list[an.Frost] = cs.color.blue .. "FR" .. "|r"
+to_print_list[an.Fire] = cs.color.orange_1 .. "FI" .. "|r"
 
-to_short_list[bn.Wisdom] = cs.color.blue .. "BW" .. "|r"
-to_short_list[bn.Might] = cs.color.red .. "BM" .. "|r"
-to_short_list[bn.Salvation] = cs.color.white .. "BV" .. "|r"
-to_short_list[bn.Light] = cs.color.yellow .. "BL" .. "|r"
-to_short_list[bn.Kings] = cs.color.purple .. "BK" .. "|r"
+to_print_list[bn.Wisdom] = cs.color.blue .. "BW" .. "|r"
+to_print_list[bn.Might] = cs.color.red .. "BM" .. "|r"
+to_print_list[bn.Salvation] = cs.color.white .. "BV" .. "|r"
+to_print_list[bn.Light] = cs.color.yellow .. "BL" .. "|r"
+to_print_list[bn.Kings] = cs.color.purple .. "BK" .. "|r"
 
-pal.to_short = function(spell_name)
+to_print_list[sn.Righteousness] = cs.color.purple .. "SR" .. "|r"
+to_print_list[sn.Crusader] = cs.color.orange_1 .. "SC" .. "|r"
+to_print_list[sn.Light] = cs.color.yellow .. "SL" .. "|r"
+to_print_list[sn.Justice] = cs.color.green .. "SJ" .. "|r"
+to_print_list[sn.Wisdom] = cs.color.blue .. "SW" .. "|r"
+
+pal.to_print = function(spell_name)
   if not spell_name then
     return cs.color.grey.."XX".."|r"
   end
-  return to_short_list[spell_name]
+  return to_print_list[spell_name]
 end
 
 

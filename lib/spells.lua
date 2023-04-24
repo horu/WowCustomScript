@@ -333,6 +333,17 @@ cs.ss.Shadow = "Shadow"
 cs.ss.Frost = "Frost"
 cs.ss.Fire = "Fire"
 
+cs.ss.to_print = function(school)
+  if school == cs.ss.Shadow then
+    school = cs.color.purple..school.."|r"
+  elseif school == cs.ss.Frost then
+    school = cs.color.blue..school.."|r"
+  elseif school == cs.ss.Fire then
+    school = cs.color.orange..school.."|r"
+  end
+  return school
+end
+
 ---@class cs.SpellData
 cs.SpellData = cs.create_class()
 

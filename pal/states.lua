@@ -38,11 +38,11 @@ function StateBuff:to_string()
   local buffed = self:get_buffed()
   local current = self:_get_config(1).current
 
-  local str = pal.to_short(current)
+  local str = pal.to_print(current)
   if not buffed then
-    str = str .. pal.to_short()
+    str = str .. pal.to_print()
   elseif buffed ~= current then
-    str = str .. cs.color.green .. pal.to_short(buffed).."|r"
+    str = str .. cs.color.green .. pal.to_print(buffed).."|r"
   else
     str = str .. "  "
   end
@@ -161,7 +161,7 @@ end
 ---@param spell_school cs.ss
 function State:on_enemy_attack_school(spell_school)
   if not self.enemy_attack:is_valid() or self.enemy_attack.school ~= spell_school then
-    cs.print("SPELL DETECTED: ".. spell_school)
+    cs.print("SPELL DETECTED: ".. cs.ss.to_print(spell_school))
   end
   self.enemy_attack.school = spell_school
   self.enemy_attack.ts = GetTime()
