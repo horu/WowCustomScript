@@ -355,7 +355,7 @@ cs.damage.Parser = cs.class()
 
 function cs.damage.Parser:build()
 
-  local parser = cs.create_simple_frame("shagu_parser")
+  local parser = cs.create_simple_frame()
   -- register to all damage combat log events
   parser:RegisterEvent("CHAT_MSG_SPELL_DAMAGESHIELDS_ON_SELF")
   parser:RegisterEvent("CHAT_MSG_SPELL_DAMAGESHIELDS_ON_OTHERS")

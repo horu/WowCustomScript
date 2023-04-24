@@ -17,22 +17,51 @@ cs.color.white = cs.color.make("ffffFF")
 cs.color.grey = cs.color.make("A0A0A0")
 
 
+cs.ui = {}
 
+--- @class cs.ui.Point
+cs.ui.Point = cs.create_class()
+
+cs.ui.Point.build = function(x, y, to_point, relative_frame, relative_point)
+  local point = cs.ui.Point:new()
+  point.impl = {
+    to_point or cs.ui.r.BOTTOMLEFT,
+    relative_frame,
+    relative_frame and (relative_point or cs.ui.r.BOTTOMLEFT),
+    x or 0,
+    y or 0,
+  }
+  return point
+end
+
+function cs.ui.Point:unpack()
+  cs.debug(self.impl)
+  return unpack(self.impl)
+end
 
 
 
 -- Frame
-function cs.create_simple_frame(name)
-  local f = CreateFrame("Frame", name, UIParent)
+function cs.create_simple_frame()
+  local f = CreateFrame("Frame", nil, UIParent)
+  return f
+end
+
+
+-- Button
+---@param point cs.ui.Point
+function cs.create_simple_button(width, hight, point, on_click_func)
+  local f = CreateFrame("Button", nil, UIParent)
+  f:SetHeight(hight or 20)
+  f:SetWidth(width or 40)
+  f:SetPoint(point:unpack())
+  f:SetScript("OnClick", on_click_func)
   return f
 end
 
 
 
 
-
-
-cs.ui = {}
 
 -- relative
 cs.ui.r = {}

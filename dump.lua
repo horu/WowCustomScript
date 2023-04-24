@@ -97,7 +97,7 @@ local function unit_dump(name)
 end
 
 local function all_dump()
-
+  cs.print_table(cs_map_data)
 end
 
 
@@ -108,8 +108,9 @@ end
 -- PUBLIC
 
 function cs_dump_unit()
-  local cur_time = cs.time_to_str(GetTime())
-  cs.print("----- " .. cur_time)
+  local ts = GetTime()
+  local cur_time = cs.time_to_str(ts)
+  cs.print("----- " .. cur_time.." "..ts)
 
   if cs.check_target(cs.t.exists) then
     local buffs = cs.get_buff_list(cs.u.target)

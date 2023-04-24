@@ -147,7 +147,7 @@ end
 
 
 
-
+-- Calcualte and show current player speed
 ---@class cs.SpeedChecker
 cs.SpeedChecker = cs.create_class()
 
@@ -159,21 +159,39 @@ cs.SpeedChecker.build = function()
   speed_checker.x = 0
   speed_checker.y = 0
   speed_checker.calc = create_calc(0)
-  speed_checker.map = ""
-  speed_checker.k = 1
   speed_checker.speed_table = cs.create_fix_table(3/period)
 
+  -- UI text
   speed_checker.text = cs.ui.Text:build_from_config(spd_checker_frame)
 
+  -- Deffered start
   cs.once_event(5, function()
     cs.loop_event(period, speed_checker, speed_checker._loop)
   end)
+
+  -- To save calculated map size ratio to config
+  speed_checker.map_params = cs.st_map_checker:get_map_params()
+  cs.st_map_checker:subscribe(speed_checker, speed_checker._on_zone_changed)
+
+  -- Reset saved map size ratio
+  local button_point = cs.ui.Point.build(0, 0, cs.ui.r.BOTTOMLEFT, speed_checker.text.frame, cs.ui.r.BOTTOMLEFT)
+  speed_checker.button = cs.create_simple_button(nil, nil, button_point, function()
+    local map_params = this.cs_speed_checker.map_params
+    cs.print("RESET SPEED FOR: " .. map_params.name)
+    map_params.size_ratio = nil
+  end)
+  speed_checker.button.cs_speed_checker = speed_checker
 
   return speed_checker
 end
 
 --region
 
+function cs.SpeedChecker:_on_zone_changed()
+  self.map_params = cs.st_map_checker:get_map_params()
+end
+
+-- speed modificator on mount/buffs/talents/ghost
 function cs.SpeedChecker:_get_speed_mod()
   if UnitIsDeadOrGhost("player") then
     return 1.25
@@ -202,8 +220,9 @@ function cs.SpeedChecker:_get_speed_mod()
   return speed
 end
 
-function cs.SpeedChecker:_get_k()
-  local k = self.k
+-- all maps have different size. this function calculate size ratio
+function cs.SpeedChecker:_calculate_size_ratio()
+  local k = 1
   local is_ghost = UnitIsDeadOrGhost("player")
   if cs.has_debuffs() and not is_ghost then
     return k
@@ -230,19 +249,29 @@ function cs.SpeedChecker:_get_k()
   end
 
   avg = avg / self:_get_speed_mod()
-  if math.abs(avg - 1) < 0.005 then
-    return k
-  end
+  --if math.abs(avg - 1) < 0.005 then
+  --  return k
+  --end
 
   -- set new k
-  self.k = k / avg
+  self.map_params.size_ratio = k / avg
 
-  cs.print(string.format("S: k:%.2f avg:%.2f", self.k, avg))
+  cs.print(string.format("SAVE FOR %s: ratio:%.2f avg:%.2f",
+          self.map_params.name, self.map_params.size_ratio, avg))
 
-  return self.k
+  return self.map_params.size_ratio
 end
 
-function cs.SpeedChecker:get_speed()
+function cs.SpeedChecker:_get_map_size_ratio()
+  if self.map_params.size_ratio then
+    return self.map_params.size_ratio
+  end
+
+  return self:_calculate_size_ratio()
+end
+
+-- distance the player runs between calculations
+function cs.SpeedChecker:_calculate_distance()
   local x, y = GetPlayerMapPosition("player")
   local m = 82350
   local y_k = 1.5
@@ -253,16 +282,22 @@ function cs.SpeedChecker:get_speed()
   self.x = x
   self.y = y
   local dist = math.sqrt(math.pow(diff_x, 2) + math.pow(diff_y, 2))
-  local k = self:_get_k()
-  local speed = self.calc:get_avg_diff(dist) * k / 100
+  return dist
+end
+
+---@return @player speed - 1.0 - normal (100%), 1.6 - mounted, ...
+function cs.SpeedChecker:get_speed()
+  local dist = self:_calculate_distance()
+  local map_ratio = self:_get_map_size_ratio()
+  local speed = self.calc:get_avg_diff(dist) * map_ratio / 100
   self.calc.value = 0
   self.speed_table:add(speed)
-  return string.format("%1.2f", speed)
+  return speed
 end
 
 function cs.SpeedChecker:_loop()
   local speed = self:get_speed()
-  self.text:set_text(speed)
+  self.text:set_text(string.format("%1.2f", speed))
 end
 
 local st_speed_checker

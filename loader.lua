@@ -13,7 +13,7 @@ local main_load = function()
   cs.pal.states.init()
 end
 
-local main_frame = cs.create_simple_frame("cs_main_frame")
+local main_frame = cs.create_simple_frame()
 main_frame:RegisterEvent("VARIABLES_LOADED")
 main_frame:SetScript("OnEvent", function()
   if event ~= "VARIABLES_LOADED" then

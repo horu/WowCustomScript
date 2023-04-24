@@ -104,13 +104,17 @@ end
 
 
 
-
+cs_map_data = {}
 
 ---@class cs.MapChecker
 cs.MapChecker = cs.create_class()
 
+--region cs.MapChecker
 cs.MapChecker.build = function()
+  ---@type cs.MapChecker
   local map_checker = cs.MapChecker:new()
+
+  map_checker.subscribers = {}
 
   map_checker.zone_text = ""
   map_checker.map_name = ""
@@ -118,17 +122,17 @@ cs.MapChecker.build = function()
   map_checker.zone_params = {}
   map_checker.zone_params["Booty Bay"] = { nopvp = true }
 
-  local f = cs.create_simple_frame("cs.MapChecker.build")
+  local f = cs.create_simple_frame()
   f.cs_map_checker = map_checker
 
   f:RegisterEvent("PLAYER_ENTERING_WORLD")
   f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
   f:RegisterEvent("ZONE_CHANGED")
   f:SetScript("OnEvent", function()
-    cs.once_event(2, this.cs_map_checker, cs.MapChecker._update)
+    cs.once_event(2, this.cs_map_checker, cs.MapChecker._on_zone_changed)
   end)
 
-  cs.once_event(2, map_checker, cs.MapChecker._update)
+  cs.once_event(2, map_checker, cs.MapChecker._on_zone_changed)
 
   return map_checker
 end
@@ -138,15 +142,31 @@ function cs.MapChecker:get_zone_text()
   return self.zone_text
 end
 
+-- const
 function cs.MapChecker:get_zone_params()
   local params = self.zone_params[self.zone_text]
   return params or {}
 end
 
-function cs.MapChecker:_update()
+-- const
+function cs.MapChecker:get_map_params()
+  cs_map_data[self.map_name] = cs_map_data[self.map_name] or { name = self.map_name }
+  return cs_map_data[self.map_name]
+end
+
+function cs.MapChecker:subscribe(obj, func)
+  table.insert(self.subscribers, {obj = obj, func = func})
+end
+
+function cs.MapChecker:_on_zone_changed()
   self.zone_text = GetMinimapZoneText()
   self.map_name = GetMapInfo()
+
+  for _, sub in self.subscribers do
+    sub.func(sub.obj)
+  end
 end
+--endregion cs.MapChecker
 
 ---@type cs.MapChecker
 cs.st_map_checker = nil
