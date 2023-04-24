@@ -29,7 +29,8 @@ function cs.DpsSession:get_avg()
   if self.ts_sum <= 0 then
     return 0
   end
-  return self.damage_sum / self.ts_sum
+  local avg = self.damage_sum / self.ts_sum
+  return avg <= 999 and avg or 999
 end
 
 function cs.DpsSession:update(damage, last_ts, cur_ts)
@@ -200,7 +201,12 @@ function cs.Dps:_update_output()
 
   self.text:set_text(string.format(
           "DPS %3d [%3d%5d] / %3d / %3d / %3d",
-          cur_dps:get_avg(), cur_dps.ts_sum, cur_dps.damage_sum, dps_4:get_avg(), dps_16:get_avg(), dps_64:get_avg()))
+          cur_dps:get_avg(),
+          cur_dps.ts_sum,
+          cur_dps.damage_sum,
+          dps_4:get_avg(),
+          dps_16:get_avg(),
+          dps_64:get_avg()))
 end
 --endregion
 
