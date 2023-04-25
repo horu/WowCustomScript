@@ -51,6 +51,8 @@ function Action:seal_action(state, seal_list)
     return
   end
 
+  cs.cast(spn.HolyStrike)
+
   if seal.Righteousness:judgement_it() then
     -- wait another seal to judgement on the target
     return
@@ -58,7 +60,7 @@ function Action:seal_action(state, seal_list)
 
   if not self.main_seal:is_reseal_available() then
     -- seal can not be casted with current situation, just cast other spells
-    cs.cast(spn.HolyStrike, pal.ud.CrusaderStrike)
+    cs.cast(pal.ud.CrusaderStrike)
     return
   end
 
@@ -70,7 +72,7 @@ function Action:seal_action(state, seal_list)
       return
     end
 
-    self.main_seal:reseal_and_cast(spn.HolyStrike, pal.ud.CrusaderStrike)
+    self.main_seal:reseal_and_cast(pal.ud.CrusaderStrike)
     return
   end
 
@@ -117,11 +119,13 @@ pal.actions.init = function()
   pal.actions.crusader = Action.build(seal.Crusader, function(self, state)
     if not cs.check_target(cs.t.close_10) then return end
 
+    cs.cast(spn.HolyStrike)
+
     if self:judgement_other() then
       return
     end
 
-    self.main_seal:reseal_and_cast(spn.HolyStrike, pal.ud.CrusaderStrike)
+    self.main_seal:reseal_and_cast(pal.ud.CrusaderStrike)
   end)
 
   pal.actions.wisdom = Action.build(seal.Wisdom, function(self, state)
