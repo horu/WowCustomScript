@@ -525,6 +525,7 @@ cs.damage.test = function()
   assert(event.value == "24")
   assert(event.school == cs.ss.Fire)
   assert(event.datatype == cs.damage.dt.damage)
+  assert(event.target == UnitName(cs.u.player))
 
   cs.damage.parser:on_parsed(event)
 end

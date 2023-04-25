@@ -15,6 +15,9 @@ local main_load = function()
 
   -- test
   cs.damage.test()
+  cs.spell.test()
+
+  cs.pal.states.test()
 
   cs.print(cs.color.green.."+++++++++++++++++++++++++++ CS LOADED +++++++++++++++++++++++++++")
 end

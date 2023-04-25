@@ -58,7 +58,7 @@ function Action:seal_action(state, seal_list)
 
   if not self.main_seal:is_reseal_available() then
     -- seal can not be casted with current situation, just cast other spells
-    cs.cast(spn.HolyStrike, spn.CrusaderStrike)
+    cs.cast(spn.HolyStrike, pal.ud.CrusaderStrike)
     return
   end
 
@@ -66,11 +66,11 @@ function Action:seal_action(state, seal_list)
     -- the target has no other seal debuff. Lets reseal and judgement it.
 
     if state.id == pal.stn.RUSH then
-      cs.cast(spn.CrusaderStrike)
+      cs.cast(pal.ud.CrusaderStrike)
       return
     end
 
-    self.main_seal:reseal_and_cast(spn.HolyStrike, spn.CrusaderStrike)
+    self.main_seal:reseal_and_cast(spn.HolyStrike, pal.ud.CrusaderStrike)
     return
   end
 
@@ -110,7 +110,7 @@ pal.actions.init = function()
     end
 
     self.main_seal:reseal_and_judgement()
-    cs.cast(build_cast_list(spn.CrusaderStrike))
+    cs.cast(build_cast_list(pal.ud.CrusaderStrike))
   end)
 
   pal.actions.crusader = Action.build(seal.Crusader, function(self, state)
@@ -120,8 +120,7 @@ pal.actions.init = function()
       return
     end
 
-    -- TODO dont cast CrusaderStrike when 5 debuff exsits
-    self.main_seal:reseal_and_cast(spn.HolyStrike, spn.CrusaderStrike)
+    self.main_seal:reseal_and_cast(spn.HolyStrike, pal.ud.CrusaderStrike)
   end)
 
   pal.actions.wisdom = Action.build(seal.Wisdom, function(self, state)
@@ -139,6 +138,7 @@ pal.actions.init = function()
   pal.actions.null = Action.build(seal.Crusader, function(self, state)
     cs.cast(spn.HolyStrike)
   end)
+  pal.actions.dict = cs.filter_dict(pal.actions, "table")
 end
 
 

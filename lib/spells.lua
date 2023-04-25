@@ -80,19 +80,18 @@ end
 ---@class cs.Spell
 cs.Spell = cs.create_class()
 
-cs.Spell.build = function(id_name, book)
+---@param limiting_debuff cs.spell.UnitBuff
+cs.Spell.build = function(name, limiting_debuff)
   local spell = cs.Spell:new()
 
-  if type(id_name) == "string" then
-    spell.id, spell.book = find_spell(id_name)
-    spell.name = id_name
-  else
-    spell.id = id_name
-    spell.book = book
-    spell.name = GetSpellName(id_name, book)
-  end
+  spell.id, spell.book = find_spell(name)
+  spell.name = name
+  --spell.id = id_name
+  --spell.book = book
+  --spell.name = GetSpellName(id_name, book)
   assert(spell.id)
-  spell.cast_ts = nil
+  spell.cast_ts = 0
+  spell.limiting_debuff = limiting_debuff
 
   return spell
 end
@@ -109,8 +108,24 @@ function cs.Spell:get_cd()
   return duration - ts + ts_start, ts_start, duration
 end
 
+function cs.Spell:_has_debuff()
+  if not self.limiting_debuff then
+    return
+  end
+
+  local debuff = self.limiting_debuff
+  if cs.has_debuffs(cs.u.target, debuff.icon, debuff.count) then
+    if debuff.duration then
+      local duration_limit = debuff.duration * 0.7
+      cs.debug({GetTime() - self.cast_ts, duration_limit})
+      return cs.compare_time(duration_limit, self.cast_ts)
+    end
+    return true
+  end
+end
+
 function cs.Spell:cast(to_self)
-  if not self:get_cd() then
+  if not self:get_cd() and not self:_has_debuff() then
     CastSpellByName(self.name, to_self);
     self.cast_ts = GetTime()
     return true
@@ -142,7 +157,12 @@ cs.SpellOrder.build = function(...)
 
   order.spell_list = {}
   for _, name in ipairs(arg) do
-    local spell = cs.Spell.build(name)
+    local spell
+    if type(name) == "string" then
+      spell = cs.Spell.build(name)
+    else
+      spell = name
+    end
     table.insert(order.spell_list, spell)
   end
 
@@ -203,7 +223,9 @@ end
 
 
 
+
 -- BUFFS
+-- find by spell name
 function cs.find_buff(check_list, unit)
   check_list = cs.is_table(check_list) and check_list or {check_list}
   for i, check in pairs(check_list) do
@@ -213,13 +235,39 @@ function cs.find_buff(check_list, unit)
   end
 end
 
+
+cs.spell = {}
+
+-- find buff/debuff by icon name
+---@class cs.spell.UnitBuff @buff on the unit
+---@field public icon string
+---@field public count number
+---@field public type string
+---@field public duration number
+cs.spell.UnitBuff = cs.create_class()
+
+cs.spell.UnitBuff.build = function(...)
+  local unit_buff = cs.spell.UnitBuff:new()
+  unit_buff.icon = arg[1]
+  unit_buff.count = arg[2]
+  unit_buff.type = arg[3] -- Magic
+  unit_buff.duration = arg[4] -- CUSTOM FIELD. UnitBuff does not return it.
+
+  if not unit_buff.icon then
+    return
+  end
+
+  return unit_buff
+end
+
+---@return cs.spell.UnitBuff[]
 cs.get_buff_list = function(unit, b_fun)
   if not unit then unit = cs.u.player end
   if not b_fun then b_fun = UnitBuff end
 
   local buff_list = {}
   for i=1, 100 do
-    local buff = b_fun(unit, i)
+    local buff = cs.spell.UnitBuff.build(b_fun(unit, i))
     if not buff then break end
 
     table.insert(buff_list, buff)
@@ -227,23 +275,25 @@ cs.get_buff_list = function(unit, b_fun)
   return buff_list
 end
 
-cs.has_buffs = function(unit, buff_str, b_fun)
-  if not buff_str then buff_str = "" end
+cs.has_buffs = function(unit, buff_icon_str, min_count, b_fun)
+  if not buff_icon_str then buff_icon_str = "" end
 
   local buff_list = cs.get_buff_list(unit, b_fun)
   for _, buff in pairs(buff_list) do
-    if string.find(buff, buff_str) then
-      return true
+    if string.find(buff.icon, buff_icon_str) and (not min_count or buff.count >= min_count) then
+      return buff
     end
   end
 end
 
-cs.get_debuff_list = function(unit)
-  return cs.get_buff_list(unit, UnitDebuff)
+cs.get_debuff_list = function(...)
+  table.insert(arg, 2, UnitDebuff)
+  return cs.get_buff_list(unpack(arg))
 end
 
-cs.has_debuffs = function(unit, debuff_str)
-  return cs.has_buffs(unit, debuff_str, UnitDebuff)
+cs.has_debuffs = function(...)
+  table.insert(arg, 4, UnitDebuff)
+  return cs.has_buffs(unpack(arg))
 end
 
 
@@ -439,6 +489,16 @@ cs.st_cast_checker = cs.CastChecker.build()
 
 
 
+
+cs.spell.test = function()
+  cs.has_buffs()
+  cs.has_buffs(cs.u.target, "Holly", 3)
+  cs.has_debuffs()
+  cs.has_debuffs(cs.u.target, "Holly", 2)
+
+  local spell = cs.Spell.build("Attack", cs.spell.UnitBuff.build("asdasd", 3))
+  spell:cast()
+end
 
 
 

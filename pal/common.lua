@@ -91,10 +91,13 @@ pal.to_print = function(spell_name)
   return to_print_list[spell_name]
 end
 
+-- UnitDebuff
+pal.ud = {}
+pal.ud.CrusaderStrike = cs.spell.UnitBuff.build("Spell_Holy_CrusaderStrike", 5, "Magic", 30)
 
-
-
-
+-- SPell
+pal.sp = {}
+pal.ud.CrusaderStrike = cs.Spell.build(spn.CrusaderStrike, pal.ud.CrusaderStrike)
 
 
 

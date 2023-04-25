@@ -66,7 +66,6 @@ function StateBuff:rebuff(buff_name)
   -- aura/bless
   self.current = pal[self.name].get_buff(buff_name)
 
-  -- TODO: fix when BoK exsits
   return self.current:rebuff()
 end
 
@@ -401,12 +400,24 @@ pal.states.init = function()
   end
   st_state_holder:init()
 
-  for action_name, action in pairs(pal.actions) do
+  for action_name, action in pairs(pal.actions.dict) do
     st_state_holder:add_action(action_name, action)
   end
 end
 
+pal.states.test = function()
+  for name in pairs(pal.actions.dict) do
+    cs_attack_action(name)
+  end
 
+  local init_state = pal.get_state_holder_config().cur_state
+
+  st_state_holder:_down_button_event(1, 1)
+  st_state_holder:_down_button_event(2, 1)
+  st_state_holder:_down_button_event(3, 1)
+  st_state_holder:_down_button_event(4, 1)
+  st_state_holder:_down_button_event(init_state, 1)
+end
 
 
 
