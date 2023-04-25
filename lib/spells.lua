@@ -62,13 +62,6 @@ function cs.MultiSlot:use()
 end
 
 
---libpredict.sender:RegisterEvent("CHAT_MSG_SPELL_SELF_BUFF")
---libpredict.sender:RegisterEvent("SPELLCAST_START")
---libpredict.sender:RegisterEvent("SPELLCAST_STOP")
---libpredict.sender:RegisterEvent("SPELLCAST_FAILED")
---libpredict.sender:RegisterEvent("SPELLCAST_INTERRUPTED")
---libpredict.sender:RegisterEvent("SPELLCAST_DELAYED")
-
 
 -- return spell_id, book
 local find_spell = function(name)
@@ -380,10 +373,6 @@ end
 
 
 
-
-
-
-
 -- SpellSchool data of some caster in ritgh now
 cs.ss = {}
 cs.ss.Shadow = "Shadow"
@@ -407,10 +396,18 @@ end
 cs.spell.UnitCast = cs.create_class()
 
 cs.spell.UnitCast.build = function(pfui_spell)
+  if not pfui_spell.icon then
+    return
+  end
+
   local data = cs.spell.UnitCast:new()
   data.pfui_spell = pfui_spell
   data.ts_sec = math.floor(GetTime())
   return data
+end
+
+function cs.spell.UnitCast:find_icon_name(name)
+  return string.find(self.pfui_spell.icon, name)
 end
 
 function cs.spell.UnitCast:get_school()
@@ -437,8 +434,11 @@ cs.get_cast_info = function(unit)
   local cast_db = pfUI.api.libcast.db
 
   for name, pfui_spell in pairs(cast_db) do
-    if UnitName(unit) == name and pfui_spell.icon then
-      return cs.spell.UnitCast.build(pfui_spell)
+    if UnitName(unit) == name then
+      local unit_cast = cs.spell.UnitCast.build(pfui_spell)
+      if unit_cast then
+        return unit_cast
+      end
     end
   end
 end
@@ -446,30 +446,27 @@ end
 
 
 -- detect cast spells from target
----@class cs.spell.TargetCastDetector
-cs.spell.TargetCastDetector = cs.create_class()
+---@class cs.spell.UnitCastDetector
+cs.spell.UnitCastDetector = cs.create_class()
 
-cs.spell.TargetCastDetector.build = function()
-  local cast_checker = cs.spell.TargetCastDetector:new()
+cs.spell.UnitCastDetector.build = function(unit)
+  local cast_detector = cs.spell.UnitCastDetector:new()
 
-  cast_checker.sub_list = {}
-  cast_checker.last_unit_cast = nil
-  cs.loop_event(0.2, cast_checker, cast_checker._check_loop)
+  cast_detector.unit = unit
+  cast_detector.sub_list = {}
+  cast_detector.last_unit_cast = nil
+  cs.loop_event(0.2, cast_detector, cast_detector._check_loop)
 
-  return cast_checker
+  return cast_detector
 end
 
 -- func = function(obj, cs.spell.UnitCast)
-function cs.spell.TargetCastDetector:subscribe(obj, func)
+function cs.spell.UnitCastDetector:subscribe(obj, func)
   self.sub_list[obj] = func
 end
 
-function cs.spell.TargetCastDetector:_check_loop()
-  if not cs.check_target(cs.t.attackable) then
-    return
-  end
-
-  local unit_cast = cs.get_cast_info(cs.u.target)
+function cs.spell.UnitCastDetector:_check_loop()
+  local unit_cast = cs.get_cast_info(self.unit)
   if not unit_cast then
     return
   end
@@ -484,8 +481,10 @@ function cs.spell.TargetCastDetector:_check_loop()
   end
 end
 
----@type cs.spell.TargetCastDetector
-cs.st_target_cast_detector = cs.spell.TargetCastDetector.build()
+---@type cs.spell.UnitCastDetector
+cs.st_target_cast_detector = cs.spell.UnitCastDetector.build(cs.u.target)
+---@type cs.spell.UnitCastDetector
+cs.st_player_cast_detector = cs.spell.UnitCastDetector.build(cs.u.player)
 
 
 

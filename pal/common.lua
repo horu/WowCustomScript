@@ -93,11 +93,15 @@ end
 
 -- UnitDebuff
 pal.ud = {}
-pal.ud.CrusaderStrike = cs.spell.UnitBuff.build("Spell_Holy_CrusaderStrike", 5, "Magic", 30)
 
 -- SPell
 pal.sp = {}
-pal.ud.CrusaderStrike = cs.Spell.build(spn.CrusaderStrike, pal.ud.CrusaderStrike)
+
+pal.common = {}
+pal.common.init = function()
+  pal.ud.CrusaderStrike = cs.spell.UnitBuff.build("Spell_Holy_CrusaderStrike", 5, "Magic", 30)
+  pal.ud.CrusaderStrike = cs.Spell.build(spn.CrusaderStrike, pal.ud.CrusaderStrike)
+end
 
 
 

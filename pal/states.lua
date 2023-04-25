@@ -110,6 +110,7 @@ State.build = function(id)
     bless = StateBuff.build(id, "bless"),
   }
 
+  ---@type cs.MultiSlot
   state.slot_to_use = state:_get_config().use_slots and cs.MultiSlot.build(state:_get_config().use_slots)
 
   state.enemy_attack = { base = nil, ts = 0 }
@@ -346,6 +347,9 @@ function StateHolder:_down_button_event(longkey, duration)
 end
 
 function StateHolder:_on_cast_detected(spell_data)
+  if not cs.check_target(cs.t.attackable) then
+    return
+  end
 
   local spell_school = spell_data:get_school()
   if not spell_school then
