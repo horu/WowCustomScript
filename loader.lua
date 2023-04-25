@@ -1,5 +1,12 @@
 local cs = cs_common
 
+local main_tests = function()
+  cs.damage.test()
+  cs.spell.test()
+
+  cs.pal.states.test()
+end
+
 local main_load = function()
   cs.damage.init()
   cs.game.init()
@@ -13,12 +20,7 @@ local main_load = function()
   cs.pal.config.init()
   cs.pal.states.init()
 
-  -- test
-  cs.damage.test()
-  cs.spell.test()
-
-  cs.pal.states.test()
-
+  main_tests()
   cs.print(cs.color.green.."+++++++++++++++++++++++++++ CS LOADED +++++++++++++++++++++++++++")
 end
 

@@ -405,6 +405,24 @@ pal.states.init = function()
   end
 end
 
+local defer_change_state
+defer_change_state = function(i, init_state)
+  if i > 4 then
+    cs.once_event(1, function()
+      st_state_holder:_down_button_event(init_state, 1)
+    end)
+    return
+  end
+
+  cs.once_event(1, function()
+    st_state_holder:_down_button_event(i, 1)
+    local name_action = next(pal.actions.dict)
+    cs.debug(name_action)
+    cs_attack_action(name_action)
+    defer_change_state(i+1, init_state)
+  end)
+end
+
 pal.states.test = function()
   for name in pairs(pal.actions.dict) do
     cs_attack_action(name)
@@ -412,11 +430,7 @@ pal.states.test = function()
 
   local init_state = pal.get_state_holder_config().cur_state
 
-  st_state_holder:_down_button_event(1, 1)
-  st_state_holder:_down_button_event(2, 1)
-  st_state_holder:_down_button_event(3, 1)
-  st_state_holder:_down_button_event(4, 1)
-  st_state_holder:_down_button_event(init_state, 1)
+  defer_change_state(1, init_state)
 end
 
 

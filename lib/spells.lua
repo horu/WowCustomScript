@@ -125,7 +125,7 @@ end
 
 function cs.Spell:cast(to_self)
   if not self:get_cd() and not self:_has_debuff() then
-    CastSpellByName(self.name, to_self);
+    CastSpellByName(self.name, to_self)
     self.cast_ts = GetTime()
     return true
   end

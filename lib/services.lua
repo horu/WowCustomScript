@@ -3,7 +3,7 @@ local damage = cs.damage
 
 cs.services = {}
 
-local spd_checker_frame = { x=10, y=94, mono=true }
+local spd_checker_frame = { x=10, y=92, mono=true }
 
 
 
