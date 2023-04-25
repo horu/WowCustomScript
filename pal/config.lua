@@ -19,6 +19,7 @@ pal.stn.DEF = "DEF"
 pal.stn.BASE = "BASE"
 pal.stn.HEAL = "HEAL"
 
+
 ---@class state_config
 local state_config = {
   name = "",
@@ -32,89 +33,6 @@ local state_config = {
   use_slots = { slot.TwoHand },
 }
 
----@class states_config
-local default_states_config = {
-  states = {
-    ---@type state_config
-    RUSH = {
-      name = pal.stn.RUSH,
-      hotkey = 1,
-      color = cs.color.red_1,
-
-      use_slots = { slot.TwoHand },
-
-      aura = {
-        default = an.Sanctity,
-        list = { an.Sanctity, an.Devotion, an.Retribution },
-      },
-      bless = {
-        default = bn.Might,
-        list = bn.list_all,
-      },
-    },
-    DEF = {
-      name = pal.stn.DEF,
-      hotkey = 2,
-      color = cs.color.white,
-
-      use_slots = { slot.OneHand, slot.OffHand },
-
-      aura = {
-        default = an.Devotion,
-        list = an.list_att,
-      },
-      bless = {
-        default = bn.Wisdom,
-        no_combat = bn.Wisdom,
-        list = bn.list_all,
-      },
-    },
-    NORM = {
-      name = pal.stn.NORM,
-      hotkey = 3,
-      color = cs.color.green,
-      use_slots = { slot.TwoHand },
-      aura = {
-        default = an.Retribution,
-        list = an.list_att,
-      },
-      bless = {
-        default = bn.Might,
-        no_combat = bn.Wisdom,
-        list = bn.list_all,
-      },
-    },
-    BASE = {
-      name = pal.stn.BASE,
-      hotkey = 4,
-      color = cs.color.blue,
-
-      aura = {
-        default = an.Retribution,
-        list = an.list_att,
-      },
-      bless = {
-        default = bn.Wisdom,
-        no_combat = bn.Wisdom,
-        list = bn.list_all,
-      },
-    },
-    HEAL = {
-      name = pal.stn.HEAL,
-      hotkey = 12 * 5 + 2,
-      color = cs.color.yellow,
-
-      aura = {
-        default = an.Concentration,
-        list = { an.Concentration },
-      },
-      bless = {
-        default = bn.Light,
-        list = bn.list_all,
-      },
-    },
-  }
-}
 
 ---@class state_holder_config
 local state_holder_config = {
@@ -148,7 +66,6 @@ local default_states_dynamic_config = {
   }
 }
 
-cs_states_config = default_states_config
 cs_states_dynamic_config = default_states_dynamic_config
 
 pal.reset_dynamic_config = function()
@@ -159,14 +76,108 @@ pal.get_state_holder_config = function()
   return cs_states_dynamic_config.state_holder
 end
 
+local default_states_config
+
 ---@return state_config
 pal.get_state_config = function(id, dynamic)
   if dynamic then
     return cs_states_dynamic_config.states[id]
   end
-  return cs_states_config.states[id]
+  return default_states_config.states[id]
 end
 
+pal.get_state_list =function()
+  return cs.dict_keys_to_list(default_states_config.states, "string")
+end
+
+pal.config = {}
+pal.config.init = function()
+  local bless_avail_list = bn.get_available()
+
+  ---@class states_config
+  default_states_config = {
+    states = {
+      ---@type state_config
+      RUSH = {
+        name = pal.stn.RUSH,
+        hotkey = 1,
+        color = cs.color.red_1,
+
+        use_slots = { slot.TwoHand },
+
+        aura = {
+          default = an.Sanctity,
+          list = { an.Sanctity, an.Devotion, an.Retribution },
+        },
+        bless = {
+          default = bn.Might,
+          list = bless_avail_list,
+        },
+      },
+      DEF = {
+        name = pal.stn.DEF,
+        hotkey = 2,
+        color = cs.color.white,
+
+        use_slots = { slot.OneHand, slot.OffHand },
+
+        aura = {
+          default = an.Devotion,
+          list = an.list_att,
+        },
+        bless = {
+          default = bn.Wisdom,
+          no_combat = bn.Wisdom,
+          list = bless_avail_list,
+        },
+      },
+      NORM = {
+        name = pal.stn.NORM,
+        hotkey = 3,
+        color = cs.color.green,
+        use_slots = { slot.TwoHand },
+        aura = {
+          default = an.Retribution,
+          list = an.list_att,
+        },
+        bless = {
+          default = bn.Might,
+          no_combat = bn.Wisdom,
+          list = bless_avail_list,
+        },
+      },
+      BASE = {
+        name = pal.stn.BASE,
+        hotkey = 4,
+        color = cs.color.blue,
+
+        aura = {
+          default = an.Retribution,
+          list = an.list_att,
+        },
+        bless = {
+          default = bn.Wisdom,
+          no_combat = bn.Wisdom,
+          list = bless_avail_list,
+        },
+      },
+      HEAL = {
+        name = pal.stn.HEAL,
+        hotkey = 12 * 5 + 2,
+        color = cs.color.yellow,
+
+        aura = {
+          default = an.Concentration,
+          list = { an.Concentration },
+        },
+        bless = {
+          default = bn.Light,
+          list = bless_avail_list,
+        },
+      },
+    }
+  }
 
 
+end
 

@@ -106,8 +106,13 @@ end
 local function all_dump()
   --dump_table("cs_map_data", cs_map_data)
   dump_table("cs_players_bless_dict", cs_players_bless_dict)
-  dump_table("bless", cs.pal.bless)
   dump_table("cs.damage.parser.sub_list", cs.damage.parser.sub_list[3].filters)
+
+  local bless_list = pal.bn.get_available()
+  for _, id in pairs(bless_list) do
+    local buff = pal.bless.get_buff(id)
+    dump_table(id, buff)
+  end
 end
 
 

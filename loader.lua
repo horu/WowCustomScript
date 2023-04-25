@@ -10,10 +10,13 @@ local main_load = function()
   cs.pal.heal.init()
   cs.pal.seal.init()
   cs.pal.actions.init()
+  cs.pal.config.init()
   cs.pal.states.init()
 
   -- test
   cs.damage.test()
+
+  cs.print(cs.color.green.."+++++++++++++++++++++++++++ CS LOADED +++++++++++++++++++++++++++")
 end
 
 local main_frame = cs.create_simple_frame()

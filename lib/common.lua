@@ -224,6 +224,18 @@ cs.dict_to_list = function(dict, value_type)
   return list
 end
 
+cs.dict_keys_to_list = function(dict, value_type)
+  assert(value_type)
+
+  local list = {}
+  for key in pairs(dict) do
+    if type(key) == value_type then
+      table.insert(list, key)
+    end
+  end
+  return list
+end
+
 function cs.fmod(v, d)
   while v >= d do
     v = v - d

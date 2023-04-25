@@ -66,6 +66,7 @@ function StateBuff:rebuff(buff_name)
   -- aura/bless
   self.current = pal[self.name].get_buff(buff_name)
 
+  -- TODO: fix when BoK exsits
   return self.current:rebuff()
 end
 
@@ -197,6 +198,7 @@ end
 function State:_standard_rebuff_attack()
   self:rebuff_aura()
   if self.buff_list.bless:rebuff() then
+    -- rebless player first,
     return
   end
   if not cs.check_combat(1) then
@@ -210,9 +212,9 @@ function State:_reuse_slot()
   end
 end
 
-function State:_every_buff(fun, a1, a2, a3)
+function State:_every_buff(fun, ...)
   for _, buff in pairs(self.buff_list) do
-    fun(buff, a1, a2, a3)
+    fun(buff, unpack(avg))
   end
 end
 
@@ -392,8 +394,9 @@ pal.states = {}
 pal.states.init = function()
   st_state_holder = StateHolder.build()
 
-  local states = cs_states_config.states
-  for id in pairs(states) do
+  local states = pal.get_state_list()
+  cs.debug(states)
+  for _, id in pairs(states) do
     st_state_holder:add_state(id)
   end
   st_state_holder:init()
@@ -401,8 +404,6 @@ pal.states.init = function()
   for action_name, action in pairs(pal.actions) do
     st_state_holder:add_action(action_name, action)
   end
-
-  cs.print(cs.color.green.."+++++++++++++++++++++++++++ CS LOADED +++++++++++++++++++++++++++")
 end
 
 

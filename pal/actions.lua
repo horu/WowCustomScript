@@ -98,6 +98,7 @@ pal.actions.init = function()
   Action.debuffed_seal_list = { seal.Light, seal.Wisdom, seal.Justice }
 
   pal.actions.right = Action.build(seal.Righteousness, function(self, state)
+    -- TODO: dont cast judgement if no mana to rebuff Righteousness
     if not cs.check_target(cs.t.close_30) then return end
 
     cs.cast(spn.HolyStrike)
@@ -119,6 +120,7 @@ pal.actions.init = function()
       return
     end
 
+    -- TODO dont cast CrusaderStrike when 5 debuff exsits
     self.main_seal:reseal_and_cast(spn.HolyStrike, spn.CrusaderStrike)
   end)
 
@@ -137,7 +139,6 @@ pal.actions.init = function()
   pal.actions.null = Action.build(seal.Crusader, function(self, state)
     cs.cast(spn.HolyStrike)
   end)
-  -- TODO: add null attack on midle mouse
 end
 
 

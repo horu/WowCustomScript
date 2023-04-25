@@ -147,6 +147,10 @@ pal.bless.blessing_everywhere = function()
   end
 end
 
+pal.bn.get_available = function()
+  local list = cs.dict_keys_to_list(bless_dict, "string")
+  return list
+end
 
 
 
