@@ -117,7 +117,6 @@ function cs.Spell:_has_debuff()
   if cs.has_debuffs(cs.u.target, debuff.icon, debuff.count) then
     if debuff.duration then
       local duration_limit = debuff.duration * 0.7
-      cs.debug({GetTime() - self.cast_ts, duration_limit})
       return cs.compare_time(duration_limit, self.cast_ts)
     end
     return true
