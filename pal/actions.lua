@@ -102,6 +102,7 @@ pal.actions.init = function()
     if not cs.check_target(cs.t.close_30) then return end
 
     cs.cast(spn.HolyStrike)
+    cs.cast(build_cast_list())
 
     if state.id ~= pal.stn.RUSH then
       if self:judgement_other() then
@@ -110,7 +111,7 @@ pal.actions.init = function()
     end
 
     self.main_seal:reseal_and_judgement()
-    cs.cast(build_cast_list(pal.ud.CrusaderStrike))
+    cs.cast(pal.ud.CrusaderStrike)
   end)
 
   pal.actions.crusader = Action.build(seal.Crusader, function(self, state)
