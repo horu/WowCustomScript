@@ -272,7 +272,7 @@ function StateHolder:init()
   cs.st_button_checker:add_down_pattern(StateHolder.handler_Reset, self, StateHolder._down_button_event)
   cs.st_button_checker:add_down_pattern(StateHolder.handler_FullReset, self, StateHolder._down_button_event)
 
-  cs.st_cast_checker:add_callback(self, self._on_cast_detected)
+  cs.st_target_cast_detector:subscribe(self, self._on_cast_detected)
 
   local filter = {}
   filter[cs.damage.p.school] = cs.dict_to_list(cs.ss, "string")
