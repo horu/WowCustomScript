@@ -150,6 +150,7 @@ pal.config.init = function()
         name = pal.stn.BASE,
         hotkey = 4,
         color = cs.color.blue,
+        use_slots = { slot.TwoHand },
 
         aura = {
           default = an.Retribution,

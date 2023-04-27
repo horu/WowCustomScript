@@ -150,7 +150,9 @@ function State:reset_buffs()
 end
 
 function State:recheck()
-  self:_reuse_slot()
+  if self.slot_to_use then
+    self.slot_to_use:try_use()
+  end
   self:_standard_rebuff_attack()
 end
 
@@ -203,12 +205,6 @@ function State:_standard_rebuff_attack()
   end
   if not cs.check_combat(1) then
     pal.bless.blessing_everywhere()
-  end
-end
-
-function State:_reuse_slot()
-  if self.slot_to_use then
-    self.slot_to_use:try_use()
   end
 end
 
