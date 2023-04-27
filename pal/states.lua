@@ -111,7 +111,8 @@ State.build = function(id)
   }
 
   ---@type cs.MultiSlot
-  state.slot_to_use = state:_get_config().use_slots and cs.MultiSlot.build(state:_get_config().use_slots)
+  state.default_slot = state:_get_config().use_slot
+  state.slot = nil
 
   state.enemy_attack = { base = nil, ts = 0 }
   state.enemy_attack.is_valid = function(self)
@@ -137,6 +138,11 @@ end
 
 
 function State:init()
+  if self.default_slot then
+    self.slot = self.default_slot
+  else
+    self.slot = cs.slot.get_current() or cs.slot.one_hand_shield
+  end
   self:recheck()
 end
 
@@ -150,9 +156,7 @@ function State:reset_buffs()
 end
 
 function State:recheck()
-  if self.slot_to_use then
-    self.slot_to_use:try_use()
-  end
+  self.slot:try_use()
   self:_standard_rebuff_attack()
 end
 
@@ -210,7 +214,7 @@ end
 
 function State:_every_buff(fun, ...)
   for _, buff in pairs(self.buff_list) do
-    fun(buff, unpack(avg))
+    fun(buff, unpack(arg))
   end
 end
 

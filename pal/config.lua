@@ -6,11 +6,6 @@ local bn = pal.bn
 local spn = pal.spn
 
 
-local slot = {}
-slot.TwoHand = 13
-slot.OneHand = 14
-slot.OffHand = 15
-
 -- STateName
 pal.stn = {}
 pal.stn.RUSH = "RUSH"
@@ -30,7 +25,7 @@ local state_config = {
   aura_list = { an.Sanctity, an.Devotion, an.Retribution },
   bless_list = bn.list_all,
 
-  use_slots = { slot.TwoHand },
+  use_slot = cs.one_hand_shield,
 }
 
 
@@ -103,7 +98,7 @@ pal.config.init = function()
         hotkey = 1,
         color = cs.color.red_1,
 
-        use_slots = { slot.TwoHand },
+        use_slot = cs.slot.two_hand,
 
         aura = {
           default = an.Sanctity,
@@ -119,7 +114,7 @@ pal.config.init = function()
         hotkey = 2,
         color = cs.color.white,
 
-        use_slots = { slot.OneHand, slot.OffHand },
+        use_slot = cs.slot.one_hand_shield,
 
         aura = {
           default = an.Devotion,
@@ -135,7 +130,7 @@ pal.config.init = function()
         name = pal.stn.NORM,
         hotkey = 3,
         color = cs.color.green,
-        use_slots = { slot.TwoHand },
+        use_slot = cs.slot.two_hand,
         aura = {
           default = an.Retribution,
           list = an.list_att,
@@ -150,7 +145,6 @@ pal.config.init = function()
         name = pal.stn.BASE,
         hotkey = 4,
         color = cs.color.blue,
-        use_slots = { slot.TwoHand },
 
         aura = {
           default = an.Retribution,

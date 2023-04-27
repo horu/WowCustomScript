@@ -61,6 +61,18 @@ function cs.MultiSlot:use()
   end
 end
 
+cs.slot = {}
+cs.slot.two_hand = cs.Slot.build(13)
+cs.slot.one_hand_shield = cs.MultiSlot.build({ 14, 15 })
+cs.slot.list = cs.dict_to_list(cs.slot, "table")
+
+cs.slot.get_current = function()
+  for _, slot in cs.slot.list do
+    if slot:is_equipped() then
+      return slot
+    end
+  end
+end
 
 
 -- return spell_id, book
