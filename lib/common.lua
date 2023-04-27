@@ -16,10 +16,12 @@ local get_stack_line = function(stack_level)
     to_output = to_output..string.sub(line, file_info_begin, file_info_end)
 
     if file_info_end then
-      local fun_info_begin = file_info_end + 14
+      local fun_info_begin = file_info_end + 13
       if fun_info_begin then
         local fun_info_end = string.find(line, "[\n]", fun_info_begin)
-        to_output = to_output..string.sub(line, fun_info_begin, fun_info_end)
+        if not fun_info_end or string.find(line, "[<]", fun_info_begin) >= fun_info_end then
+          to_output = to_output..string.sub(line, fun_info_begin, fun_info_end)
+        end
       end
     end
   end
