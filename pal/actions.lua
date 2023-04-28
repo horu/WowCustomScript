@@ -100,6 +100,7 @@ pal.actions.init = function()
   Action.debuffed_seal_list = { seal.Light, seal.Wisdom, seal.Justice }
 
   pal.actions.right = Action.build(seal.Righteousness, function(self, state)
+    -- TODO: add HoW
     -- TODO: dont cast judgement if no mana to rebuff Righteousness
     if not cs.check_target(cs.t.close_30) then return end
 

@@ -102,7 +102,7 @@ cs.Spell.build = function(name, limiting_debuff)
   --spell.id = id_name
   --spell.book = book
   --spell.name = GetSpellName(id_name, book)
-  assert(spell.id)
+  assert(spell.id, string.format("spell not found: '%s'", name))
   spell.cast_ts = 0
   spell.limiting_debuff = limiting_debuff
 
