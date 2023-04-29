@@ -61,6 +61,7 @@ spn.Judgement = "Judgement"
 spn.CrusaderStrike = "Crusader Strike"
 spn.HolyStrike = "Holy Strike"
 spn.Exorcism = "Exorcism"
+spn.HammerWrath = "Hammer of Wrath"
 
 
 
@@ -103,7 +104,9 @@ pal.sp = {}
 pal.common = {}
 pal.common.init = function()
   pal.ud.CrusaderStrike = cs.spell.UnitBuff.build("Spell_Holy_CrusaderStrike", 5, "Magic", 30)
-  pal.ud.CrusaderStrike = cs.Spell.build(spn.CrusaderStrike, pal.ud.CrusaderStrike)
+
+  pal.sp.CrusaderStrike = cs.Spell.build(spn.CrusaderStrike, pal.ud.CrusaderStrike)
+  pal.sp.HammerWrath = cs.Spell.build(spn.HammerWrath, nil, 0.19)
 end
 
 

@@ -56,6 +56,24 @@ function cs.check_mouse(check)
   return cs.check_unit(check, cs.u.mouseover)
 end
 
+function cs.check_target_hp(limit)
+  if not limit then
+    return
+  end
+
+  local target_hp = UnitHealth(cs.u.target) or 0
+  return target_hp <= limit
+end
+
+function cs.check_target_hp_perc(limit_perc)
+  if not limit_perc then
+    return
+  end
+
+  local target_hp_max_perc = UnitHealthMax(cs.u.target) or 0
+  local limit_hp = limit_perc * target_hp_max_perc
+  return cs.check_target_hp(limit_hp)
+end
 
 
 function cs.get_talent_rank(name)

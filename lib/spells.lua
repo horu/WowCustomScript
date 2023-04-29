@@ -93,8 +93,8 @@ end
 ---@class cs.Spell
 cs.Spell = cs.create_class()
 
----@param limiting_debuff cs.spell.UnitBuff
-cs.Spell.build = function(name, limiting_debuff)
+---@param debuff_limit cs.spell.UnitBuff
+cs.Spell.build = function(name, debuff_limit, target_hp_limit_perc)
   local spell = cs.Spell:new()
 
   spell.id, spell.book = find_spell(name)
@@ -104,7 +104,8 @@ cs.Spell.build = function(name, limiting_debuff)
   --spell.name = GetSpellName(id_name, book)
   assert(spell.id, string.format("spell not found: '%s'", name))
   spell.cast_ts = 0
-  spell.limiting_debuff = limiting_debuff
+  spell.debuff_limit = debuff_limit
+  spell.target_hp_limit_perc = target_hp_limit_perc
 
   return spell
 end
@@ -121,23 +122,8 @@ function cs.Spell:get_cd()
   return duration - ts + ts_start, ts_start, duration
 end
 
-function cs.Spell:_has_debuff()
-  if not self.limiting_debuff then
-    return
-  end
-
-  local debuff = self.limiting_debuff
-  if cs.has_debuffs(cs.u.target, debuff.icon, debuff.count) then
-    if debuff.duration then
-      local duration_limit = debuff.duration * 0.7
-      return cs.compare_time(duration_limit, self.cast_ts)
-    end
-    return true
-  end
-end
-
 function cs.Spell:cast(to_self)
-  if not self:get_cd() and not self:_has_debuff() then
+  if self:is_ready() then
     CastSpellByName(self.name, to_self)
     self.cast_ts = GetTime()
     return true
@@ -148,6 +134,26 @@ function cs.Spell:cast_to_unit(unit)
   if self:cast(unit == cs.u.player) then
     if (SpellIsTargeting()) then
       SpellTargetUnit(unit)
+    end
+    return true
+  end
+end
+
+function cs.Spell:is_ready()
+  local hp_check = not self.target_hp_limit_perc or cs.check_target_hp_perc(self.target_hp_limit_perc)
+  return not self:get_cd() and not self:_has_debuff() and hp_check
+end
+
+function cs.Spell:_has_debuff()
+  if not self.debuff_limit then
+    return
+  end
+
+  local debuff = self.debuff_limit
+  if cs.has_debuffs(cs.u.target, debuff.icon, debuff.count) then
+    if debuff.duration then
+      local duration_limit = debuff.duration * 0.7
+      return cs.compare_time(duration_limit, self.cast_ts)
     end
     return true
   end

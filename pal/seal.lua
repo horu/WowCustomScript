@@ -37,9 +37,8 @@ function pal.Seal:is_judgement_available(from_other)
     return
   end
 
-  local target_hp = UnitHealth(cs.u.target) or 0
   local limit = from_other and self.target_hp_limit or self.judgement_target_hp_limit
-  return target_hp >= limit
+  return not cs.check_target_hp(limit)
 end
 
 -- const
@@ -63,8 +62,7 @@ function pal.Seal:is_reseal_available()
     return
   end
 
-  local target_hp = UnitHealth(cs.u.target) or 0
-  return target_hp >= self.target_hp_limit
+  return not cs.check_target_hp(self.target_hp_limit)
 end
 
 function pal.Seal:reseal()
