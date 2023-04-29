@@ -25,19 +25,21 @@ pal.Seal.build = function(spell, target_debuff, target_hp_limit, judgement_targe
   return seal
 end
 
+--region
 -- const
 function pal.Seal:get_name()
   return self.buff:get_name()
 end
 
 -- const
-function pal.Seal:is_judgement_available()
+function pal.Seal:is_judgement_available(from_other)
   if self:check_target_debuff() then
     return
   end
 
   local target_hp = UnitHealth(cs.u.target) or 0
-  return target_hp >= self.judgement_target_hp_limit
+  local limit = from_other and self.target_hp_limit or self.judgement_target_hp_limit
+  return target_hp >= limit
 end
 
 -- const
@@ -92,13 +94,13 @@ function pal.Seal:reseal_and_cast(...)
 end
 
 -- check the seal exists and the target has no the seal debuff
-function pal.Seal:judgement_it()
-  if self:check_exists() and self:is_judgement_available() then
+function pal.Seal:judgement_it(from_other)
+  if self:check_exists() and self:is_judgement_available(from_other) then
     self.judgement:cast()
     return true
   end
 end
-
+--endregion
 
 
 pal.seal = {}
@@ -117,14 +119,14 @@ pal.seal.init = function()
   pal.seal.Light = pal.Seal.build(
           sn.Light,
           "Spell_Holy_HealingAura",
-          UnitHealthMax(cs.u.player) * 0.2,
+          UnitHealthMax(cs.u.player) * 0.1,
           UnitHealthMax(cs.u.player) * 0.8
   )
   ---@type pal.Seal
   pal.seal.Wisdom = pal.Seal.build(
           sn.Wisdom,
           "Spell_Holy_RighteousnessAura",
-          UnitHealthMax(cs.u.player) * 0.2,
+          UnitHealthMax(cs.u.player) * 0.1,
           UnitHealthMax(cs.u.player) * 0.8
   )
   ---@type pal.Seal

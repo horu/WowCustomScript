@@ -29,7 +29,7 @@ end
 function Action:judgement_other()
   for _, it_seal in pairs(seal.list_all) do
     if it_seal ~= self.main_seal then
-      if it_seal:judgement_it() then
+      if it_seal:judgement_it(true) then
         return true
       end
     end
@@ -143,6 +143,9 @@ pal.actions.init = function()
 
   pal.actions.null = Action.build(seal.Crusader, function(self, state)
     -- cs.cast(spn.HolyStrike)
+  end)
+  pal.actions.broad = Action.build(seal.Crusader, function(self, state)
+    cs.auto_attack_nearby()
   end)
   pal.actions.dict = cs.filter_dict(pal.actions, "table")
 end

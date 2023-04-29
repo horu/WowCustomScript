@@ -30,6 +30,7 @@ end
 
 local states_config
 
+--TODO: fix config
 pal.get_state_config = function(id, dynamic)
   if dynamic then
     cs_states_dynamic_config.states = cs_states_dynamic_config.states or {}

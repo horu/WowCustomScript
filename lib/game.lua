@@ -19,6 +19,7 @@ cs.t.exists = UnitExists
 cs.t.dead = UnitIsDead
 cs.t.player = UnitIsPlayer
 cs.t.self = UnitIsUnit
+cs.t.close_9 = "t_close_9"
 cs.t.close_10 = "t_close_10"
 cs.t.close_30 = "t_close_30"
 cs.t.attackable = "t_attackable"
@@ -28,7 +29,9 @@ cs.t.en_player = "t_en_player"
 
 -- check condition by OR
 function cs.check_unit(check, unit)
-  if check == cs.t.close_10 then
+  if check == cs.t.close_9 then
+    return CheckInteractDistance("target", 1)
+  elseif check == cs.t.close_10 then
     return CheckInteractDistance("target", 2)
   elseif check == cs.t.close_30 then
     return CheckInteractDistance("target", 4)
@@ -100,7 +103,55 @@ function cs.auto_attack()
   end
 end
 
+cs.auto_attack_nearby = function()
+  if cs.check_target(cs.t.close_9) then
+    return
+  end
 
+  local has_target = cs.check_target(cs.t.exists)
+
+  for i=1,10 do
+    if cs.check_target(cs.t.close_9) then
+      break
+    end
+    TargetNearestEnemy()
+  end
+
+  if cs.check_target(cs.t.close_9) then
+    cs.once_event(0.2, cs.auto_attack)
+    cs.once_event(0.6, cs.auto_attack)
+  elseif not has_target then
+    ClearTarget()
+  end
+end
+
+cs.attack_target_max_hp = function()
+  local has_target = cs.check_target(cs.t.exists)
+
+  local max_hp = 0
+  for i=1,10 do
+    if cs.check_target(cs.t.close_9) then
+      local hp = UnitHealth(cs.u.target)
+      max_hp = math.max(max_hp, hp)
+    end
+    TargetNearestEnemy()
+  end
+
+  for i=1,10 do
+    local hp = UnitHealth(cs.u.target)
+    if hp + 100 >= max_hp then
+      break
+    end
+    TargetNearestEnemy()
+  end
+
+  if cs.check_target(cs.t.close_9) then
+    cs.once_event(0.2, cs.auto_attack)
+    cs.once_event(0.6, cs.auto_attack)
+  elseif not has_target then
+    ClearTarget()
+  end
+end
 
 
 
