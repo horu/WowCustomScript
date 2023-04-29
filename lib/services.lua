@@ -223,6 +223,10 @@ function cs.SpeedChecker:_get_speed_mod()
     else
       speed = 2 * speed
     end
+  else
+    if cs.has_buffs(cs.u.player, "Ability_Creature_Poison_05") then
+      speed = 1.1
+    end
   end
 
   return speed
