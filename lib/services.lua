@@ -308,7 +308,7 @@ function cs.SpeedChecker:_loop()
   self.text:set_text(string.format("%1.2f", speed or -1))
 end
 
-local st_speed_checker
+cs.services.speed_checker = nil
 
 --endregion
 
@@ -318,7 +318,7 @@ local st_speed_checker
 
 
 cs.services.init = function()
-  st_speed_checker = cs.SpeedChecker.build()
+  cs.services.speed_checker = cs.SpeedChecker.build()
 end
 
 

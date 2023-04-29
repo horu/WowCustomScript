@@ -113,7 +113,12 @@ pal.common.init = function()
   end)
 
   pal.sp.HammerWrath = cs.Spell.build(spn.HammerWrath, function(spell)
-    return cs.check_target_hp_perc(0.19)
+    if not cs.check_target_hp_perc(0.19) then
+      return
+    end
+
+    local player_speed = cs.services.speed_checker:get_speed()
+    return player_speed == 0
   end)
 
   pal.sp.Exorcism = cs.Spell.build(spn.Exorcism, function(spell)
