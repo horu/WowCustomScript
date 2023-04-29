@@ -4,22 +4,20 @@ local spn = pal.spn
 
 local sn = pal.sn
 
-
-
 -- SEAL
 ---@class pal.Seal
 pal.Seal = cs.create_class()
 
+pal.Seal.no_judgement = 999999
 
-pal.Seal.build = function(spell, target_debuff, target_hp_limit, no_judgement)
+pal.Seal.build = function(spell, target_debuff, target_hp_limit, judgement_target_hp_limit)
   ---@type pal.Seal
   local seal = pal.Seal:new()
 
   seal.buff = cs.Buff.build(spell)
   seal.target_debuff = target_debuff
-  if not no_judgement then
-    seal.judgement = cs.Spell.build(spn.Judgement)
-  end
+  seal.judgement = cs.Spell.build(spn.Judgement)
+  seal.judgement_target_hp_limit = judgement_target_hp_limit or 0
   seal.target_hp_limit = target_hp_limit or 0
 
   --cs.debug(seal)
@@ -34,16 +32,12 @@ end
 
 -- const
 function pal.Seal:is_judgement_available()
-  if not self.judgement then
-    -- seal no need to judgement never
-    return
-  end
-
   if self:check_target_debuff() then
     return
   end
 
-  return self:is_reseal_available()
+  local target_hp = UnitHealth(cs.u.target) or 0
+  return target_hp >= self.judgement_target_hp_limit
 end
 
 -- const
@@ -118,18 +112,20 @@ pal.seal.init = function()
   ---@type pal.Seal
   pal.seal.Righteousness = pal.Seal.build(sn.Righteousness)
   ---@type pal.Seal
-  pal.seal.Crusader = pal.Seal.build(sn.Crusader, nil, nil, true)
+  pal.seal.Crusader = pal.Seal.build(sn.Crusader, nil, nil, pal.Seal.no_judgement)
   ---@type pal.Seal
   pal.seal.Light = pal.Seal.build(
           sn.Light,
           "Spell_Holy_HealingAura",
-          UnitHealthMax(cs.u.player) * 0.2
+          UnitHealthMax(cs.u.player) * 0.2,
+          UnitHealthMax(cs.u.player) * 0.8
   )
   ---@type pal.Seal
   pal.seal.Wisdom = pal.Seal.build(
           sn.Wisdom,
           "Spell_Holy_RighteousnessAura",
-          UnitHealthMax(cs.u.player) * 0.2
+          UnitHealthMax(cs.u.player) * 0.2,
+          UnitHealthMax(cs.u.player) * 0.8
   )
   ---@type pal.Seal
   pal.seal.Justice = pal.Seal.build(sn.Justice, "Spell_Holy_SealOfWrath")
