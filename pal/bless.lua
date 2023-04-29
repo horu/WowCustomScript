@@ -104,7 +104,7 @@ local rebuff_unit = function(unit)
   if result == cs.Buff.success then
     local short = pal.to_print(player_bless:get_name())
     local color = pfUI.api.GetUnitColor(unit)
-    cs.print("BUFF: ".. short .. " FOR ".. player_name.. " ".. color .. class)
+    cs.print(string.format("BUFF: %s FOR %s [%s] %s", short, player_name, unit, color .. class))
   end
 
   return result
@@ -137,7 +137,7 @@ end
 pal.bless.blessing_everywhere = function()
   if cs.is_in_party() then
     -- TODO
-    --cs.Buff.build(spn.Righteous):rebuff()
+    cs.Buff.build(spn.Righteous):rebuff()
     buff_party()
   end
   if cs.check_target(cs.t.fr_player) then

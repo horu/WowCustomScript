@@ -142,7 +142,7 @@ pal.actions.init = function()
   end)
 
   pal.actions.null = Action.build(seal.Crusader, function(self, state)
-    cs.cast(spn.HolyStrike)
+    -- cs.cast(spn.HolyStrike)
   end)
   pal.actions.dict = cs.filter_dict(pal.actions, "table")
 end

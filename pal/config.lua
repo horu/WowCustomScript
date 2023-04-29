@@ -15,46 +15,24 @@ pal.stn.BASE = "BASE"
 pal.stn.HEAL = "HEAL"
 
 
----@class state_config
-local state_config = {
-  name = "",
-  hotkey = 1,
-  color = cs.color.red_1,
-  default_aura = an.Sanctity,
-  default_bless = bn.Might,
-  aura_list = { an.Sanctity, an.Devotion, an.Retribution },
-  bless_list = bn.list_all,
-
-  use_slot = cs.one_hand_shield,
-}
-
-
----@class state_holder_config
-local state_holder_config = {
-  cur_state = 1,
-}
-
----@class states_dynamic_config
-local default_states_dynamic_config = {
-  state_holder = state_holder_config,
-  states = {}
-}
-
-cs_states_dynamic_config = default_states_dynamic_config
+cs_states_dynamic_config = {}
 
 pal.reset_dynamic_config = function()
-  cs_states_dynamic_config = default_states_dynamic_config
+  cs_states_dynamic_config = {}
 end
 
 pal.get_state_holder_config = function()
+  cs_states_dynamic_config.state_holder = cs_states_dynamic_config.state_holder or {}
+  cs_states_dynamic_config.state_holder.cur_state = cs_states_dynamic_config.state_holder.cur_state or 1
+
   return cs_states_dynamic_config.state_holder
 end
 
 local states_config
 
----@return state_config
 pal.get_state_config = function(id, dynamic)
   if dynamic then
+    cs_states_dynamic_config.states = cs_states_dynamic_config.states or {}
     cs_states_dynamic_config.states[id] = cs_states_dynamic_config.states[id] or { aura = {}, bless = {} }
     return cs_states_dynamic_config.states[id]
   end
@@ -66,6 +44,7 @@ pal.get_state_list =function()
 end
 
 pal.config = {}
+
 pal.config.init = function()
   local bless_avail_list = bn.get_available()
 
@@ -164,7 +143,7 @@ pal.config.init = function()
 
         aura = {
           default = an.Retribution,
-          list = { an.Devotion, an.Retribution },
+          list = an.list_att,
         },
         bless = {
           default = bn.Might,
@@ -223,7 +202,7 @@ pal.config.init = function()
         name = "MANA",
         hotkey = 5,
         color = cs.color.blue,
-        use_slot = cs.slot.one_hand_shield,
+        -- use_slot = cs.slot.one_hand_shield,
 
         aura = {
           default = an.Retribution,

@@ -169,7 +169,7 @@ end
 ---@param spell_school cs.ss
 function State:on_enemy_attack_school(spell_school)
   if not self.enemy_attack:is_valid() or self.enemy_attack.school ~= spell_school then
-    cs.print("SPELL DETECTED: ".. cs.ss.to_print(spell_school))
+    -- cs.print("SPELL DETECTED: ".. cs.ss.to_print(spell_school))
   end
   self.enemy_attack.school = spell_school
   self.enemy_attack.ts = GetTime()
