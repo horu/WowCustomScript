@@ -77,14 +77,14 @@ to_print_list[an.Fire] = cs.color.orange_1 .. "FI" .. "|r"
 
 to_print_list[bn.Wisdom] = cs.color.blue .. "BW" .. "|r"
 to_print_list[bn.Might] = cs.color.red .. "BM" .. "|r"
-to_print_list[bn.Salvation] = cs.color.white .. "BN" .. "|r"
+to_print_list[bn.Salvation] = cs.color.orange .. "BSV" .. "|r"
 to_print_list[bn.Light] = cs.color.yellow .. "BL" .. "|r"
 to_print_list[bn.Sanctuary] = cs.color.purple .. "BS" .. "|r"
 to_print_list[bn.Kings] = cs.color.purple .. "BK" .. "|r"
 
 to_print_list[sn.Righteousness] = cs.color.purple .. "SR" .. "|r"
 to_print_list[sn.Crusader] = cs.color.orange_1 .. "SC" .. "|r"
-to_print_list[sn.Light] = cs.color.yellow .. "1SL" .. "|r"
+to_print_list[sn.Light] = cs.color.yellow .. "SL" .. "|r"
 to_print_list[sn.Justice] = cs.color.green .. "SJ" .. "|r"
 to_print_list[sn.Wisdom] = cs.color.blue .. "SW" .. "|r"
 

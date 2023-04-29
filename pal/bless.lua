@@ -115,8 +115,9 @@ local buff_party = function()
   for i=1, size do
     local unit = "party"..i
     rebuff_unit(unit)
-    local pet = "partypet"..i
-    rebuff_unit(pet)
+    --TODO: bug with warlock pet
+    --local pet = "partypet"..i
+    --rebuff_unit(pet)
   end
 end
 

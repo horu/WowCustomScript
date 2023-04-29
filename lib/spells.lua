@@ -201,12 +201,13 @@ cs.get_spell_cd = function(spell_name)
 end
 
 -- default to player
+-- For heals/recovery
 cs.cast_helpful = function(name)
   local unit = cs.u.player
   if cs.check_target(cs.t.friend) then
     unit = cs.u.target
-  elseif cs.check_mouse(cs.t.exists) and cs.check_mouse(cs.t.friend) then
-    unit = cs.u.mouseover
+  --elseif cs.check_mouse(cs.t.exists) and cs.check_mouse(cs.t.friend) then
+  --  unit = cs.u.mouseover
   end
 
   local spell = cs.Spell.build(name)
