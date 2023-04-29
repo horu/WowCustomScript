@@ -93,8 +93,7 @@ end
 ---@class cs.Spell
 cs.Spell = cs.create_class()
 
----@param debuff_limit cs.spell.UnitBuff
-cs.Spell.build = function(name, debuff_limit, target_hp_limit_perc)
+cs.Spell.build = function(name, custom_ready_check)
   local spell = cs.Spell:new()
 
   spell.id, spell.book = find_spell(name)
@@ -104,8 +103,7 @@ cs.Spell.build = function(name, debuff_limit, target_hp_limit_perc)
   --spell.name = GetSpellName(id_name, book)
   assert(spell.id, string.format("spell not found: '%s'", name))
   spell.cast_ts = 0
-  spell.debuff_limit = debuff_limit
-  spell.target_hp_limit_perc = target_hp_limit_perc
+  spell.custom_ready_check = custom_ready_check
 
   return spell
 end
@@ -140,25 +138,8 @@ function cs.Spell:cast_to_unit(unit)
 end
 
 function cs.Spell:is_ready()
-  local hp_check = not self.target_hp_limit_perc or cs.check_target_hp_perc(self.target_hp_limit_perc)
-  return not self:get_cd() and not self:_has_debuff() and hp_check
+  return not self:get_cd() and (not self.custom_ready_check or self.custom_ready_check(self))
 end
-
-function cs.Spell:_has_debuff()
-  if not self.debuff_limit then
-    return
-  end
-
-  local debuff = self.debuff_limit
-  if cs.has_debuffs(cs.u.target, debuff.icon, debuff.count) then
-    if debuff.duration then
-      local duration_limit = debuff.duration * 0.7
-      return cs.compare_time(duration_limit, self.cast_ts)
-    end
-    return true
-  end
-end
-
 
 
 
@@ -514,7 +495,7 @@ cs.spell.test = function()
   cs.has_debuffs()
   cs.has_debuffs(cs.u.target, "Holly", 2)
 
-  local spell = cs.Spell.build("Attack", cs.spell.UnitBuff.build("asdasd", 3))
+  local spell = cs.Spell.build("Attack", function() return 1  end)
   spell:cast()
 end
 

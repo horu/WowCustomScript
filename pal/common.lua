@@ -103,10 +103,23 @@ pal.sp = {}
 
 pal.common = {}
 pal.common.init = function()
-  pal.ud.CrusaderStrike = cs.spell.UnitBuff.build("Spell_Holy_CrusaderStrike", 5, "Magic", 30)
+  pal.sp.CrusaderStrike = cs.Spell.build(spn.CrusaderStrike, function(spell)
+    if not cs.has_debuffs(cs.u.target, "Spell_Holy_CrusaderStrike", 5) then
+      return true
+    end
 
-  pal.sp.CrusaderStrike = cs.Spell.build(spn.CrusaderStrike, pal.ud.CrusaderStrike)
-  pal.sp.HammerWrath = cs.Spell.build(spn.HammerWrath, nil, 0.19)
+    local duration_limit = 30 * 0.7
+    return not cs.compare_time(duration_limit, spell.cast_ts)
+  end)
+
+  pal.sp.HammerWrath = cs.Spell.build(spn.HammerWrath, function(spell)
+    return cs.check_target_hp_perc(0.19)
+  end)
+
+  pal.sp.Exorcism = cs.Spell.build(spn.Exorcism, function(spell)
+    local target = UnitCreatureType(cs.u.target)
+    return target == "Demon" or target == "Undead"
+  end)
 end
 
 

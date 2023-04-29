@@ -84,16 +84,6 @@ function Action:seal_action(state, seal_list)
   self.main_seal:reseal_and_judgement()
 end
 
-local build_cast_list = function(...)
-  local cast_list = arg
-
-  local target = UnitCreatureType("target")
-  if target == "Demon" or target == "Undead" then
-    table.insert(cast_list, 1, spn.Exorcism)
-  end
-  return unpack(cast_list)
-end
-
 
 pal.actions = {}
 pal.actions.init = function()
@@ -105,7 +95,7 @@ pal.actions.init = function()
     if not cs.check_target(cs.t.close_30) then return end
 
     cs.cast(spn.HolyStrike)
-    cs.cast(build_cast_list(pal.sp.HammerWrath))
+    cs.cast(pal.sp.Exorcism, pal.sp.HammerWrath)
 
     if state.id ~= pal.stn.RUSH then
       if self:judgement_other() then
