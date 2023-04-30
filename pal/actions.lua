@@ -53,6 +53,11 @@ function Action:seal_action(state, seal_list)
 
   cs.cast(spn.HolyStrike)
 
+  local last_phy_ts = cs.damage.analyzer:get_school(cs.damage.s.Physical):get_last_ts()
+  if cs.compare_time(5, last_phy_ts) and cs.cast(pal.sp.HolyShield) then
+    return
+  end
+
   if seal.Righteousness:judgement_it() then
     -- wait another seal to judgement on the target
     return
@@ -90,7 +95,6 @@ pal.actions.init = function()
   Action.debuffed_seal_list = { seal.Light, seal.Wisdom, seal.Justice }
 
   pal.actions.right = Action.build(seal.Righteousness, function(self, state)
-    -- TODO: add HoW
     -- TODO: dont cast judgement if no mana to rebuff Righteousness
     if not cs.check_target(cs.t.close_30) then return end
 
@@ -136,6 +140,7 @@ pal.actions.init = function()
   end)
   pal.actions.broad = Action.build(seal.Crusader, function(self, state)
     cs.auto_attack_nearby()
+    cs.cast(pal.sp.HolyShield)
   end)
   pal.actions.dict = cs.filter_dict(pal.actions, "table")
 end

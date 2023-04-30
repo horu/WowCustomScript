@@ -62,6 +62,7 @@ spn.CrusaderStrike = "Crusader Strike"
 spn.HolyStrike = "Holy Strike"
 spn.Exorcism = "Exorcism"
 spn.HammerWrath = "Hammer of Wrath"
+spn.HolyShield = "Holy Shield"
 
 
 
@@ -125,6 +126,8 @@ pal.common.init = function()
     local target = UnitCreatureType(cs.u.target)
     return target == "Demon" or target == "Undead"
   end)
+
+  pal.sp.HolyShield = cs.Spell.build(spn.HolyShield)
 end
 
 

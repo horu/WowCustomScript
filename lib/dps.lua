@@ -1,5 +1,4 @@
 local cs = cs_common
-local damage = cs.damage
 
 
 local dps_frame = {
@@ -108,12 +107,12 @@ function cs.Dps:build(unit, frame_config)
 
   local filter = {}
   if unit == cs.u.target then
-    filter[damage.p.source] = damage.u.player
+    filter[cs.damage.p.source] = cs.damage.u.player
   else
-    filter[damage.p.target] = damage.u.player
+    filter[cs.damage.p.target] = cs.damage.u.player
   end
-  filter[damage.p.datatype] = damage.dt.damage
-  damage.parser:subscribe(filter, self, self._on_damage_parser_event)
+  filter[cs.damage.p.datatype] = cs.damage.dt.damage
+  cs.damage.parser:subscribe(filter, self, self._on_damage_parser_event)
 
   self:_on_damage(0)
 end
@@ -147,7 +146,7 @@ function cs.Dps:_on_damage(damage_value)
   end
 
   if not data.start_ts then
-    -- combat first damage. create session
+    -- combat first cs.damage. create session
 
     data.sessions[ts] = data.sessions[ts] or cs.DpsSession:new()
 

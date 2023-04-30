@@ -272,13 +272,19 @@ end
 
 
 function cs.create_fix_table(size)
-  local fix_table = { size = size, list = {} }
+  local fix_table = { size = size, list = {}, last_ts = 0 }
 
   function fix_table.clear(self)
     self.list = {}
+    self.last_ts = 0
+  end
+
+  function fix_table:get_last_ts()
+    return self.last_ts
   end
 
   function fix_table.add(self, value)
+    self.last_ts = GetTime()
     table.insert(self.list, 1, value)
     local size = table.getn(self.list)
     if size > self.size then

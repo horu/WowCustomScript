@@ -151,7 +151,9 @@ end
 ---@class cs.SpellOrder
 cs.SpellOrder = cs.create_class()
 
+---@return cs.SpellOrder
 cs.SpellOrder.build = function(...)
+  ---@type cs.SpellOrder
   local order = cs.SpellOrder:new()
 
   order.spell_list = {}
@@ -375,9 +377,9 @@ end
 
 -- SpellSchool data of some caster in ritgh now
 cs.ss = {}
-cs.ss.Shadow = "Shadow"
-cs.ss.Frost = "Frost"
-cs.ss.Fire = "Fire"
+cs.ss.Fire = cs.damage.s.Fire
+cs.ss.Frost = cs.damage.s.Frost
+cs.ss.Shadow = cs.damage.s.Shadow
 
 cs.ss.to_print = function(school)
   if school == cs.ss.Shadow then

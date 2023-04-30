@@ -337,7 +337,7 @@ local combatlog_strings = {
 }
 
 cs.damage = {}
--- Param
+---@class cs.damage.Param
 cs.damage.p = {}
 cs.damage.p.source = "source"
 cs.damage.p.action = "action"
@@ -346,19 +346,26 @@ cs.damage.p.value = "value"
 cs.damage.p.school = "school"
 cs.damage.p.datatype = "datatype"
 
--- Unit
+---@class cs.damage.Unit
 cs.damage.u = {}
 cs.damage.u.player = "u.player"
 cs.damage.u.party = "u.party"
 
--- Target
+---@class cs.damage.Target
 cs.damage.t = {}
 cs.damage.t.you = "you"
 
--- DataType
+---@class cs.damage.DataType
 cs.damage.dt = {}
 cs.damage.dt.damage = "damage"
 cs.damage.dt.heal = "heal"
+
+---@class cs.damage.School
+cs.damage.s = {}
+cs.damage.s.Physical = "Physical"
+cs.damage.s.Fire = "Fire"
+cs.damage.s.Frost = "Frost"
+cs.damage.s.Shadow = "Shadow"
 
 ---@class cs.damage.Event
 ---@field public source
@@ -446,7 +453,7 @@ local defaults = { }
 function cs.damage.Parser:parse(msg)
   defaults.source = UnitName("player")
   defaults.target = UnitName("player")
-  defaults.school = "physical"
+  defaults.school = cs.damage.s.Physical
   defaults.attack = "Auto Hit"
   defaults.spell = "UNKNOWN"
   defaults.value = 0
@@ -458,6 +465,7 @@ function cs.damage.Parser:parse(msg)
     if result then
       local event = cs.damage.Event.build({data[2](defaults, a1, a2, a3, a4, a5)})
 
+      event.value = tonumber(event.value)
       return event
     end
   end
@@ -505,6 +513,7 @@ function cs.damage.Parser:on_parsed(event)
   end
 end
 
+---@param func function(event)
 function cs.damage.Parser:subscribe(filters, obj, func)
   table.insert(self.sub_list, { filters = filters, obj = obj, func = func })
 end
@@ -512,8 +521,40 @@ end
 ---@type cs.damage.Parser
 cs.damage.parser = nil
 
+
+
+---@class cs.damage.Analyzer
+cs.damage.Analyzer = cs.class()
+
+function cs.damage.Analyzer:build()
+  local filter = {}
+  filter[cs.damage.p.target] = { cs.damage.u.player }
+  cs.damage.parser:subscribe(filter, self, self._on_damage)
+
+  self.school_list = {}
+end
+
+
+
+---@param event cs.damage.Event
+function cs.damage.Analyzer:_on_damage(event)
+  local school = self:get_school(event.school)
+  school:add(event.value)
+end
+
+---@param school cs.damage.School
+function cs.damage.Analyzer:get_school(school)
+  self.school_list[school] = self.school_list[school] or cs.create_fix_table(10)
+  return self.school_list[school]
+end
+
+---@type cs.damage.Analyzer
+cs.damage.analyzer = nil
+
+
 cs.damage.init = function()
   cs.damage.parser = cs.damage.Parser:new()
+  cs.damage.analyzer = cs.damage.Analyzer:new()
 end
 
 
@@ -522,10 +563,15 @@ cs.damage.test = function()
   cs.debug(event)
   assert(event.action == "Auto Hit")
   assert(event.source == "Burning Ravager")
-  assert(event.value == "24")
-  assert(event.school == cs.ss.Fire)
+  assert(event.value == 24)
+  assert(event.school == cs.damage.s.Fire)
   assert(event.datatype == cs.damage.dt.damage)
   assert(event.target == UnitName(cs.u.player))
+
+  cs.damage.analyzer:_on_damage(event)
+
+  local school = cs.damage.analyzer:get_school(cs.damage.s.Fire)
+  assert(school:get_sum() == 24)
 
   cs.damage.parser:on_parsed(event)
 end

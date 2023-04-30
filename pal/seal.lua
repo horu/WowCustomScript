@@ -119,6 +119,7 @@ pal.seal.init = function()
           "Spell_Holy_HealingAura",
           UnitHealthMax(cs.u.player) * 0.1,
           UnitHealthMax(cs.u.player) * 0.8
+          -- TODO: add party dependenc
   )
   ---@type pal.Seal
   pal.seal.Wisdom = pal.Seal.build(
