@@ -53,9 +53,11 @@ function Action:seal_action(state, seal_list)
 
   cs.cast(spn.HolyStrike)
 
-  local last_phy_ts = cs.damage.analyzer:get_school(cs.damage.s.Physical):get_last_ts()
-  if cs.compare_time(5, last_phy_ts) and cs.cast(pal.sp.HolyShield) then
-    return
+  if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
+    local last_phy_ts = cs.damage.analyzer:get_school(cs.damage.s.Physical):get_last_ts()
+    if cs.compare_time(5, last_phy_ts) and cs.cast(pal.sp.HolyShield) then
+      return
+    end
   end
 
   if seal.Righteousness:judgement_it() then

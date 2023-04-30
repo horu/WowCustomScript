@@ -12,6 +12,8 @@ pal.stn.RUSH = "RUSH"
 pal.stn.NORM = "NORM"
 pal.stn.DEF = "DEF"
 pal.stn.BASE = "BASE"
+pal.stn.BACK = "BACK"
+pal.stn.MANA = "MANA"
 pal.stn.HEAL = "HEAL"
 
 
