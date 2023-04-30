@@ -101,7 +101,7 @@ cs.Spell.build = function(name, custom_ready_check)
   --spell.id = id_name
   --spell.book = book
   --spell.name = GetSpellName(id_name, book)
-  assert(spell.id, string.format("spell not found: '%s'", name))
+  assert(spell.id, string.format("spell not found: '%s'", (name or "nil")))
   spell.cast_ts = 0
   spell.custom_ready_check = custom_ready_check
 
