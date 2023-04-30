@@ -128,6 +128,8 @@ pal.common.init = function()
   end)
 
   pal.sp.HolyShield = cs.Spell.build(spn.HolyShield)
+
+  pal.sp.Righteous = cs.Buff.build(pal.spn.Righteous, nil, 28 * 60)
 end
 
 
