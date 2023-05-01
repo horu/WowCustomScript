@@ -92,6 +92,9 @@ function cs.get_talent_rank(name)
 end
 
 
+cs.get_party_max_hp_sum = function()
+  -- TODO
+end
 
 
 function cs.get_hp_level()

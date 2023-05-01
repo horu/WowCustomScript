@@ -44,6 +44,15 @@ function Action:has_any_seal_debuff()
   end
 end
 
+local cast_holy_sheild = function(state)
+  if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
+    local last_phy_ts = cs.damage.analyzer:get_school(cs.damage.s.Physical):get_last_ts()
+    if cs.compare_time(5, last_phy_ts) and cs.cast(pal.sp.HolyShield) then
+      return
+    end
+  end
+end
+
 ---@param seal_list pal.Seal[]
 function Action:seal_action(state, seal_list)
   if not cs.check_target(cs.t.close_10) then
@@ -52,13 +61,7 @@ function Action:seal_action(state, seal_list)
   end
 
   cs.cast(spn.HolyStrike)
-
-  if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
-    local last_phy_ts = cs.damage.analyzer:get_school(cs.damage.s.Physical):get_last_ts()
-    if cs.compare_time(5, last_phy_ts) and cs.cast(pal.sp.HolyShield) then
-      return
-    end
-  end
+  cast_holy_sheild(state)
 
   if seal.Righteousness:judgement_it() then
     -- wait another seal to judgement on the target
@@ -67,7 +70,7 @@ function Action:seal_action(state, seal_list)
 
   if not self.main_seal:is_reseal_available() then
     -- seal can not be casted with current situation, just cast other spells
-    cs.cast(pal.sp.CrusaderStrike)
+    --cs.cast(pal.sp.CrusaderStrike)
     return
   end
 
@@ -79,7 +82,8 @@ function Action:seal_action(state, seal_list)
       return
     end
 
-    self.main_seal:reseal_and_cast(pal.sp.CrusaderStrike)
+    -- self.main_seal:reseal_and_cast(pal.sp.CrusaderStrike)
+    self.main_seal:reseal()
     return
   end
 
@@ -102,6 +106,7 @@ pal.actions.init = function()
 
     cs.cast(spn.HolyStrike)
     cs.cast(pal.sp.Exorcism, pal.sp.HammerWrath)
+    cast_holy_sheild(state)
 
     if state.id ~= pal.stn.RUSH then
       if self:judgement_other() then
