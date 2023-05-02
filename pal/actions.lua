@@ -47,6 +47,7 @@ end
 local cast_holy_sheild = function(state)
   if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
     local last_phy_ts = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical):get_last_ts()
+    -- cs.debug(GetTime() - last_phy_ts)
     if cs.compare_time(5, last_phy_ts) then
       return cs.cast(pal.sp.HolyShield)
     end

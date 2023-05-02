@@ -2,6 +2,13 @@ local cs = cs_common
 
 
 cs.damage = {}
+
+cs.damage.CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES = "CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES"
+
+---@class cs.damage.Any
+cs.damage.a = {}
+cs.damage.a.unknown = "UNKNOWN"
+
 ---@class cs.damage.Param
 cs.damage.p = {}
 cs.damage.p.source = "source"
@@ -422,6 +429,10 @@ function cs.damage.Parser:build()
   parser:RegisterEvent("CHAT_MSG_SPELL_PET_DAMAGE")
   parser:RegisterEvent("CHAT_MSG_COMBAT_PET_HITS")
 
+  -- misses
+  parser:RegisterEvent("CHAT_MSG_COMBAT_SELF_MISSES")
+  parser:RegisterEvent(cs.damage.CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES)
+
   -- register to all heal combat log events
   parser:RegisterEvent("CHAT_MSG_SPELL_SELF_BUFF")
   parser:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS")
@@ -437,36 +448,48 @@ function cs.damage.Parser:build()
   -- call all datasources on each event
   parser:SetScript("OnEvent", function()
     local cs_parser = this.cs_damage_parser
-    cs_parser:handle_event(arg1)
+    cs_parser:handle_event(arg1, event)
   end)
 
   self.player_name = UnitName(cs.u.player)
   self.sub_list = {}
 end
 
-function cs.damage.Parser:handle_event(msg)
-    if not msg then
-      return
-    end
+function cs.damage.Parser:handle_event(msg, msg_event)
+  if not msg then
+    return
+  end
+  local event = self:parse(msg, msg_event)
 
-    local event = self:parse(msg)
-    if event then
-      return self:_on_parsed(event)
-    end
+  if event then
+    return self:_on_parsed(event)
+  end
 end
 
 -- cache default table
 local defaults = { }
 
 ---@return cs.damage.Event
-function cs.damage.Parser:parse(msg)
+function cs.damage.Parser:parse(msg, msg_event)
   defaults.source = UnitName("player")
   defaults.target = UnitName("player")
   defaults.school = cs.damage.s.Unknown
   defaults.attack = "Auto Hit"
-  defaults.spell = "UNKNOWN"
+  defaults.spell = cs.damage.a.unknown
   defaults.value = 0
   defaults.sourcetype = cs.damage.st.Physical
+
+  if msg_event == cs.damage.CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES then
+    return cs.damage.Event.build(
+            cs.damage.a.unknown,
+            defaults.attack,
+            cs.damage.t.you,
+            0,
+            defaults.school,
+            cs.damage.dt.damage,
+            cs.damage.st.Physical
+    )
+  end
 
   -- detection on all damage sources
   for id, data in pairs(combatlog_strings) do
@@ -571,21 +594,35 @@ end
 cs.damage.test = function()
   local dmg_24_fire = "Burning Ravager hits you for 24 Fire damage."
 
-  local event = cs.damage.parser:parse(dmg_24_fire)
-  assert(event.action == "Auto Hit")
-  assert(event.source == "Burning Ravager")
-  assert(event.value == 24)
-  assert(event.school == cs.damage.s.Fire)
-  assert(event.datatype == cs.damage.dt.damage)
-  assert(event.target == UnitName(cs.u.player))
-  assert(event.sourcetype == cs.damage.st.Physical)
+  -- smoke
+  do
+    local event = cs.damage.parser:parse(dmg_24_fire)
+    assert(event.action == "Auto Hit")
+    assert(event.source == "Burning Ravager")
+    assert(event.value == 24)
+    assert(event.school == cs.damage.s.Fire)
+    assert(event.datatype == cs.damage.dt.damage)
+    assert(event.target == UnitName(cs.u.player))
+    assert(event.sourcetype == cs.damage.st.Physical)
+  end
 
-  cs.damage.parser:handle_event(dmg_24_fire)
+  -- analyzer
+  do
+    cs.damage.parser:handle_event(dmg_24_fire)
 
-  local dmg_20_unkn = "Burning Ravager hits you for 20 damage."
-  cs.damage.parser:handle_event(dmg_20_unkn)
+    local dmg_20_unkn = "Burning Ravager hits you for 20 damage."
+    cs.damage.parser:handle_event(dmg_20_unkn)
 
-  local type = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical)
-  assert(type:get_sum() == 44)
+    local type = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical)
+    assert(type:get_sum() == 44)
+  end
+
+  -- miss
+  do
+    local event = cs.damage.parser:parse("", cs.damage.CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES)
+    assert(event.value == 0)
+    assert(event.target == cs.damage.t.you)
+    assert(event.sourcetype == cs.damage.st.Physical)
+  end
 end
 
