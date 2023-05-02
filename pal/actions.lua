@@ -47,8 +47,8 @@ end
 local cast_holy_sheild = function(state)
   if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
     local last_phy_ts = cs.damage.analyzer:get_school(cs.damage.s.Physical):get_last_ts()
-    if cs.compare_time(5, last_phy_ts) and cs.cast(pal.sp.HolyShield) then
-      return
+    if cs.compare_time(5, last_phy_ts) then
+      return cs.cast(pal.sp.HolyShield)
     end
   end
 end
@@ -60,8 +60,37 @@ function Action:seal_action(state, seal_list)
     return
   end
 
+  if seal.Righteousness:judgement_it() then
+    -- wait another seal to judgement on the target
+    return
+  end
+
+  if self.main_seal:reseal() then
+      return
+  end
+
   cs.cast(spn.HolyStrike)
-  cast_holy_sheild(state)
+  if cast_holy_sheild(state) then return end
+
+  if not self:has_any_seal_debuff() then
+    if self:judgement_other() then
+      -- wait another seal to judgement on the target
+      return
+    end
+
+    self.main_seal:judgement_it()
+  end
+end
+
+---@param seal_list pal.Seal[]
+function Action:seal_action_old(state, seal_list)
+  if not cs.check_target(cs.t.close_10) then
+    -- the target is far away
+    return
+  end
+
+  cs.cast(spn.HolyStrike)
+  if cast_holy_sheild(state) then return end
 
   if seal.Righteousness:judgement_it() then
     -- wait another seal to judgement on the target
@@ -105,7 +134,9 @@ pal.actions.init = function()
     if not cs.check_target(cs.t.close_30) then return end
 
     cs.cast(spn.HolyStrike)
-    cs.cast(pal.sp.Exorcism, pal.sp.HammerWrath)
+    if cs.cast(pal.sp.Exorcism, pal.sp.HammerWrath) then
+      return
+    end
     cast_holy_sheild(state)
 
     if state.id ~= pal.stn.RUSH then

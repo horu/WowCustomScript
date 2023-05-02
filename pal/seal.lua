@@ -75,7 +75,7 @@ end
 -- return true on success cast
 function pal.Seal:reseal_and_judgement()
   if self:reseal() then
-    return
+    return true
   end
 
   return self:judgement_it()
