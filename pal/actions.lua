@@ -44,14 +44,18 @@ function Action:has_any_seal_debuff()
   end
 end
 
-local cast_holy_sheild = function(state)
-  if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
-    local last_phy_ts = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical):get_last_ts()
-    -- cs.debug(GetTime() - last_phy_ts)
-    if cs.compare_time(5, last_phy_ts) then
-      return cs.cast(pal.sp.HolyShield)
-    end
+local holy_shield_if_attacked = function(state)
+  if state.id ~= pal.stn.DEF and state.id ~= pal.stn.BACK then
+    return
   end
+
+  local last_phy_ts = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical):get_last_ts()
+  -- cs.debug(GetTime() - last_phy_ts)
+  if not cs.compare_time(5, last_phy_ts) then
+    return
+  end
+
+  return cs.cast(pal.sp.HolyShield)
 end
 
 ---@param seal_list pal.Seal[]
@@ -62,18 +66,21 @@ function Action:seal_action(state, seal_list)
   end
 
   if seal.Righteousness:judgement_it() then
-    -- wait another seal to judgement on the target
+    -- First wait Righteousness seal to judgement on the target ( damage )
     return
   end
 
-  if self.main_seal:reseal() then
+  if self.main_seal:reseal() == cs.Buff.success then
+    -- reseal and wait when it will be casted
       return
   end
 
+  -- cast spells
   cs.cast(spn.HolyStrike)
-  if cast_holy_sheild(state) then return end
+  if holy_shield_if_attacked(state) then return end
 
   if not self:has_any_seal_debuff() then
+    -- the target has no debuffs. judgement it.
     if self:judgement_other() then
       -- wait another seal to judgement on the target
       return
@@ -81,48 +88,6 @@ function Action:seal_action(state, seal_list)
 
     self.main_seal:judgement_it()
   end
-end
-
----@param seal_list pal.Seal[]
-function Action:seal_action_old(state, seal_list)
-  if not cs.check_target(cs.t.close_10) then
-    -- the target is far away
-    return
-  end
-
-  cs.cast(spn.HolyStrike)
-  if cast_holy_sheild(state) then return end
-
-  if seal.Righteousness:judgement_it() then
-    -- wait another seal to judgement on the target
-    return
-  end
-
-  if not self.main_seal:is_reseal_available() then
-    -- seal can not be casted with current situation, just cast other spells
-    --cs.cast(pal.sp.CrusaderStrike)
-    return
-  end
-
-  if self:has_any_seal_debuff() then
-    -- the target has no other seal debuff. Lets reseal and judgement it.
-
-    if state.id == pal.stn.RUSH then
-      cs.cast(pal.sp.CrusaderStrike)
-      return
-    end
-
-    -- self.main_seal:reseal_and_cast(pal.sp.CrusaderStrike)
-    self.main_seal:reseal()
-    return
-  end
-
-  if self:judgement_other() then
-    -- wait another seal to judgement on the target
-    return
-  end
-
-  self.main_seal:reseal_and_judgement()
 end
 
 
@@ -135,10 +100,9 @@ pal.actions.init = function()
     if not cs.check_target(cs.t.close_30) then return end
 
     cs.cast(spn.HolyStrike)
-    if cs.cast(pal.sp.Exorcism, pal.sp.HammerWrath) then
+    if cs.cast(pal.sp.Exorcism, pal.sp.HammerWrath) or holy_shield_if_attacked(state) then
       return
     end
-    cast_holy_sheild(state)
 
     if state.id ~= pal.stn.RUSH then
       if self:judgement_other() then
