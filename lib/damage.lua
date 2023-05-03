@@ -1,9 +1,11 @@
 local cs = cs_common
 
 
-cs.damage = {}
+cs.chat = {}
+cs.chat.c_c_vs_s_m = "CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES"
+cs.chat.c_hp_m = "CHAT_MSG_COMBAT_HOSTILEPLAYER_MISSES"
 
-cs.damage.CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES = "CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES"
+cs.damage = {}
 
 ---@class cs.damage.Any
 cs.damage.a = {}
@@ -430,8 +432,8 @@ function cs.damage.Parser:build()
   parser:RegisterEvent("CHAT_MSG_COMBAT_PET_HITS")
 
   -- misses
-  parser:RegisterEvent("CHAT_MSG_COMBAT_SELF_MISSES")
-  parser:RegisterEvent(cs.damage.CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES)
+  parser:RegisterEvent(cs.chat.c_c_vs_s_m)
+  parser:RegisterEvent(cs.chat.c_hp_m)
 
   -- register to all heal combat log events
   parser:RegisterEvent("CHAT_MSG_SPELL_SELF_BUFF")
@@ -479,7 +481,7 @@ function cs.damage.Parser:parse(msg, msg_event)
   defaults.value = 0
   defaults.sourcetype = cs.damage.st.Physical
 
-  if msg_event == cs.damage.CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES then
+  if msg_event == cs.chat.c_c_vs_s_m or msg_event == cs.chat.c_hp_m then
     return cs.damage.Event.build(
             cs.damage.a.unknown,
             defaults.attack,
@@ -619,7 +621,7 @@ cs.damage.test = function()
 
   -- miss
   do
-    local event = cs.damage.parser:parse("", cs.damage.CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES)
+    local event = cs.damage.parser:parse("", cs.chat.c_c_vs_s_m)
     assert(event.value == 0)
     assert(event.target == cs.damage.t.you)
     assert(event.sourcetype == cs.damage.st.Physical)
