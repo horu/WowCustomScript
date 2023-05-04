@@ -1,7 +1,19 @@
 
 local cs = cs_common
 
+--class
+cs.cl = {}
+cs.cl.WARRIOR = "WARRIOR"
+cs.cl.PALADIN = "PALADIN"
+cs.cl.HUNTER = "HUNTER"
+cs.cl.ROGUE = "ROGUE"
 
+cs.cl.SHAMAN = "SHAMAN"
+cs.cl.DRUID = "DRUID"
+
+cs.cl.PRIEST = "PRIEST"
+cs.cl.MAGE = "MAGE"
+cs.cl.WARLOCK = "WARLOCK"
 
 
 --units
@@ -9,6 +21,10 @@ cs.u = {}
 cs.u.mouseover = "mouseover"
 cs.u.target = "target"
 cs.u.player = "player"
+cs.u.party = {}
+for i=1,5 do table.insert(cs.u.party, i, "party"..i) end
+cs.u.partypet = {}
+for i=1,5 do table.insert(cs.u.partypet, i, "partypet"..i) end
 
 
 -- target
@@ -99,11 +115,26 @@ end
 
 function cs.get_hp_level()
   -- 0-1
-  return UnitHealth("player") / UnitHealthMax("player")
+  return UnitHealth(cs.u.player) / UnitHealthMax(cs.u.player)
 end
 
 function cs.is_in_party()
   return GetNumPartyMembers() ~= 0
+end
+
+cs.iterate_party = function(func)
+  local size = GetNumPartyMembers()
+  for i=1, size do
+    func(cs.u.party[i], i)
+  end
+end
+
+cs.get_party_hp_sum = function()
+  local sum = UnitHealthMax(cs.u.player)
+  cs.iterate_party(function(unit)
+    sum = sum + UnitHealthMax(unit)
+  end)
+  return sum
 end
 
 function cs.auto_attack()
@@ -421,4 +452,8 @@ end
 cs.game = {}
 cs.game.init = function()
   cs.st_map_checker = cs.MapChecker.build()
+end
+
+cs.game.test = function()
+  cs.get_party_hp_sum()
 end

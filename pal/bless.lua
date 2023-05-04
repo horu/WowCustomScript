@@ -111,14 +111,13 @@ local rebuff_unit = function(unit)
 end
 
 local buff_party = function()
-  local size = GetNumPartyMembers()
-  for i=1, size do
-    local unit = "party"..i
+  cs.iterate_party(function(unit, i)
     rebuff_unit(unit)
-    --TODO: bug with warlock pet
-    --local pet = "partypet"..i
-    --rebuff_unit(pet)
-  end
+    local class = UnitClass(unit)
+    if class == cs.cl.HUNTER or class == cs.cl.WARLOCK then
+      rebuff_unit(cs.u.partypet[i])
+    end
+  end)
 end
 
 local alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'

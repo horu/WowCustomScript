@@ -44,6 +44,10 @@ function Action:has_any_seal_debuff()
   end
 end
 
+local is_def_state = function(state)
+  return state.id ~= pal.stn.NORM and state.id ~= pal.stn.RUSH
+end
+
 ---@param seal_list pal.Seal[]
 function Action:seal_action(state, seal_list)
   if not cs.check_target(cs.t.close_10) then
@@ -62,7 +66,7 @@ function Action:seal_action(state, seal_list)
   end
 
   -- cast spells
-  if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
+  if is_def_state(state) then
     if pal.sp.HolyShield:cast() then return end
   end
 
@@ -90,7 +94,7 @@ pal.actions.init = function()
       self.main_seal:reseal_and_judgement()
     end
 
-    if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
+    if is_def_state(state) then
       self.cast_order_def:cast()
     else
       self.cast_order:cast()

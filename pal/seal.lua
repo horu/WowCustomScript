@@ -10,6 +10,8 @@ pal.Seal = cs.create_class()
 
 pal.Seal.no_judgement = 999999
 
+---@param target_hp_limit number percent target hp limit to party sum hp
+---@param judgement_target_hp_limit number percent target hp limit to party sum hp for judgement
 pal.Seal.build = function(spell, target_debuff, target_hp_limit, judgement_target_hp_limit)
   ---@type pal.Seal
   local seal = pal.Seal:new()
@@ -38,7 +40,7 @@ function pal.Seal:is_judgement_available(from_other)
   end
 
   local limit = from_other and self.target_hp_limit or self.judgement_target_hp_limit
-  return not cs.check_target_hp(limit)
+  return not cs.check_target_hp(limit * cs.get_party_hp_sum())
 end
 
 -- const
@@ -62,7 +64,7 @@ function pal.Seal:is_reseal_available()
     return
   end
 
-  return not cs.check_target_hp(self.target_hp_limit)
+  return not cs.check_target_hp(self.target_hp_limit * cs.get_party_hp_sum())
 end
 
 function pal.Seal:reseal()
@@ -114,20 +116,9 @@ pal.seal.init = function()
   ---@type pal.Seal
   pal.seal.Crusader = pal.Seal.build(sn.Crusader, nil, nil, pal.Seal.no_judgement)
   ---@type pal.Seal
-  pal.seal.Light = pal.Seal.build(
-          sn.Light,
-          "Spell_Holy_HealingAura",
-          UnitHealthMax(cs.u.player) * 0.1,
-          UnitHealthMax(cs.u.player) * 0.5
-          -- TODO: add party dependenc
-  )
+  pal.seal.Light = pal.Seal.build(sn.Light, "Spell_Holy_HealingAura", 0.1, 0.5)
   ---@type pal.Seal
-  pal.seal.Wisdom = pal.Seal.build(
-          sn.Wisdom,
-          "Spell_Holy_RighteousnessAura",
-          UnitHealthMax(cs.u.player) * 0.1,
-          UnitHealthMax(cs.u.player) * 0.5
-  )
+  pal.seal.Wisdom = pal.Seal.build(sn.Wisdom, "Spell_Holy_RighteousnessAura", 0.1, 0.5)
   ---@type pal.Seal
   pal.seal.Justice = pal.Seal.build(sn.Justice, "Spell_Holy_SealOfWrath")
   ---@type pal.Seal[]
