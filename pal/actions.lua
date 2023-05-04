@@ -103,9 +103,9 @@ pal.actions.init = function()
   end)
 
   pal.actions.damage.cast_order_def = cs.SpellOrder.build(
-          spn.HolyStrike, pal.sp.Exorcism, pal.sp.HammerWrath, pal.sp.HolyShield, pal.sp.CrusaderStrike)
+          pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike, pal.sp.HolyShield, pal.sp.CrusaderStrike)
   pal.actions.damage.cast_order = cs.SpellOrder.build(
-          spn.HolyStrike, pal.sp.Exorcism, pal.sp.HammerWrath,                    pal.sp.CrusaderStrike)
+          pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike,                    pal.sp.CrusaderStrike)
 
   pal.actions.right = Action.build(seal.Righteousness, function(self, state)
     -- TODO: dont cast judgement if no mana to rebuff Righteousness

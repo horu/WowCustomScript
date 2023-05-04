@@ -116,9 +116,9 @@ pal.seal.init = function()
   ---@type pal.Seal
   pal.seal.Crusader = pal.Seal.build(sn.Crusader, nil, nil, pal.Seal.no_judgement)
   ---@type pal.Seal
-  pal.seal.Light = pal.Seal.build(sn.Light, "Spell_Holy_HealingAura", 0.1, 0.5)
+  pal.seal.Light = pal.Seal.build(sn.Light, "Spell_Holy_HealingAura", 0.1, 0.4)
   ---@type pal.Seal
-  pal.seal.Wisdom = pal.Seal.build(sn.Wisdom, "Spell_Holy_RighteousnessAura", 0.1, 0.5)
+  pal.seal.Wisdom = pal.Seal.build(sn.Wisdom, "Spell_Holy_RighteousnessAura", 0.1, 0.4)
   ---@type pal.Seal
   pal.seal.Justice = pal.Seal.build(sn.Justice, "Spell_Holy_SealOfWrath")
   ---@type pal.Seal[]

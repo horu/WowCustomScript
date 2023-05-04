@@ -116,7 +116,7 @@ end
 local buff_party = function()
   cs.iterate_party(function(unit, i)
     rebuff_unit(unit)
-    local class = UnitClass(unit)
+    local _, class = UnitClass(unit)
     if class == cs.cl.HUNTER or class == cs.cl.WARLOCK then
       rebuff_unit(cs.u.partypet[i])
     end
