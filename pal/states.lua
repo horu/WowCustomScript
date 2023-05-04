@@ -133,7 +133,7 @@ function State:to_string()
   local msg = self:_get_config().color..string.sub(self:_get_config().name, 1, 1).."|r "..
           self.buff_list.aura:to_string().." "..
           self.buff_list.bless:to_string().." "..
-          pal.seal.current_to_string()
+          pal.to_print(pal.seal.get_current())
   return msg
 end
 

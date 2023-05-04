@@ -136,11 +136,13 @@ pal.config.init = function()
 
   local states_config_2 = {
     states = {
-      NORM = {
-        name = "NORM",
+      RUSH = {
+        name = pal.stn.RUSH,
         hotkey = 1,
-        color = cs.color.green,
-        use_slot = cs.slot.one_hand_shield,
+        color = cs.color.red_1,
+
+        use_slot = cs.slot.two_hand,
+
         aura = {
           default = an.Retribution,
           list = an.list_att,
@@ -200,19 +202,18 @@ pal.config.init = function()
           list = bless_avail_list,
         },
       },
-      RUSH = {
-        name = pal.stn.RUSH,
+      NORM = {
+        name = "NORM",
         hotkey = 5,
-        color = cs.color.red_1,
-
-        use_slot = cs.slot.two_hand,
-
+        color = cs.color.green,
+        use_slot = cs.slot.one_hand_shield,
         aura = {
           default = an.Retribution,
           list = an.list_att,
         },
         bless = {
           default = bn.Might,
+          no_combat = bn.Wisdom,
           list = bless_avail_list,
         },
       },

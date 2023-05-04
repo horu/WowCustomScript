@@ -44,20 +44,6 @@ function Action:has_any_seal_debuff()
   end
 end
 
-local holy_shield_if_attacked = function(state)
-  if state.id ~= pal.stn.DEF and state.id ~= pal.stn.BACK then
-    return
-  end
-
-  local last_phy_ts = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical):get_last_ts()
-  -- cs.debug(GetTime() - last_phy_ts)
-  if not cs.compare_time(5, last_phy_ts) then
-    return
-  end
-
-  return cs.cast(pal.sp.HolyShield)
-end
-
 ---@param seal_list pal.Seal[]
 function Action:seal_action(state, seal_list)
   if not cs.check_target(cs.t.close_10) then
@@ -76,8 +62,9 @@ function Action:seal_action(state, seal_list)
   end
 
   -- cast spells
-  cs.cast(spn.HolyStrike)
-  if holy_shield_if_attacked(state) then return end
+  if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
+    if pal.sp.HolyShield:cast() then return end
+  end
 
   if not self:has_any_seal_debuff() then
     -- the target has no debuffs. judgement it.
@@ -95,14 +82,30 @@ pal.actions = {}
 pal.actions.init = function()
   Action.debuffed_seal_list = { seal.Light, seal.Wisdom, seal.Justice }
 
+  pal.actions.damage = Action.build(seal.Righteousness, function(self, state)
+    if not cs.check_target(cs.t.close_30) then return end
+
+    local current_seal = pal.seal.get_current()
+    if not current_seal or current_seal == pal.sn.Righteousness then
+      self.main_seal:reseal_and_judgement()
+    end
+
+    if state.id == pal.stn.DEF or state.id == pal.stn.BACK then
+      self.cast_order_def:cast()
+    else
+      self.cast_order:cast()
+    end
+
+  end)
+
+  pal.actions.damage.cast_order_def = cs.SpellOrder.build(
+          spn.HolyStrike, pal.sp.Exorcism, pal.sp.HammerWrath, pal.sp.HolyShield, pal.sp.CrusaderStrike)
+  pal.actions.damage.cast_order = cs.SpellOrder.build(
+          spn.HolyStrike, pal.sp.Exorcism, pal.sp.HammerWrath,                    pal.sp.CrusaderStrike)
+
   pal.actions.right = Action.build(seal.Righteousness, function(self, state)
     -- TODO: dont cast judgement if no mana to rebuff Righteousness
     if not cs.check_target(cs.t.close_30) then return end
-
-    cs.cast(spn.HolyStrike)
-    if cs.cast(pal.sp.Exorcism, pal.sp.HammerWrath) or holy_shield_if_attacked(state) then
-      return
-    end
 
     if state.id ~= pal.stn.RUSH then
       if self:judgement_other() then
@@ -111,19 +114,16 @@ pal.actions.init = function()
     end
 
     self.main_seal:reseal_and_judgement()
-    cs.cast(pal.sp.CrusaderStrike)
   end)
 
   pal.actions.crusader = Action.build(seal.Crusader, function(self, state)
     if not cs.check_target(cs.t.close_10) then return end
 
-    cs.cast(spn.HolyStrike)
-
     if self:judgement_other() then
       return
     end
 
-    self.main_seal:reseal_and_cast(pal.sp.CrusaderStrike)
+    self.main_seal:reseal()
   end)
 
   pal.actions.wisdom = Action.build(seal.Wisdom, function(self, state)
@@ -143,7 +143,7 @@ pal.actions.init = function()
   end)
   pal.actions.splash = Action.build(seal.Crusader, function(self, state)
     cs.auto_attack_nearby()
-    cs.cast(pal.sp.HolyShield)
+    pal.sp.HolyShield_force:cast()
   end)
   pal.actions.dict = cs.filter_dict(pal.actions, "table")
 end

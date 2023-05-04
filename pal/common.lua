@@ -127,7 +127,12 @@ pal.common.init = function()
     return target == "Demon" or target == "Undead"
   end)
 
-  pal.sp.HolyShield = cs.Spell.build(spn.HolyShield)
+  pal.sp.HolyShield = cs.Spell.build(spn.HolyShield, function(spell)
+    local last_phy_ts = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical):get_last_ts()
+    -- cs.debug(GetTime() - last_phy_ts)
+    return cs.compare_time(5, last_phy_ts)
+  end)
+  pal.sp.HolyShield_force = cs.Spell.build(spn.HolyShield)
 
   pal.sp.Righteous = cs.Buff.build(pal.spn.Righteous, nil, 28 * 60)
 end

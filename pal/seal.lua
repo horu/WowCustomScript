@@ -103,9 +103,9 @@ end
 
 pal.seal = {}
 
-pal.seal.current_to_string = function()
+pal.seal.get_current = function()
   local seal_name = cs.find_buff(sn.list_all)
-  return pal.to_print(seal_name)
+  return seal_name
 end
 
 pal.seal.init = function()
