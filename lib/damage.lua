@@ -481,6 +481,11 @@ function cs.damage.Parser:parse(msg, msg_event)
   defaults.value = 0
   defaults.sourcetype = cs.damage.st.Physical
 
+  if msg_event == cs.chat.c_hp_m then
+    cs.debug(msg)
+  end
+
+  -- TODO: add parser for c_hp_m
   if msg_event == cs.chat.c_c_vs_s_m or msg_event == cs.chat.c_hp_m then
     return cs.damage.Event.build(
             cs.damage.a.unknown,
