@@ -10,16 +10,19 @@ local spn = pal.spn
 ---@class pal.Bless
 pal.Bless = cs.create_class()
 
-pal.Bless.rebuff_timeout = 250
-
 -- Bless can by anavailable, but buffed on the target.
 function pal.Bless.try_build(bless_name, unit)
   if not cs.is_spell_available(bless_name) then
     return
   end
 
+  local rebuff_timeout = 5 * 60 - 50
+  if string.find(bless_name, "Greater") then
+    rebuff_timeout = 15 * 60 - 50
+  end
+
   local bless = pal.Bless:new()
-  bless.buff = cs.Buff.build(bless_name, unit, pal.Bless.rebuff_timeout)
+  bless.buff = cs.Buff.build(bless_name, unit, rebuff_timeout)
 
   return bless
 end
