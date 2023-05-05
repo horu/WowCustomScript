@@ -266,8 +266,8 @@ function cs.MapChecker:subscribe(obj, func)
 end
 
 function cs.MapChecker:_on_zone_changed()
-  self.zone_text = GetMinimapZoneText()
-  self.map_name = GetMapInfo()
+  self.zone_text = GetMinimapZoneText() or self.zone_text
+  self.map_name = GetMapInfo() or self.map_name
 
   for _, sub in self.subscribers do
     sub.func(sub.obj)
