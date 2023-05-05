@@ -48,8 +48,7 @@ local is_def_state = function(state)
   return state.id ~= pal.stn.NORM and state.id ~= pal.stn.RUSH
 end
 
----@param seal_list pal.Seal[]
-function Action:seal_action(state, seal_list)
+function Action:seal_action(state)
   if not cs.check_target(cs.t.close_10) then
     -- the target is far away
     return
@@ -147,6 +146,8 @@ pal.actions.init = function()
   end)
   pal.actions.splash = Action.build(seal.Crusader, function(self, state)
     cs.auto_attack_nearby()
+    -- TODO: add detect wisdom/light
+    pal.actions.wisdom:seal_action(state)
     pal.sp.HolyShield_force:cast()
   end)
   pal.actions.dict = cs.filter_dict(pal.actions, "table")
