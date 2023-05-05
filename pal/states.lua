@@ -142,7 +142,7 @@ function State:init()
   if self.default_slot then
     self.slot = self.default_slot
   else
-    self.slot = cs.slot.get_current() or cs.slot.one_hand_shield
+    self.slot = cs.slot.two_hand:is_equipped() and cs.slot.two_hand or cs.slot.one_hand_shield
   end
   self:recheck()
 end
@@ -304,6 +304,10 @@ end
 
 function StateHolder:heal_action(heal_cast)
   cs.error_disabler:off()
+
+  if not pal.heal.check_no_control() then
+    return
+  end
 
   -- TODO cast aura on damage
   if cs.check_combat(1) then

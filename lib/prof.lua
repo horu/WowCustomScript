@@ -1,13 +1,13 @@
 
 local cs = cs_common
-
 cs.prof = {}
 
-local slot = {}
-slot.MiningPick = 16
+
 
 ---@type cs.Slot
-local mining_pick_slot = cs.Slot.build(slot.MiningPick)
+local mining_pick_slot = cs.Slot.build(cs.slot.prof)
+
+
 
 ---@class cs.prof.Mining
 cs.prof.Mining = cs.create_class()
@@ -37,5 +37,7 @@ function cs.prof.Mining:_cast_detected(unit_cast)
 
   mining_pick_slot:try_use()
 end
+
+
 
 local mining = cs.prof.Mining.build()

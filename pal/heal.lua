@@ -14,18 +14,26 @@ hn.shield_list = {hn.DivineShield, hn.BlessingProtection}
 
 
 
-local EmegryCaster = cs.create_class()
+local EmegryCaster = cs.class()
 
-EmegryCaster.build = function()
-  local caster = EmegryCaster:new()
-  caster.shield_ts = 0
-  caster.spell_order = cs.SpellOrder.build(unpack(hn.shield_list))
-  caster.lay_spell = cs.Spell.build(hn.LayOnHands)
-  return caster
+function EmegryCaster:build()
+  self.shield_ts = 0
+  self.spell_order = cs.SpellOrder.build(unpack(hn.shield_list))
+  self.lay_spell = cs.Spell.build(hn.LayOnHands)
+
+  ---@type cs.Slot
+  self.dispel_no_control_slot = cs.Slot.build(cs.slot.tinker)
 end
 
 function EmegryCaster:has_debuff_protection()
   return cs.has_debuffs(cs.u.player, "Spell_Holy_RemoveCurse")
+end
+
+function EmegryCaster:dispel_no_control()
+  if not HasFullControl() then
+    self.dispel_no_control_slot:use()
+    return cs.Buff.success
+  end
 end
 
 function EmegryCaster:em_buff(lay)
@@ -69,9 +77,14 @@ pal.heal.check_hp = function()
   end
 end
 
+pal.heal.check_no_control = function()
+  return pal.st_em_caster:dispel_no_control() == cs.Buff.exists
+end
+
+
 
 pal.heal.init = function()
-  pal.st_em_caster = EmegryCaster.build()
+  pal.st_em_caster = EmegryCaster:new()
 end
 
 
