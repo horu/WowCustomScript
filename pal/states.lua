@@ -19,7 +19,6 @@ StateBuff.build = function(state_id, buff_name)
   buff.id = state_id
   buff.name = buff_name
 
-  buff:_get_config(1).current = buff:_get_config(1).current or buff:_get_config().default
   ---@type cs.Buff
   buff.current = nil
 
@@ -36,7 +35,7 @@ end
 -- const
 function StateBuff:to_string()
   local buffed = self:get_buffed()
-  local current = self:_get_config(1).current
+  local current = self:_get_config_current()
 
   local str = pal.to_print(current)
   if not buffed then
@@ -61,7 +60,7 @@ function StateBuff:rebuff(buff_name)
 
   if not buff_name or not self:_is_available(buff_name) then
     -- set current
-    buff_name = self:_get_config(1).current
+    buff_name = self:_get_config_current()
   end
 
   -- aura/bless
@@ -73,12 +72,21 @@ end
 -- set buff and save it to config
 function StateBuff:set_current(buff_name)
   self:rebuff(buff_name or self:_get_config().default)
-  self:_get_config(1).current = self.current:get_name()
+  self:_set_config_current(self.current:get_name())
 end
 
 function StateBuff:save_buffed_to_config()
   local current = self:get_buffed()
   self:set_current(current)
+end
+
+function StateBuff:_get_config_current()
+  self:_get_config(1).current = self:_get_config(1).current or self:_get_config().default
+  return self:_get_config(1).current
+end
+
+function StateBuff:_set_config_current(value)
+  self:_get_config(1).current = value
 end
 
 
