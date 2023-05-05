@@ -4,51 +4,28 @@ local pal = cs.pal
 local spn = pal.spn
 local seal = pal.seal
 
+---@type pal.Seal[]
+local debuffed_seal_list = {}
 
 
--- ATTACKS
 
 ---@class Action
 local Action = cs.create_class()
-
----@type pal.Seal[]
-Action.debuffed_seal_list = {}
 
 ---@param main_seal pal.Seal
 Action.build = function(main_seal, run_func)
   local action = Action:new()
 
   action.main_seal = main_seal
-  ---@type function(self, state)
+  ---@type function(self, state_type)
   action.run = run_func
 
   --cs.debug(action)
   return action
 end
 
-function Action:judgement_other()
-  for _, it_seal in pairs(seal.list_all) do
-    if it_seal ~= self.main_seal then
-      if it_seal:judgement_it(true) then
-        return true
-      end
-    end
-  end
-end
-
-function Action:has_any_seal_debuff()
-  for _, it_seal in pairs(Action.debuffed_seal_list) do
-    if it_seal:check_target_debuff() then
-      return true
-    end
-  end
-end
-
-local is_def_state = function(state)
-  return state.id ~= pal.stn.NORM and state.id ~= pal.stn.RUSH
-end
-
-function Action:seal_action(state)
+---@param state_type pal.stt
+function Action:_seal_action(state_type)
   if not cs.check_target(cs.t.close_10) then
     -- the target is far away
     return
@@ -65,13 +42,13 @@ function Action:seal_action(state)
   end
 
   -- cast spells
-  if is_def_state(state) then
+  if state_type == pal.stt.def then
     if pal.sp.HolyShield:cast() then return end
   end
 
-  if not self:has_any_seal_debuff() then
+  if not self:_has_any_seal_debuff() then
     -- the target has no debuffs. judgement it.
-    if self:judgement_other() then
+    if self:_judgement_other() then
       -- wait another seal to judgement on the target
       return
     end
@@ -80,12 +57,31 @@ function Action:seal_action(state)
   end
 end
 
+function Action:_judgement_other()
+  for _, it_seal in pairs(seal.list_all) do
+    if it_seal ~= self.main_seal then
+      if it_seal:judgement_it(true) then
+        return true
+      end
+    end
+  end
+end
+
+function Action:_has_any_seal_debuff()
+  for _, it_seal in pairs(debuffed_seal_list) do
+    if it_seal:check_target_debuff() then
+      return true
+    end
+  end
+end
+
+
 
 pal.actions = {}
 pal.actions.init = function()
-  Action.debuffed_seal_list = { seal.Light, seal.Wisdom, seal.Justice }
+  debuffed_seal_list = { seal.Light, seal.Wisdom, seal.Justice }
 
-  pal.actions.damage = Action.build(seal.Righteousness, function(self, state)
+  pal.actions.damage = Action.build(seal.Righteousness, function(self, state_type)
     if not cs.check_target(cs.t.close_30) then return end
 
     local current_seal = pal.seal.get_current()
@@ -93,25 +89,24 @@ pal.actions.init = function()
       self.main_seal:reseal_and_judgement()
     end
 
-    if is_def_state(state) then
+    if state_type == pal.stt.def then
       self.cast_order_def:cast()
     else
       self.cast_order:cast()
     end
 
   end)
-
   pal.actions.damage.cast_order_def = cs.SpellOrder.build(
           pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike, pal.sp.HolyShield, pal.sp.CrusaderStrike)
   pal.actions.damage.cast_order = cs.SpellOrder.build(
           pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike,                    pal.sp.CrusaderStrike)
 
-  pal.actions.right = Action.build(seal.Righteousness, function(self, state)
+  pal.actions.right = Action.build(seal.Righteousness, function(self, state_type)
     -- TODO: dont cast judgement if no mana to rebuff Righteousness
     if not cs.check_target(cs.t.close_30) then return end
 
-    if state.id ~= pal.stn.RUSH then
-      if self:judgement_other() then
+    if state_type ~= pal.stt.damage then
+      if self:_judgement_other() then
         return
       end
     end
@@ -119,40 +114,51 @@ pal.actions.init = function()
     self.main_seal:reseal_and_judgement()
   end)
 
-  pal.actions.crusader = Action.build(seal.Crusader, function(self, state)
+  pal.actions.crusader = Action.build(seal.Crusader, function(self, state_type)
     if not cs.check_target(cs.t.close_10) then return end
 
-    if self:judgement_other() then
+    if self:_judgement_other() then
       return
     end
 
     self.main_seal:reseal()
   end)
 
-  pal.actions.wisdom = Action.build(seal.Wisdom, function(self, state)
-    self:seal_action(state, {seal.Wisdom, seal.Light, seal.Justice})
+  pal.actions.wisdom = Action.build(seal.Wisdom, function(self, state_type)
+    self:_seal_action(state_type, {seal.Wisdom, seal.Light, seal.Justice})
   end)
 
-  pal.actions.light = Action.build(seal.Light, function(self, state)
-    self:seal_action(state, {seal.Light, seal.Wisdom, seal.Justice})
+  pal.actions.light = Action.build(seal.Light, function(self, state_type)
+    self:_seal_action(state_type, {seal.Light, seal.Wisdom, seal.Justice})
   end)
 
-  pal.actions.justice = Action.build(seal.Justice, function(self, state)
-    self:seal_action(state, {seal.Justice, seal.Light, seal.Wisdom})
+  pal.actions.justice = Action.build(seal.Justice, function(self, state_type)
+    self:_seal_action(state_type, {seal.Justice, seal.Light, seal.Wisdom})
   end)
 
-  pal.actions.null = Action.build(seal.Crusader, function(self, state)
+  pal.actions.null = Action.build(seal.Wisdom, function(self, state_type)
     -- cs.cast(spn.HolyStrike)
   end)
-  pal.actions.splash = Action.build(seal.Crusader, function(self, state)
+
+  pal.actions.splash = Action.build(seal.Wisdom, function(self, state_type)
     cs.auto_attack_nearby()
     -- TODO: add detect wisdom/light
-    pal.actions.wisdom:seal_action(state)
+    pal.actions.wisdom:_seal_action(state_type)
     pal.sp.HolyShield_force:cast()
   end)
+
+  pal.actions.stun = Action.build(seal.Crusader, function(self, state_type)
+    self.cast_order:cast()
+  end)
+  pal.actions.stun.cast_order = cs.SpellOrder.build(pal.sp.TurnUndead, pal.spn.HammerJustice)
+
   pal.actions.dict = cs.filter_dict(pal.actions, "table")
 end
 
 
-
+-- PUBLIC
+function cs_free_action(name)
+  local action = pal.actions[name]
+  action:run(pal.stt.damage)
+end
 

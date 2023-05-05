@@ -16,6 +16,11 @@ pal.stn.BACK = "BACK"
 pal.stn.MANA = "MANA"
 pal.stn.HEAL = "HEAL"
 
+-- STateType
+pal.stt = {}
+pal.stt.damage = "damage"
+pal.stt.def = "def"
+
 
 cs_states_dynamic_config = {}
 
@@ -138,6 +143,7 @@ pal.config.init = function()
     states = {
       RUSH = {
         name = pal.stn.RUSH,
+        type = pal.stt.damage,
         hotkey = 1,
         color = cs.color.red_1,
 
@@ -155,6 +161,7 @@ pal.config.init = function()
       },
       DEF = {
         name = pal.stn.DEF,
+        type = pal.stt.def,
         hotkey = 2,
         color = cs.color.white,
 
@@ -172,6 +179,7 @@ pal.config.init = function()
       },
       BACK = {
         name = "BACK",
+        type = pal.stt.def,
         hotkey = 3,
         color = cs.color.purple,
         use_slot = cs.slot.one_hand_shield,
@@ -188,6 +196,7 @@ pal.config.init = function()
       },
       MANA = {
         name = "MANA",
+        type = pal.stt.def,
         hotkey = 4,
         color = cs.color.blue,
         -- use_slot = cs.slot.one_hand_shield,
@@ -204,6 +213,7 @@ pal.config.init = function()
       },
       NORM = {
         name = "NORM",
+        type = pal.stt.damage,
         hotkey = 5,
         color = cs.color.green,
         use_slot = cs.slot.one_hand_shield,
@@ -219,6 +229,7 @@ pal.config.init = function()
       },
       HEAL = {
         name = pal.stn.HEAL,
+        type = pal.stt.def,
         hotkey = 12 * 5 + 2,
         color = cs.color.yellow,
 

@@ -60,10 +60,12 @@ spn.Righteous = "Righteous Fury"
 spn.Judgement = "Judgement"
 spn.CrusaderStrike = "Crusader Strike"
 spn.HolyStrike = "Holy Strike"
-spn.Exorcism = "Exorcism"
 spn.HammerWrath = "Hammer of Wrath"
+spn.HammerJustice = "Hammer of Justice"
 spn.HolyShield = "Holy Shield"
 
+spn.Exorcism = "Exorcism"
+spn.TurnUndead = "Turn Undead"
 
 
 
@@ -123,8 +125,13 @@ pal.common.init = function()
   end)
 
   pal.sp.Exorcism = cs.Spell.build(spn.Exorcism, function(spell)
-    local target = UnitCreatureType(cs.u.target)
-    return target == "Demon" or target == "Undead"
+    return cs.check_target(cs.t.undead)
+  end)
+
+  pal.sp.TurnUndead = cs.Spell.build(spn.TurnUndead, function(spell)
+    local player_speed = cs.services.speed_checker:get_speed()
+    local is_undead = cs.check_target(cs.t.undead)
+    return is_undead and player_speed == 0
   end)
 
   pal.sp.HolyShield = cs.Spell.build(spn.HolyShield, function(spell)

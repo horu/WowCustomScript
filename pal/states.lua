@@ -132,6 +132,11 @@ State.build = function(id)
 end
 
 -- const
+function State:get_type()
+  return self:_get_config().type
+end
+
+-- const
 function State:get_name()
   return self:_get_config().color..self:_get_config().name
 end
@@ -394,7 +399,7 @@ end
 -- const
 function StateHolder:_do_action(name)
   local action = self.actions[name]
-  action:run(self.cur_state)
+  action:run(self.cur_state:get_type())
 end
 
 

@@ -41,6 +41,7 @@ cs.t.close_30 = "t_close_30"
 cs.t.attackable = "t_attackable"
 cs.t.fr_player = "t_fr_player"
 cs.t.en_player = "t_en_player"
+cs.t.undead = "cs.t.undead"
 
 
 -- check condition by OR
@@ -55,6 +56,9 @@ function cs.check_unit(check, unit)
     return cs.check_unit(cs.t.friend, unit) and cs.check_unit(cs.t.player, unit)
   elseif check == cs.t.en_player then
     return cs.check_unit(cs.t.enemy, unit) and cs.check_unit(cs.t.player, unit)
+  elseif check == cs.t.undead then
+    local target = UnitCreatureType(cs.u.target)
+    return target == "Demon" or target == "Undead"
   elseif check == cs.t.attackable then
     return cs.check_unit(cs.t.exists, unit) and
             not cs.check_unit(cs.t.friend, unit) and
