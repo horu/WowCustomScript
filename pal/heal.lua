@@ -22,7 +22,7 @@ function EmegryCaster:build()
   self.lay_spell = cs.Spell.build(hn.LayOnHands)
 
   ---@type cs.Slot
-  self.dispel_no_control_slot = cs.Slot.build(cs.slot.tinker)
+  self.dispel_no_control_slot = cs.slot.tinker
 end
 
 function EmegryCaster:has_debuff_protection()
