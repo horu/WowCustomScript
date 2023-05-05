@@ -5,7 +5,7 @@ cs.prof = {}
 
 
 ---@type cs.Slot
-local mining_pick_slot = cs.Slot.build(cs.slot.prof)
+local mining_pick_slot = cs.slot.prof
 
 
 
@@ -41,3 +41,7 @@ end
 
 
 local mining = cs.prof.Mining.build()
+
+cs.prof.test = function()
+  mining:_cast_detected({find_icon_name = function(self, name) return name == "Trade_Mining" end})
+end
