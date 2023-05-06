@@ -135,6 +135,10 @@ pal.common.init = function()
   end)
 
   pal.sp.HolyShield = cs.Spell.build(spn.HolyShield, function(spell)
+    if not cs.slot.id.is_equipped(cs.slot.id.off_hand) then
+      return
+    end
+
     local last_phy_ts = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical):get_last_ts()
     -- cs.debug(GetTime() - last_phy_ts)
     return cs.compare_time(5, last_phy_ts)

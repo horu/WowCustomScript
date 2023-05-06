@@ -61,6 +61,14 @@ end
 
 
 cs.slot = {}
+
+-- SlotId
+cs.slot.id = {}
+cs.slot.id.off_hand = 17
+cs.slot.id.is_equipped = function(id)
+  return GetInventoryItemTexture(cs.u.player, id) ~= nil
+end
+
 cs.slot.two_hand = cs.Slot.build(13)
 cs.slot.one_hand_shield = cs.MultiSlot.build({ 14, 15 })
 cs.slot.prof = cs.Slot.build(16)
@@ -75,4 +83,5 @@ cs.slot.get_equipped = function(available_list)
     end
   end
 end
+
 

@@ -84,22 +84,16 @@ pal.actions.init = function()
   pal.actions.damage = Action.build(seal.Righteousness, function(self, state_type)
     if not cs.check_target(cs.t.close_30) then return end
 
+    self.cast_order:cast()
+
     local current_seal = pal.seal.get_current()
     if not current_seal or current_seal == pal.sn.Righteousness then
       self.main_seal:reseal_and_judgement()
     end
 
-    if state_type == pal.stt.def then
-      self.cast_order_def:cast()
-    else
-      self.cast_order:cast()
-    end
-
   end)
-  pal.actions.damage.cast_order_def = cs.SpellOrder.build(
-          pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike, pal.sp.HolyShield, pal.sp.CrusaderStrike)
   pal.actions.damage.cast_order = cs.SpellOrder.build(
-          pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike,                    pal.sp.CrusaderStrike)
+          pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike, pal.sp.HolyShield, pal.sp.CrusaderStrike)
 
   pal.actions.right = Action.build(seal.Righteousness, function(self, state_type)
     -- TODO: dont cast judgement if no mana to rebuff Righteousness
