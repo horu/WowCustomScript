@@ -18,6 +18,7 @@ lib\prof.lua
 lib\stat.lua
 
 pal\common.lua
+pal\resist.lua
 pal\aura.lua
 pal\bless.lua
 pal\heal.lua

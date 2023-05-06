@@ -17,6 +17,7 @@ local main_load = function()
   cs.stat.init()
 
   cs.pal.common.init()
+  cs.pal.resist.init()
   cs.pal.bless.init()
   cs.pal.heal.init()
   cs.pal.seal.init()

@@ -123,11 +123,6 @@ State.build = function(id)
   state.default_slot = state:_get_config().use_slot
   state.slot = nil
 
-  state.enemy_attack = { base = nil, ts = 0 }
-  state.enemy_attack.is_valid = function(self)
-    return self.school and cs.compare_time(7, self.ts)
-  end
-
   return state
 end
 
@@ -178,16 +173,6 @@ function State:rebuff_aura()
   return self.buff_list.aura:rebuff(self:_get_aura())
 end
 
--- reacion for enenmy cast to change resist aura
----@param spell_school cs.ss
-function State:on_enemy_attack_school(spell_school)
-  if not self.enemy_attack:is_valid() or self.enemy_attack.school ~= spell_school then
-    -- cs.print("SPELL DETECTED: ".. cs.ss.to_print(spell_school))
-  end
-  self.enemy_attack.school = spell_school
-  self.enemy_attack.ts = GetTime()
-end
-
 
 -- const
 function State:_get_config(dynamic)
@@ -198,8 +183,8 @@ end
 function State:_get_aura()
   local aura_name
   -- buff spell defended auras if enemy casts one
-  if self.enemy_attack:is_valid() then
-    local spell_school = self.enemy_attack.school
+  local spell_school = pal.resist.analyzer:get_school()
+  if spell_school then
     if spell_school == cs.ss.Frost then
       aura_name = an.Frost
     end
@@ -286,13 +271,6 @@ function StateHolder:init()
   cs.st_button_checker:add_down_pattern(StateHolder.handler_Save, self, StateHolder._down_button_event)
   cs.st_button_checker:add_down_pattern(StateHolder.handler_Reset, self, StateHolder._down_button_event)
   cs.st_button_checker:add_down_pattern(StateHolder.handler_FullReset, self, StateHolder._down_button_event)
-
-  cs.st_target_cast_detector:subscribe(self, self._on_cast_detected)
-
-  local filter = {}
-  filter[cs.damage.p.school] = cs.dict_to_list(cs.ss, "string")
-  filter[cs.damage.p.target] = { cs.damage.u.player, cs.damage.u.party }
-  cs.damage.parser:subscribe(filter, self, self._on_damage_detected)
 end
 
 -- const
@@ -367,25 +345,6 @@ function StateHolder:_down_button_event(longkey, duration)
   elseif duration >= StateHolder.handler_Change then
     self:_change_state(longkey)
   end
-end
-
-function StateHolder:_on_cast_detected(spell_data)
-  if not cs.check_target(cs.t.attackable) then
-    return
-  end
-
-  local spell_school = spell_data:get_school()
-  if not spell_school then
-    return
-  end
-
-  self.cur_state:on_enemy_attack_school(spell_school)
-end
-
----@param event cs.damage.Event
-function StateHolder:_on_damage_detected(event)
-  local spell_school = event.school
-  self.cur_state:on_enemy_attack_school(spell_school)
 end
 
 function StateHolder:_change_state(state_number)
