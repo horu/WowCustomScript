@@ -3,8 +3,8 @@ local pal = cs.pal
 
 
 local school_timeout = 8
-local school_phy = cs.damage.st.Physical
-local spell_critical_damage_proc = 0.1
+-- when sum school damage for last %school_timeout seconds more then pick this school even phy damage more
+local spell_critical_damage_proc = 0.07
 
 pal.resist = {}
 
@@ -103,8 +103,8 @@ function pal.resist.Analyzer:_calculate_school()
     return
   end
 
-  local max_hp = UnitHealthMax(cs.u.player)
-  if max_damage > spell_critical_damage_proc * max_hp then
+  local party_max_hp = cs.get_party_hp_sum()
+  if max_damage > spell_critical_damage_proc * party_max_hp then
     -- magic damage has critical value
     return
   end
