@@ -329,10 +329,11 @@ function StateHolder:heal_action(heal_cast)
       return
     end
   end
-
-  if cs.services.speed_checker:is_moving() then
-    pal.sp.Cleanse:cast_helpful()
-  end
+  --
+  --if cs.services.speed_checker:is_moving() then
+  --  pal.sp.Cleanse:cast_helpful()
+  --  return
+  --end
 
   if self.cur_state.id == pal.stn.HEAL and self.cur_state:rebuff_aura() then
     -- wait rebuff aura
