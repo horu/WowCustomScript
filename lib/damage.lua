@@ -386,6 +386,7 @@ local combatlog_strings = {
 ---@field public action
 ---@field public target
 ---@field public value
+---@field public resisted
 ---@field public school
 ---@field public datatype
 ---@field public sourcetype
@@ -394,7 +395,7 @@ cs.damage.Event = cs.create_class()
 function cs.damage.Event.build(...)
   local event = cs.damage.Event:new()
 
-  event.source, event.action, event.target, event.value, event.school, event.datatype, event.sourcetype = unpack(arg)
+  event.source, event.action, event.target, event.value, event.school, event.datatype, event.sourcetype, event.resisted = unpack(arg)
   return event
 end
 
@@ -479,13 +480,14 @@ function cs.damage.Parser:parse(msg, msg_event)
   defaults.attack = "Auto Hit"
   defaults.spell = cs.damage.a.unknown
   defaults.value = 0
+  defaults.resisted = 0
   defaults.sourcetype = cs.damage.st.Physical
 
+  -- TODO: add parser for c_hp_m
   if msg_event == cs.chat.c_hp_m then
     cs.debug(msg)
   end
 
-  -- TODO: add parser for c_hp_m
   if msg_event == cs.chat.c_c_vs_s_m or msg_event == cs.chat.c_hp_m then
     return cs.damage.Event.build(
             cs.damage.a.unknown,
@@ -494,7 +496,8 @@ function cs.damage.Parser:parse(msg, msg_event)
             0,
             defaults.school,
             cs.damage.dt.damage,
-            cs.damage.st.Physical
+            cs.damage.st.Physical,
+            defaults.resisted
     )
   end
 
@@ -503,9 +506,23 @@ function cs.damage.Parser:parse(msg, msg_event)
     local result, _, a1, a2, a3, a4, a5, a6 = cfind(msg, data[1])
 
     if result then
-      local event = cs.damage.Event.build(data[2](defaults, a1, a2, a3, a4, a5, a6))
+      local pack_event = { data[2](defaults, a1, a2, a3, a4, a5, a6) }
+      table.insert(pack_event, defaults.resisted)
+
+      local event = cs.damage.Event.build(unpack(pack_event))
 
       event.value = tonumber(event.value)
+
+      local _, _, resisted_str = string.find(msg, "%((%d+) resisted%)")
+      if resisted_str then
+        event.resisted = tonumber(resisted_str)
+      end
+
+      local _, _, blocked_str = string.find(msg, "%((%d+) blocked%)")
+      if blocked_str then
+        event.resisted = tonumber(blocked_str)
+      end
+
       return event
     end
   end
@@ -599,7 +616,7 @@ end
 
 
 cs.damage.test = function()
-  local dmg_24_fire = "Burning Ravager hits you for 24 Fire damage."
+  local dmg_24_fire = "Burning Ravager hits you for 24 Fire damage. 12 resisted (10 resisted)"
 
   -- smoke
   do
@@ -611,13 +628,14 @@ cs.damage.test = function()
     assert(event.datatype == cs.damage.dt.damage)
     assert(event.target == UnitName(cs.u.player))
     assert(event.sourcetype == cs.damage.st.Physical)
+    assert(event.resisted == 10)
   end
 
   -- analyzer
   do
     cs.damage.parser:handle_event(dmg_24_fire)
 
-    local dmg_20_unkn = "Burning Ravager hits you for 20 damage."
+    local dmg_20_unkn = "Burning Ravager hits you for 20 damage. (2 blocked)"
     cs.damage.parser:handle_event(dmg_20_unkn)
 
     local type = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical)
@@ -630,6 +648,16 @@ cs.damage.test = function()
     assert(event.value == 0)
     assert(event.target == cs.damage.t.you)
     assert(event.sourcetype == cs.damage.st.Physical)
+    assert(event.resisted == 0)
+  end
+
+  -- blocked
+  do
+    local dmg_20_blocked = "Burning Ravager hits you for 20 damage. 21 blocked (2 blocked)"
+    local event = cs.damage.parser:parse(dmg_20_blocked)
+    assert(event.value == 20)
+    assert(event.sourcetype == cs.damage.st.Physical)
+    assert(event.resisted == 2)
   end
 end
 

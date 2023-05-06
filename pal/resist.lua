@@ -80,7 +80,7 @@ function pal.resist.Analyzer:_on_damage_detected(event)
     return
   end
 
-  school:add(event.value)
+  school:add(event.value + event.resisted)
 end
 
 function pal.resist.Analyzer:_calculate_school()
