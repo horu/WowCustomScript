@@ -4,6 +4,7 @@ local pal = cs.pal
 
 local school_timeout = 8
 local school_phy = cs.damage.st.Physical
+local spell_critical_damage_proc = 0.1
 
 pal.resist = {}
 
@@ -13,7 +14,7 @@ pal.resist.Analyzer = cs.class()
 
 function pal.resist.Analyzer:build()
   self.school_damage = {}
-  self.school_damage[school_phy] = cs.FixTable:new(school_timeout)
+  self.school_damage_phy = cs.FixTable:new(school_timeout)
   self.school_damage[cs.damage.s.Fire] = cs.FixTable:new(school_timeout)
   self.school_damage[cs.damage.s.Frost] = cs.FixTable:new(school_timeout)
   self.school_damage[cs.damage.s.Shadow] = cs.FixTable:new(school_timeout)
@@ -70,7 +71,7 @@ function pal.resist.Analyzer:_on_damage_detected(event)
 
     -- every hit phy damage is retr aura return 20 damage
     -- add value ~ 2 * retr aura damage
-    self.school_damage[school_phy]:add(max_hp / 200)
+    self.school_damage_phy:add(max_hp / 200)
   end
 
   local spell_school = event.school
@@ -89,9 +90,27 @@ function pal.resist.Analyzer:_calculate_school()
     self.damage_sum_list[school] = sum
     if sum > max_damage then
       max_damage = sum
-      self.current_school = school ~= school_phy and school
+      self.current_school = school
     end
   end
+
+  local phy_sum = self.school_damage_phy:get_sum()
+
+  self.damage_sum_list[cs.damage.st.Physical] = phy_sum
+
+  if max_damage > phy_sum then
+    -- magic damage more then phy
+    return
+  end
+
+  local max_hp = UnitHealthMax(cs.u.player)
+  if max_damage > spell_critical_damage_proc * max_hp then
+    -- magic damage has critical value
+    return
+  end
+
+  -- reset magic school. use phy
+  self.current_school = nil
 end
 
 
