@@ -15,6 +15,7 @@ lib\services.lua
 lib\dps.lua
 lib\spells.lua
 lib\prof.lua
+lib\stat.lua
 
 pal\common.lua
 pal\aura.lua

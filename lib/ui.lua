@@ -15,6 +15,7 @@ cs.color.purple = cs.color.make("C086F9")
 cs.color.green = cs.color.make("00ff00")
 cs.color.white = cs.color.make("ffffFF")
 cs.color.grey = cs.color.make("A0A0A0")
+cs.color.none = "|r"
 
 
 cs.ui = {}

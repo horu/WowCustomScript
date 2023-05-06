@@ -388,7 +388,7 @@ cs.spell.UnitCastDetector.build = function(unit)
   cast_detector.unit = unit
   cast_detector.sub_list = {}
   cast_detector.last_unit_cast = nil
-  cs.loop_event(0.2, cast_detector, cast_detector._check_loop)
+  cs.event.loop(0.2, cast_detector, cast_detector._check_loop)
 
   return cast_detector
 end

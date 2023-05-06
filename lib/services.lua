@@ -168,32 +168,48 @@ cs.SpeedChecker.build = function()
   speed_checker.y = 0
   speed_checker.calc = create_calc(0)
   speed_checker.speed_table = cs.create_fix_table(3/period)
-
-  -- UI text
-  speed_checker.text = cs.ui.Text:build_from_config(spd_checker_frame)
+  --
+  ---- UI text
+  --speed_checker.text = cs.ui.Text:build_from_config(spd_checker_frame)
 
   -- Deffered start
-  cs.once_event(5, function()
-    cs.loop_event(period, speed_checker, speed_checker._loop)
+  cs.event.once(5, function()
+    cs.event.loop(period, speed_checker, speed_checker._loop)
   end)
 
   -- To save calculated map size ratio to config
   speed_checker.map_params = cs.st_map_checker:get_map_params()
   cs.st_map_checker:subscribe(speed_checker, speed_checker._on_zone_changed)
+  --
+  ---- Reset saved map size ratio
+  --local button_point = cs.ui.Point.build(0, 0, cs.ui.r.BOTTOMLEFT, speed_checker.text.frame, cs.ui.r.BOTTOMLEFT)
+  --speed_checker.button = cs.create_simple_button(nil, nil, button_point, function()
+  --  local map_params = this.cs_speed_checker.map_params
+  --  cs.print("RESET SPEED FOR: " .. map_params.name)
+  --  map_params.size_ratio = nil
+  --end)
 
-  -- Reset saved map size ratio
-  local button_point = cs.ui.Point.build(0, 0, cs.ui.r.BOTTOMLEFT, speed_checker.text.frame, cs.ui.r.BOTTOMLEFT)
-  speed_checker.button = cs.create_simple_button(nil, nil, button_point, function()
-    local map_params = this.cs_speed_checker.map_params
-    cs.print("RESET SPEED FOR: " .. map_params.name)
-    map_params.size_ratio = nil
-  end)
-  speed_checker.button.cs_speed_checker = speed_checker
+  speed_checker.current_speed = nil
 
   return speed_checker
 end
 
 --region
+
+---@return @player speed - 1.0 - normal (100%), 1.6 - mounted, ...
+function cs.SpeedChecker:get_speed()
+  return self.current_speed
+end
+
+function cs.SpeedChecker:is_moving()
+  return self:get_speed() ~= 0
+end
+
+function cs.SpeedChecker:reset_speed()
+  local map_params = self.map_params
+  cs.print("RESET SPEED FOR: " .. map_params.name)
+  map_params.size_ratio = nil
+end
 
 function cs.SpeedChecker:_on_zone_changed()
   self.map_params = cs.st_map_checker:get_map_params()
@@ -297,30 +313,18 @@ function cs.SpeedChecker:_calculate_distance()
   return dist
 end
 
----@return @player speed - 1.0 - normal (100%), 1.6 - mounted, ...
-function cs.SpeedChecker:get_speed()
+function cs.SpeedChecker:_loop()
   local dist = self:_calculate_distance()
   local map_ratio = self:_get_map_size_ratio()
   local speed = self.calc:get_avg_diff(dist) * map_ratio / 100
   self.calc.value = 0
   self.speed_table:add(speed)
-  if self.map_params.size_ratio then
-    return speed
-  elseif speed == 0 then
-    return 0
+  if self.map_params.size_ratio or speed == 0 then
+    self.current_speed = speed
+  else
+    self.current_speed = nil
   end
 end
-
-function cs.SpeedChecker:is_moving()
-  return self:get_speed() ~= 0
-end
-
-function cs.SpeedChecker:_loop()
-  local speed = self:get_speed()
-  self.text:set_text(string.format("%1.2f", speed or -1))
-end
-
-cs.services.speed_checker = nil
 
 --endregion
 

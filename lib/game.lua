@@ -174,8 +174,8 @@ cs.auto_attack_nearby = function()
   end
 
   if cs.check_target(cs.t.close_9) then
-    cs.once_event(0.2, cs.auto_attack)
-    cs.once_event(0.6, cs.auto_attack)
+    cs.event.once(0.2, cs.auto_attack)
+    cs.event.once(0.6, cs.auto_attack)
   elseif not has_target then
     ClearTarget()
   end
@@ -202,8 +202,8 @@ cs.attack_target_max_hp = function()
   end
 
   if cs.check_target(cs.t.close_9) then
-    cs.once_event(0.2, cs.auto_attack)
-    cs.once_event(0.6, cs.auto_attack)
+    cs.event.once(0.2, cs.auto_attack)
+    cs.event.once(0.6, cs.auto_attack)
   elseif not has_target then
     ClearTarget()
   end
@@ -236,10 +236,10 @@ cs.MapChecker.build = function()
   f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
   f:RegisterEvent("ZONE_CHANGED")
   f:SetScript("OnEvent", function()
-    cs.once_event(2, this.cs_map_checker, cs.MapChecker._on_zone_changed)
+    cs.event.once(2, this.cs_map_checker, cs.MapChecker._on_zone_changed)
   end)
 
-  cs.once_event(2, map_checker, cs.MapChecker._on_zone_changed)
+  cs.event.once(2, map_checker, cs.MapChecker._on_zone_changed)
 
   return map_checker
 end

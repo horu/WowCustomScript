@@ -419,15 +419,16 @@ cs.add_loop_event = function(name, period, obj, func, count)
   end
 end
 
-cs.loop_event = function(period, obj, func)
+cs.event = {}
+cs.event.loop = function(period, obj, func)
   cs.add_loop_event("", period, obj, func)
 end
 
-cs.repeat_event = function(period, count, obj, func)
+cs.event.rep = function(period, count, obj, func)
   cs.add_loop_event("", period, obj, func, count)
 end
 
-cs.once_event = function(delay, obj, func)
+cs.event.once = function(delay, obj, func)
   cs.add_loop_event("", delay, obj, func, 1)
 end
 

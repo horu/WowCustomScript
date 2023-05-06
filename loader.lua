@@ -14,6 +14,7 @@ local main_load = function()
   cs.game.init()
   cs.services.init()
   cs.dps.init()
+  cs.stat.init()
 
   cs.pal.common.init()
   cs.pal.bless.init()
@@ -34,5 +35,5 @@ main_frame:SetScript("OnEvent", function()
     return
   end
 
-  cs.once_event(0.2, main_load)
+  cs.event.once(0.2, main_load)
 end)

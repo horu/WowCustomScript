@@ -98,12 +98,12 @@ end
 cs.Dps = cs.class()
 
 --region
-function cs.Dps:build(unit, frame_config)
-  ---@type cs.Dps
+---@param self cs.Dps
+function cs.Dps.build(self, unit, frame_config)
   self.unit = unit
   self.data = cs.DpsData:new(unit)
   self.text = cs.ui.Text:build_from_config(frame_config)
-  self:_init_frame()
+  self:_init_events_frame()
 
   local filter = {}
   if unit == cs.u.target then
@@ -130,7 +130,6 @@ function cs.Dps:_on_damage_parser_event(event)
 end
 
 function cs.Dps:_on_damage(damage_value)
-
   ---@type cs.DpsData
   local data = self.data
   local ts = GetTime()
@@ -165,7 +164,7 @@ end
 
 
 
-function cs.Dps:_init_frame()
+function cs.Dps:_init_events_frame()
   local f = cs.create_simple_frame()
   f.cs_dps = self
   --f:RegisterEvent("UNIT_COMBAT")
@@ -227,6 +226,6 @@ local st_dps_player -- player received damage
 
 cs.dps = {}
 cs.dps.init = function()
-  st_dps_target = cs.Dps:new("target", dps_frame.target)
-  st_dps_player = cs.Dps:new("player", dps_frame.player)
+  --st_dps_target = cs.Dps:new("target", dps_frame.target)
+  --st_dps_player = cs.Dps:new("player", dps_frame.player)
 end
