@@ -4,12 +4,7 @@ local pal = cs.pal
 
 
 -- HealName
-local hn = {}
-hn.DivineShield = "Divine Shield"
-hn.DivineProtection = "Divine Protection"
-hn.BlessingProtection = "Blessing of Protection"
-hn.LayOnHands = "Lay on Hands"
-hn.shield_list = {hn.DivineShield, hn.BlessingProtection}
+
 
 
 
@@ -18,8 +13,8 @@ local EmegryCaster = cs.class()
 
 function EmegryCaster:build()
   self.shield_ts = 0
-  self.spell_order = cs.SpellOrder.build(unpack(hn.shield_list))
-  self.lay_spell = cs.Spell.build(hn.LayOnHands)
+  self.spell_order = cs.SpellOrder.build(unpack(pal.hn.shield_list))
+  self.lay_spell = cs.Spell.build(pal.hn.LayOnHands)
 
   ---@type cs.Slot
   self.dispel_no_control_slot = cs.slot.tinker
@@ -46,11 +41,11 @@ function EmegryCaster:em_buff(lay)
     end
   end
 
-  if cs.compare_time(8, self.shield_ts) or cs.find_buff(hn.shield_list) then
+  if cs.compare_time(8, self.shield_ts) or cs.find_buff(pal.hn.shield_list) then
     return cs.Buff.exists
   end
 
-  if cs.get_spell_cd(hn.LayOnHands) then
+  if cs.get_spell_cd(pal.hn.LayOnHands) then
     return cs.Buff.exists
   end
 

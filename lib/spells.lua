@@ -23,7 +23,9 @@ end
 ---@class cs.Spell
 cs.Spell = cs.create_class()
 
+---@return cs.Spell
 cs.Spell.build = function(name, custom_ready_check)
+  ---@type cs.Spell
   local spell = cs.Spell:new()
 
   spell.id, spell.book = find_spell(name)
@@ -65,6 +67,17 @@ function cs.Spell:cast_to_unit(unit)
     end
     return true
   end
+end
+
+function cs.Spell:cast_helpful()
+  local unit = cs.u.player
+  if cs.check_target(cs.t.friend) then
+    unit = cs.u.target
+  --elseif cs.check_mouse(cs.t.exists) and cs.check_mouse(cs.t.friend) then
+  --  unit = cs.u.mouseover
+  end
+
+  return self:cast_to_unit(unit)
 end
 
 function cs.Spell:is_ready()
@@ -130,15 +143,8 @@ end
 -- default to player
 -- For heals/recovery
 cs.cast_helpful = function(name)
-  local unit = cs.u.player
-  if cs.check_target(cs.t.friend) then
-    unit = cs.u.target
-  --elseif cs.check_mouse(cs.t.exists) and cs.check_mouse(cs.t.friend) then
-  --  unit = cs.u.mouseover
-  end
-
   local spell = cs.Spell.build(name)
-  return spell:cast_to_unit(unit)
+  return spell:cast_helpful()
 end
 
 cs.is_spell_available = function(name)

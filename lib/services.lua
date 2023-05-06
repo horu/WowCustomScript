@@ -311,6 +311,10 @@ function cs.SpeedChecker:get_speed()
   end
 end
 
+function cs.SpeedChecker:is_moving()
+  return self:get_speed() ~= 0
+end
+
 function cs.SpeedChecker:_loop()
   local speed = self:get_speed()
   self.text:set_text(string.format("%1.2f", speed or -1))

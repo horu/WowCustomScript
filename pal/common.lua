@@ -68,6 +68,15 @@ spn.Exorcism = "Exorcism"
 spn.TurnUndead = "Turn Undead"
 
 
+-- HealName
+pal.hn = {}
+pal.hn.DivineShield = "Divine Shield"
+pal.hn.DivineProtection = "Divine Protection"
+pal.hn.BlessingProtection = "Blessing of Protection"
+pal.hn.LayOnHands = "Lay on Hands"
+pal.hn.Cleanse = "Cleanse"
+pal.hn.shield_list = {pal.hn.DivineShield, pal.hn.BlessingProtection}
+
 
 local to_print_list = {}
 to_print_list[an.Concentration] = cs.color.yellow .. "CA" .. "|r"
@@ -120,8 +129,7 @@ pal.common.init = function()
       return
     end
 
-    local player_speed = cs.services.speed_checker:get_speed()
-    return player_speed == 0
+    return not cs.services.speed_checker:is_moving()
   end)
 
   pal.sp.Exorcism = cs.Spell.build(spn.Exorcism, function(spell)
@@ -129,9 +137,9 @@ pal.common.init = function()
   end)
 
   pal.sp.TurnUndead = cs.Spell.build(spn.TurnUndead, function(spell)
-    local player_speed = cs.services.speed_checker:get_speed()
-    local is_undead = cs.check_target(cs.t.undead)
-    return is_undead and player_speed == 0
+    local is_moving = cs.services.speed_checker:is_moving()
+    local target_is_undead = cs.check_target(cs.t.undead)
+    return target_is_undead and not is_moving
   end)
 
   pal.sp.HolyShield = cs.Spell.build(spn.HolyShield, function(spell)
@@ -146,6 +154,8 @@ pal.common.init = function()
   pal.sp.HolyShield_force = cs.Spell.build(spn.HolyShield)
 
   pal.sp.Righteous = cs.Buff.build(pal.spn.Righteous, nil, 28 * 60)
+
+  pal.sp.Cleanse = cs.Spell.build(pal.hn.Cleanse)
 end
 
 
