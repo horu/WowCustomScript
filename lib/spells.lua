@@ -380,21 +380,18 @@ end
 
 -- detect cast spells from target
 ---@class cs.spell.UnitCastDetector
-cs.spell.UnitCastDetector = cs.create_class()
+cs.spell.UnitCastDetector = cs.class()
 
-cs.spell.UnitCastDetector.build = function(unit)
-  local cast_detector = cs.spell.UnitCastDetector:new()
-
-  cast_detector.unit = unit
-  cast_detector.sub_list = {}
-  cast_detector.last_unit_cast = nil
-  cs.event.loop(0.2, cast_detector, cast_detector._check_loop)
-
-  return cast_detector
+function cs.spell.UnitCastDetector:build(unit)
+  self.unit = unit
+  self.sub_list = {}
+  self.last_unit_cast = nil
 end
 
 -- func = function(obj, cs.spell.UnitCast)
 function cs.spell.UnitCastDetector:subscribe(obj, func)
+  -- TODO: test it
+  cs.event.try_loop(0.2, self, self._check_loop)
   self.sub_list[obj] = func
 end
 
@@ -415,9 +412,9 @@ function cs.spell.UnitCastDetector:_check_loop()
 end
 
 ---@type cs.spell.UnitCastDetector
-cs.st_target_cast_detector = cs.spell.UnitCastDetector.build(cs.u.target)
+cs.st_target_cast_detector = cs.spell.UnitCastDetector:new(cs.u.target)
 ---@type cs.spell.UnitCastDetector
-cs.st_player_cast_detector = cs.spell.UnitCastDetector.build(cs.u.player)
+cs.st_player_cast_detector = cs.spell.UnitCastDetector:new(cs.u.player)
 
 
 

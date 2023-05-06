@@ -271,64 +271,108 @@ cs.compare_time = function(limit, past, now)
 end
 
 
-function cs.create_fix_table(size)
-  local fix_table = { size = size, list = {}, last_ts = 0 }
+---@class cs.FixTable
+cs.FixTable = cs.class()
 
-  function fix_table.clear(self)
-    self.list = {}
-    self.last_ts = 0
-  end
-
-  function fix_table:get_last_ts()
-    return self.last_ts
-  end
-
-  function fix_table.add(self, value)
-    self.last_ts = GetTime()
-    table.insert(self.list, 1, value)
-    local size = table.getn(self.list)
-    if size > self.size then
-      table.remove(self.list, size)
-    end
-  end
-
-  function fix_table.is_full(self)
-    return table.getn(self.list) == self.size
-  end
-
-  function fix_table.get_max_diff(self)
-    local min_v =  9999999
-    local max_v = -9999999
-    for _, v in self.list do
-      min_v = min(min_v, v)
-      max_v = max(max_v, v)
-    end
-
-    return max_v - min_v
-  end
-
-  function fix_table.get_sum(self, last_count)
-    local sum = 0
-    local cur_size = table.getn(self.list)
-    local cur_count = math.min(last_count or cur_size, cur_size)
-    for i=1, cur_count do
-      sum = sum + self.list[i]
-    end
-    return sum
-  end
-
-  function fix_table.get_avg_value(self, last_count)
-    local cur_size = table.getn(self.list)
-    local cur_count = math.min(last_count or cur_size, cur_size)
-    local sum = self:get_sum(cur_count)
-    if cur_size > 0 then
-      return sum / cur_count
-    end
-    return 0
-  end
-  return fix_table
+function cs.FixTable:build(timeout, size_limit)
+  self.timeout = timeout
+  self.size_limit = size_limit
+  self.list = {}
 end
 
+-- const
+function cs.FixTable:get_last_ts()
+  self:_remove_expired()
+  local size = self:get_size()
+  if size > 0 then
+    return self.list[1].ts
+  end
+  return 0
+end
+
+-- const
+function cs.FixTable:get_size()
+  self:_remove_expired()
+  return table.getn(self.list)
+end
+
+-- const
+function cs.FixTable:is_full()
+  self:_remove_expired()
+  return self.size_limit and self:get_size() == self.size_limit
+end
+
+-- const
+function cs.FixTable:get_max_diff()
+  self:_remove_expired()
+  local min_v =  9999999
+  local max_v = -9999999
+  for _, el in self.list do
+    min_v = min(min_v, el.value)
+    max_v = max(max_v, el.value)
+  end
+
+  return max_v - min_v
+end
+
+-- const
+function cs.FixTable:get_sum(last_count)
+  self:_remove_expired()
+  local sum = 0
+  local cur_size = self:get_size()
+  local cur_count = math.min(last_count or cur_size, cur_size)
+  for i=1, cur_count do
+    sum = sum + self.list[i].value
+  end
+  return sum
+end
+
+-- const
+function cs.FixTable:get_avg_value(last_count)
+  local cur_size = self:get_size()
+  local cur_count = math.min(last_count or cur_size, cur_size)
+  local sum = self:get_sum(cur_count)
+  if cur_size > 0 then
+    return sum / cur_count
+  end
+  return 0
+end
+
+function cs.FixTable:add(value)
+  local ts = GetTime()
+  table.insert(self.list, 1, { value = value, ts = ts })
+
+  local size = table.getn(self.list)
+  if self.size_limit and size > self.size_limit then
+    table.remove(self.list, size)
+  end
+  self:_remove_expired(ts)
+end
+
+function cs.FixTable:clear()
+  self.list = {}
+end
+
+function cs.FixTable:_remove_expired(ts)
+  if not self.timeout then
+    return
+  end
+
+  ts = ts or GetTime()
+  local size = table.getn(self.list)
+  for i=size, 1, -1 do
+    if not cs.compare_time(self.timeout, self.list[i].ts, ts) then
+      table.remove(self.list, i)
+    else
+      break
+    end
+  end
+end
+
+
+function cs.create_fix_table(size)
+  return cs.FixTable:new(nil, size)
+end
 
 
 
@@ -419,8 +463,20 @@ cs.add_loop_event = function(name, period, obj, func, count)
   end
 end
 
+local looper_sub_list = {}
+
 cs.event = {}
 cs.event.loop = function(period, obj, func)
+  cs.add_loop_event("", period, obj, func)
+end
+
+cs.event.try_loop = function(period, obj, func)
+  if looper_sub_list[obj] then
+    return
+  end
+
+  looper_sub_list[obj] = true
+
   cs.add_loop_event("", period, obj, func)
 end
 
@@ -434,4 +490,73 @@ end
 
 
 
+cs.common = {}
+cs.common.test = function()
+  do
+    ---@type cs.FixTable`
+    local fix = cs.FixTable:new(nil, 3)
+    assert(fix:get_size() == 0)
+    assert(not fix:is_full())
+    assert(fix:get_last_ts() == 0)
+    assert(fix:get_sum() == 0)
+    assert(fix:get_avg_value() == 0)
 
+    fix:add(10)
+    assert(fix:get_size() == 1)
+    assert(not fix:is_full())
+    assert(fix:get_sum() == 10)
+    assert(fix:get_avg_value() == 10)
+    assert(fix:get_max_diff() == 0)
+
+    fix:add(6)
+    assert(fix:get_size() == 2)
+    assert(not fix:is_full())
+    assert(fix:get_sum() == 16)
+    assert(fix:get_avg_value() == 8)
+    assert(fix:get_max_diff() == 4)
+
+    fix:add(104)
+    assert(fix:get_size() == 3)
+    assert(fix:is_full())
+    assert(fix:get_sum() == 120)
+    assert(fix:get_avg_value() == 40)
+    assert(fix:get_max_diff() == 98)
+
+    fix:add(-20)
+    assert(fix:get_size() == 3)
+    assert(fix:is_full())
+    assert(fix:get_sum() == 90)
+    assert(fix:get_avg_value() == 30)
+    assert(fix:get_max_diff() == 124)
+  end
+
+  do
+    local fix = cs.FixTable:new(1)
+    assert(fix:get_size() == 0)
+    assert(fix:get_last_ts() == 0)
+    assert(fix:get_sum() == 0)
+    assert(fix:get_avg_value() == 0)
+
+    fix:add(10)
+    assert(fix:get_size() == 1)
+    assert(not fix:is_full())
+    assert(fix:get_sum() == 10)
+    assert(fix:get_avg_value() == 10)
+    assert(fix:get_max_diff() == 0)
+
+    cs.event.once(0.5, function()
+      assert(fix:get_size() == 1)
+      assert(not fix:is_full())
+      assert(fix:get_sum() == 10)
+      assert(fix:get_avg_value() == 10)
+      assert(fix:get_max_diff() == 0)
+    end)
+
+    cs.event.once(10, function()
+      assert(fix:get_size() == 0)
+      assert(fix:get_last_ts() == 0)
+      assert(fix:get_sum() == 0)
+      assert(fix:get_avg_value() == 0)
+    end)
+  end
+end

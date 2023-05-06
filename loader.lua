@@ -1,6 +1,7 @@
 local cs = cs_common
 
 local main_tests = function()
+  cs.common.test()
   cs.damage.test()
   cs.game.test()
   cs.spell.test()
