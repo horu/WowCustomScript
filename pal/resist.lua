@@ -2,6 +2,9 @@ local cs = cs_common
 local pal = cs.pal
 
 
+local school_timeout = 8
+local school_phy = cs.damage.st.Physical
+
 pal.resist = {}
 
 -- analyzer current damage and detect max school damage
@@ -9,19 +12,24 @@ pal.resist = {}
 pal.resist.Analyzer = cs.class()
 
 function pal.resist.Analyzer:build()
-  self.enemy_attack = { base = nil, ts = 0 }
-  self.enemy_attack.is_valid = function(self)
-    return self.school and cs.compare_time(7, self.ts)
-  end
-
-  --cs.st_target_cast_detector:subscribe(self, self._on_cast_detected)
-
   self.school_damage = {}
+  self.school_damage[school_phy] = cs.FixTable:new(school_timeout)
+  self.school_damage[cs.damage.s.Fire] = cs.FixTable:new(school_timeout)
+  self.school_damage[cs.damage.s.Frost] = cs.FixTable:new(school_timeout)
+  self.school_damage[cs.damage.s.Shadow] = cs.FixTable:new(school_timeout)
+
+  --TODO: Remove it
+  self.damage_sum_list = {}
+
+  self.current_school = nil -- phy
 
   local filter = {}
-  filter[cs.damage.p.school] = cs.dict_to_list(cs.ss, "string")
   filter[cs.damage.p.target] = { cs.damage.u.player, cs.damage.u.party }
   cs.damage.parser:subscribe(filter, self, self._on_damage_detected)
+end
+
+function pal.resist.Analyzer:get_sum_damage(school)
+  return self.damage_sum_list[school] or 0
 end
 
 -- nil - phy damage
@@ -32,9 +40,9 @@ function pal.resist.Analyzer:get_school()
     return school
   end
 
-  if self.enemy_attack:is_valid() then
-    return self.enemy_attack.school
-  end
+  self:_calculate_school()
+
+  return self.current_school
 end
 
 function pal.resist.Analyzer:_detect_target_cast()
@@ -55,37 +63,36 @@ function pal.resist.Analyzer:_detect_target_cast()
   return spell_school
 end
 
-function pal.resist.Analyzer:_on_cast_detected(spell_data)
-  if not cs.check_target(cs.t.attackable) then
-    return
-  end
-
-  local spell_school = spell_data:get_school()
-  if not spell_school then
-    return
-  end
-
-  self:_on_enemy_attack_school(spell_school)
-end
-
 ---@param event cs.damage.Event
 function pal.resist.Analyzer:_on_damage_detected(event)
-  -- every hit phy damage is retr aura return 20 damage
+  if event.sourcetype == cs.damage.st.Physical then
+    local max_hp = UnitHealthMax(cs.u.player)
+
+    -- every hit phy damage is retr aura return 20 damage
+    -- add value ~ 2 * retr aura damage
+    self.school_damage[school_phy]:add(max_hp / 200)
+  end
 
   local spell_school = event.school
-  self:_on_enemy_attack_school(spell_school)
-end
-
--- reacion for enenmy cast to change resist aura
----@param spell_school cs.ss
-function pal.resist.Analyzer:_on_enemy_attack_school(spell_school)
-  if not self.enemy_attack:is_valid() or self.enemy_attack.school ~= spell_school then
-    -- cs.print("SPELL DETECTED: ".. cs.ss.to_print(spell_school))
+  local school = self.school_damage[spell_school]
+  if not school then
+    return
   end
-  self.enemy_attack.school = spell_school
-  self.enemy_attack.ts = GetTime()
+
+  school:add(event.value)
 end
 
+function pal.resist.Analyzer:_calculate_school()
+  local max_damage = 1
+  for school, damage in pairs(self.school_damage) do
+    local sum = damage:get_sum()
+    self.damage_sum_list[school] = sum
+    if sum > max_damage then
+      max_damage = sum
+      self.current_school = school ~= school_phy and school
+    end
+  end
+end
 
 
 pal.resist.init = function()

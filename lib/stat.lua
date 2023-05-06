@@ -45,13 +45,25 @@ end
 function cs.stat.Frame:_update()
   local speed = cs.services.speed_checker:get_speed()
 
-  local fire_resist = cs.color.orange_1..cs.ur.get_total_resist(cs.ur.Fire)..cs.color.none
-  local frost_resist = cs.color.blue..cs.ur.get_total_resist(cs.ur.Frost)..cs.color.none
-  local shadow_resist = cs.color.purple..cs.ur.get_total_resist(cs.ur.Shadow)..cs.color.none
+  local fire_resist = cs.color.orange_1..cs.ur.get_total_resist(cs.ur.Fire)
+  local frost_resist = cs.color.blue..cs.ur.get_total_resist(cs.ur.Frost)
+  local shadow_resist = cs.color.purple..cs.ur.get_total_resist(cs.ur.Shadow)
   local armor = cs.ur.get_total_resist(cs.ur.Physical) / 1000
 
-  local text = string.format("%1.2f %s %s %s %1.1f",
-          speed or -1, fire_resist, frost_resist, shadow_resist, armor)
+  -- TODO: remove it
+  local fire_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.s.Fire)
+  local frost_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.s.Frost)
+  local shadow_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.s.Shadow)
+  local phy_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.st.Physical)
+
+
+  local text = string.format("%1.2f %s(%4d) %s(%4d) %s(%4d) |r%1.1f(%4d)",
+          speed or -1,
+          fire_resist, fire_damage,
+          frost_resist, frost_damage,
+          shadow_resist, shadow_damage,
+          armor, phy_damage
+  )
 
   self.text:set_text(text)
 end
