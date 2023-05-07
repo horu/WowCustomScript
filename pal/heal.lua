@@ -72,6 +72,14 @@ pal.heal.check_hp = function()
   end
 end
 
+pal.heal.bubble_and_teleport = function()
+  if pal.st_em_caster:em_buff(true) ~= cs.Buff.exists then
+    return
+  end
+
+  cs.slot.use_by_name(cs.item.hearth_stone)
+end
+
 pal.heal.check_no_control = function()
   return pal.st_em_caster:dispel_no_control() == cs.Buff.exists
 end
@@ -83,8 +91,11 @@ pal.heal.init = function()
 end
 
 
-
 -- PUBLIC
 function cs_emegrancy()
   pal.st_em_caster:em_buff(true)
+end
+
+function cs_bubble_and_teleport()
+  pal.heal.bubble_and_teleport()
 end

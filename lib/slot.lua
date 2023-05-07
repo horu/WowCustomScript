@@ -59,6 +59,9 @@ function cs.MultiSlot:use()
 end
 
 
+cs.item = {}
+cs.item.hearth_stone = "Hearthstone"
+
 
 cs.slot = {}
 
@@ -93,10 +96,13 @@ cs.slot.Set = cs.class()
 function cs.slot.Set:build(list)
   -- map slot_id: item_name
   self.list = {}
-  list = list or {}
-  for _, id in pairs(list) do
-    -- Save current set by default
-    self.list[id] = cs.slot.id.get_item_name(id)
+  for id, name in pairs(list) do
+    if name == "" then
+      -- Save current set by default
+      self.list[id] = cs.slot.id.get_item_name(id)
+    else
+      self.list[id] = name
+    end
   end
 end
 
