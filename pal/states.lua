@@ -280,11 +280,11 @@ function StateHolder:attack_action(action_name)
 
   -- TODO: cast before change state and rebuf ?
   cs.auto_attack()
-  self.cur_state:recheck()
   self:_update_frame()
 
   -- TODO: add usage blessing of freedom on freeze
   self:_do_action(action_name)
+  self.cur_state:recheck()
 
   cs.error_disabler:on()
 
