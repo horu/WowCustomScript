@@ -63,25 +63,63 @@ end
 cs.slot = {}
 
 -- SlotId
+
+cs.slot.two_hand = { 13 }
+cs.slot.one_hand_shield = { 14, 15 }
+cs.slot.prof = 16
+cs.slot.tinker = 17
+
+-- from SM
+cs.slot.use_by_name = UseItemByName
+cs.slot.link_to_name = ItemLinkToName
+
 cs.slot.id = {}
+cs.slot.id.main_hand = 16
 cs.slot.id.off_hand = 17
-cs.slot.id.is_equipped = function(id)
-  return GetInventoryItemTexture(cs.u.player, id) ~= nil
+
+cs.slot.id.get_item_name = function(slot_id)
+  return cs.slot.link_to_name(GetInventoryItemLink(cs.u.player, slot_id))
 end
 
-cs.slot.two_hand = cs.Slot.build(13)
-cs.slot.one_hand_shield = cs.MultiSlot.build({ 14, 15 })
-cs.slot.prof = cs.Slot.build(16)
-cs.slot.tinker = cs.Slot.build(17)
-cs.slot.list = cs.dict_to_list(cs.slot, "table")
+cs.slot.id.is_equipped = function(slot_id)
+  return cs.slot.id.get_item_name(slot_id) ~= nil
+end
 
-cs.slot.get_equipped = function(available_list)
-  available_list = available_list or cs.slot.list
-  for _, slot in cs.slot.list do
-    if slot:is_equipped() then
-      return slot
+
+
+---@class cs.slot.Set
+cs.slot.Set = cs.class()
+
+function cs.slot.Set:build(list)
+  -- map slot_id: item_name
+  self.list = {}
+  list = list or {}
+  for _, id in pairs(list) do
+    -- Save current set by default
+    self.list[id] = cs.slot.id.get_item_name(id)
+  end
+end
+
+function cs.slot.Set:is_equipped()
+  for id, name in pairs(self.list) do
+    if cs.slot.id.get_item_name(id) ~= name then
+      return
     end
   end
+  return true
+end
+
+function cs.slot.Set:use()
+  for id, name in pairs(self.list) do
+    if cs.slot.id.get_item_name(id) ~= name then
+      cs.slot.use_by_name(name)
+    end
+  end
+end
+
+
+cs.slot.test = function()
+  cs.debug(cs.slot.id.get_item_name(17))
 end
 
 

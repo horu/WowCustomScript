@@ -6,6 +6,7 @@ local main_tests = function()
   cs.game.test()
   cs.spell.test()
   cs.prof.test()
+  cs.slot.test()
 
   cs.pal.resist.test()
   cs.pal.states.test()

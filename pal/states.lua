@@ -25,7 +25,6 @@ StateBuff.build = function(state_id, buff_name)
   return buff
 end
 
-
 -- const
 -- get current buffed buf ( not config )
 function StateBuff:get_buffed()
@@ -35,7 +34,7 @@ end
 -- const
 function StateBuff:to_string()
   local buffed = self:get_buffed()
-  local current = self:_get_config_current()
+  local current = self:_get_config().current
 
   local str = pal.to_print(current)
   if not buffed then
@@ -60,7 +59,7 @@ function StateBuff:rebuff(buff_name)
 
   if not buff_name or not self:_is_available(buff_name) then
     -- set current
-    buff_name = self:_get_config_current()
+    buff_name = self:_get_config().current
   end
 
   -- aura/bless
@@ -71,8 +70,8 @@ end
 
 -- set buff and save it to config
 function StateBuff:set_current(buff_name)
-  self:rebuff(buff_name or self:_get_config().default)
-  self:_set_config_current(self.current:get_name())
+  self:rebuff(buff_name or self:_get_config().current)
+  self:_get_config().current = self.current:get_name()
 end
 
 function StateBuff:save_buffed_to_config()
@@ -80,19 +79,10 @@ function StateBuff:save_buffed_to_config()
   self:set_current(current)
 end
 
-function StateBuff:_get_config_current()
-  self:_get_config(1).current = self:_get_config(1).current or self:_get_config().default
-  return self:_get_config(1).current
-end
-
-function StateBuff:_set_config_current(value)
-  self:_get_config(1).current = value
-end
-
 
 -- const
-function StateBuff:_get_config(dynamic)
-  return pal.get_state_config(self.id, dynamic)[self.name]
+function StateBuff:_get_config()
+  return pal.get_state_config(self.id)[self.name]
 end
 
 -- const
@@ -148,9 +138,10 @@ end
 
 function State:init()
   if self.default_slot then
-    self.slot = self.default_slot
+    self.slot = cs.MultiSlot.build(self.default_slot)
   else
-    self.slot = cs.slot.two_hand:is_equipped() and cs.slot.two_hand or cs.slot.one_hand_shield
+    self.slot = cs.MultiSlot.build(cs.slot.two_hand):is_equipped() and
+            cs.MultiSlot.build(cs.slot.two_hand) or cs.MultiSlot.build(cs.slot.one_hand_shield)
   end
   self:recheck()
 end
@@ -175,8 +166,8 @@ end
 
 
 -- const
-function State:_get_config(dynamic)
-  return pal.get_state_config(self.id, dynamic)
+function State:_get_config()
+  return pal.get_state_config(self.id)
 end
 
 -- const

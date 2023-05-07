@@ -5,7 +5,7 @@ cs.prof = {}
 
 
 ---@type cs.Slot
-local mining_pick_slot = cs.slot.prof
+local mining_pick_slot = cs.Slot.build(cs.slot.prof)
 
 
 

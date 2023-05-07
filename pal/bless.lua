@@ -39,11 +39,11 @@ function pal.Bless:rebuff()
   return self.buff:rebuff()
 end
 
-local bless_dict = {}
+local avail_bless_dict = {}
 
 pal.bless = {}
 pal.bless.get_buff = function(spell_name)
-  return bless_dict[spell_name]
+  return avail_bless_dict[spell_name]
 end
 
 
@@ -151,7 +151,7 @@ pal.bless.blessing_everywhere = function()
 end
 
 pal.bn.get_available = function()
-  local list = cs.dict_keys_to_list(bless_dict, "string")
+  local list = cs.dict_keys_to_list(avail_bless_dict, "string")
   return list
 end
 
@@ -160,12 +160,13 @@ end
 
 pal.bless.init = function()
   -- self bless list
+  -- TODO: rebuild when spell book changed
   for bless_name, spell_name in pairs(bn.dict_all) do
     local bless = pal.Bless.try_build(spell_name)
     -- pal.bless[bless_name] = bless
     if bless then
       -- cs.print(bless:get_name())
-      bless_dict[spell_name] = bless
+      avail_bless_dict[spell_name] = bless
     end
   end
 end
