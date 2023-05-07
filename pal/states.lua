@@ -28,7 +28,7 @@ end
 -- const
 -- get current buffed buf ( not config )
 function StateBuff:get_buffed()
-  return cs.find_buff(self:_get_config().list)
+  return cs.find_buff(self:_get_config("list").list)
 end
 
 -- const
@@ -81,13 +81,19 @@ end
 
 
 -- const
-function StateBuff:_get_config()
-  return pal.get_state_config(self.id)[self.name]
+function StateBuff:_get_config(check_key)
+  local dict = pal.config.get_state(self.id)[self.name]
+
+  if check_key and not dict[check_key] then
+    return pal.config.get().default_state[self.name]
+  end
+
+  return pal.config.get_state(self.id)[self.name]
 end
 
 -- const
 function StateBuff:_is_available(value)
-  return cs.list_to_dict(self:_get_config().list, "string")[value]
+  return cs.list_to_dict(self:_get_config("list").list, "string")[value]
 end
 
 
@@ -167,7 +173,7 @@ end
 
 -- const
 function State:_get_config()
-  return pal.get_state_config(self.id)
+  return pal.config.get_state(self.id)
 end
 
 -- const
@@ -247,12 +253,12 @@ end
 
 -- before init
 function StateHolder:add_state(id)
-  local config = pal.get_state_config(id)
+  local config = pal.config.get_state(id)
   self.states[config.hotkey] = State.build(id)
 end
 
 function StateHolder:init()
-  self:_change_state(pal.get_state_holder_config().cur_state)
+  self:_change_state(pal.config.get_state_holder().cur_state)
 
   for longkey in pairs(self.states) do
     cs.st_button_checker:add_button(longkey)
@@ -324,7 +330,7 @@ function StateHolder:_down_button_event(longkey, duration)
   local state = self.states[longkey]
 
   if duration >= StateHolder.handler_FullReset then
-    pal.reset_dynamic_config()
+    pal.config.reset()
     state:reset_buffs()
     cs.print("RESET CONFIG!")
   elseif duration >= StateHolder.handler_Reset then
@@ -345,7 +351,7 @@ function StateHolder:_change_state(state_number)
     self.cur_state = state
     self.cur_state:init()
     self:_update_frame()
-    pal.get_state_holder_config().cur_state = state_number
+    pal.config.get_state_holder().cur_state = state_number
     cs.print("NEW STATE: "..self.cur_state:get_name())
     return true
   end
@@ -370,7 +376,7 @@ pal.states = {}
 pal.states.init = function()
   st_state_holder = StateHolder.build()
 
-  local states = pal.get_state_list()
+  local states = pal.config.get_state_list()
   cs.debug(states)
   for _, id in pairs(states) do
     st_state_holder:add_state(id)
@@ -387,7 +393,7 @@ pal.states.test = function()
     cs_attack_action(name)
   end
 
-  local init_state = pal.get_state_holder_config().cur_state
+  local init_state = pal.config.get_state_holder().cur_state
   st_state_holder:_down_button_event(1, 1)
   st_state_holder:_down_button_event(2, 1)
   st_state_holder:_down_button_event(3, 1)
