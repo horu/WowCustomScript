@@ -135,7 +135,7 @@ function cs.print_table(...)
   cs.print(full_msg)
 end
 
-function cs.debug(...)
+cs_debug = function(...)
   local stack_level = 3
 
   local line = get_stack_line(stack_level)
@@ -144,6 +144,7 @@ function cs.debug(...)
   cs.print(line..": "..full_msg)
 end
 
+cs.debug = cs_debug
 
 
 

@@ -2,8 +2,8 @@
 ## Interface: 11200
 ## Title: CustomScripts
 ## First created: Mar 2023
-## Version: 3.17.1
-## RequiredDeps: pfUI
+## Version: 1
+## RequiredDeps: pfUI SuperMacro
 ## SavedVariables: cs_states_dynamic_config cs_dps_sessions cs_map_data
 lib\common.lua
 lib\console.lua

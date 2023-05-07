@@ -106,13 +106,16 @@ end
 local function all_dump()
   --dump_table("cs_map_data", cs_map_data)
   dump_table("cs_players_bless_dict", cs_players_bless_dict)
-  cs.debug(cs.get_party_hp_sum())
 
   local bless_list = pal.bn.get_available()
   for _, id in pairs(bless_list) do
     local buff = pal.bless.get_buff(id)
     dump_table(id, buff)
   end
+
+  cs.debug(cs.get_party_hp_sum())
+  cs.debug(cs.st_map_checker)
+  cs.debug(GetMapInfo())
 end
 
 
