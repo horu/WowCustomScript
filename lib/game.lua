@@ -235,8 +235,10 @@ cs.MapChecker.build = function()
   f:RegisterEvent("PLAYER_ENTERING_WORLD")
   f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
   f:RegisterEvent("ZONE_CHANGED")
+  f:RegisterEvent("MINIMAP_ZONE_CHANGED")
+  f:RegisterEvent("WORLD_MAP_UPDATE")
   f:SetScript("OnEvent", function()
-    cs.event.once(2, this.cs_map_checker, cs.MapChecker._on_zone_changed)
+    cs.event.rep(3, 3, this.cs_map_checker, cs.MapChecker._on_zone_changed)
   end)
 
   cs.event.once(2, map_checker, cs.MapChecker._on_zone_changed)
@@ -267,10 +269,13 @@ end
 
 function cs.MapChecker:_on_zone_changed()
   self.zone_text = GetMinimapZoneText() or self.zone_text
-  self.map_name = GetMapInfo() or self.map_name
 
-  for _, sub in self.subscribers do
-    sub.func(sub.obj)
+  local new_map_name = GetMapInfo()
+  if new_map_name ~= self.map_name then
+    self.map_name = new_map_name
+    for _, sub in self.subscribers do
+      sub.func(sub.obj)
+    end
   end
 end
 --endregion cs.MapChecker
