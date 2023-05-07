@@ -7,6 +7,7 @@ local main_tests = function()
   cs.spell.test()
   cs.prof.test()
 
+  cs.pal.resist.test()
   cs.pal.states.test()
 end
 

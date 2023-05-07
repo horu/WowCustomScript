@@ -4,7 +4,8 @@ local pal = cs.pal
 
 local school_timeout = 8
 -- when sum school damage for last %school_timeout seconds more then pick this school even phy damage more
-local spell_critical_damage_proc = 0.07
+local spell_critical_damage_ratio = 0.07
+local retr_aura_ratio = 0.005
 
 pal.resist = {}
 
@@ -71,7 +72,7 @@ function pal.resist.Analyzer:_on_damage_detected(event)
 
     -- every hit phy damage is retr aura return 20 damage
     -- add value ~ 2 * retr aura damage
-    self.school_damage_phy:add(max_hp / 200)
+    self.school_damage_phy:add(retr_aura_ratio * max_hp)
   end
 
   local spell_school = event.school
@@ -104,7 +105,7 @@ function pal.resist.Analyzer:_calculate_school()
   end
 
   local party_max_hp = cs.get_party_hp_sum()
-  if max_damage > spell_critical_damage_proc * party_max_hp then
+  if max_damage > spell_critical_damage_ratio * party_max_hp then
     -- magic damage has critical value
     return
   end
@@ -117,4 +118,48 @@ end
 pal.resist.init = function()
   ---@type pal.resist.Analyzer
   pal.resist.analyzer = pal.resist.Analyzer:new()
+end
+
+pal.resist.test = function()
+  local party_max_hp = cs.get_party_hp_sum()
+  local spell_critical_damage = math.floor(spell_critical_damage_ratio * party_max_hp)
+  local damage_part = math.floor(spell_critical_damage / 10)
+
+  do
+    cs.damage.parser:handle_event(
+            string.format("Bob's Frostbolt hits you for %d Shadow damage. (%d resisted)", damage_part, 4 * damage_part))
+    cs.damage.parser:handle_event(
+            string.format("Bob's Frostbolt hits you for %d Frost damage. (%d resisted)", 3 * damage_part, damage_part))
+
+    local school = pal.resist.analyzer:get_school()
+    local shadow_sum = pal.resist.analyzer:get_sum_damage(cs.damage.s.Shadow)
+    local frost_sum = pal.resist.analyzer:get_sum_damage(cs.damage.s.Frost)
+    assert(school == cs.damage.s.Shadow, school)
+    assert(shadow_sum == 5 * damage_part, shadow_sum)
+    assert(frost_sum == 4 * damage_part, frost_sum)
+  end
+
+  local hit_part = UnitHealthMax(cs.u.player) * retr_aura_ratio
+
+  do
+    for i=hit_part, spell_critical_damage * 2, hit_part do
+      -- about 2x spell_critical_damage
+      cs.damage.parser:handle_event("Bob hits you for 1 Frost damage. (1 blocked)")
+    end
+
+    assert(pal.resist.analyzer:get_school() == nil)
+  end
+
+  do
+    --
+    cs.damage.parser:handle_event(
+            string.format("Bob's Frostbolt hits you for %d Shadow damage.", 6 * damage_part))
+
+    local school = pal.resist.analyzer:get_school()
+    assert(school == cs.damage.s.Shadow, school)
+
+    local shadow_sum = pal.resist.analyzer:get_sum_damage(cs.damage.s.Shadow)
+    local phy_sum = pal.resist.analyzer:get_sum_damage(cs.damage.st.Physical)
+    assert(shadow_sum < phy_sum)
+  end
 end

@@ -616,7 +616,7 @@ end
 
 
 cs.damage.test = function()
-  local dmg_24_fire = "Burning Ravager hits you for 24 Fire damage. 12 resisted (10 resisted)"
+  local dmg_24_fire = "Burning Ravager hits you for 24 Fire damage."
 
   -- smoke
   do
@@ -628,15 +628,15 @@ cs.damage.test = function()
     assert(event.datatype == cs.damage.dt.damage)
     assert(event.target == UnitName(cs.u.player))
     assert(event.sourcetype == cs.damage.st.Physical)
-    assert(event.resisted == 10)
+    assert(event.resisted == 0)
   end
 
   -- analyzer
   do
     cs.damage.parser:handle_event(dmg_24_fire)
 
-    local dmg_20_unkn = "Burning Ravager hits you for 20 damage. (2 blocked)"
-    cs.damage.parser:handle_event(dmg_20_unkn)
+    local msg = "Burning Ravager hits you for 20 damage."
+    cs.damage.parser:handle_event(msg)
 
     local type = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical)
     assert(type:get_sum() == 44)
@@ -653,11 +653,29 @@ cs.damage.test = function()
 
   -- blocked
   do
-    local dmg_20_blocked = "Burning Ravager hits you for 20 damage. 21 blocked (2 blocked)"
-    local event = cs.damage.parser:parse(dmg_20_blocked)
+    local msg = "Burning Ravager hits you for 20 damage. 21 blocked (none blocked) (2 blocked)"
+    local event = cs.damage.parser:parse(msg)
+    assert(event.action == "Auto Hit")
+    assert(event.source == "Burning Ravager")
     assert(event.value == 20)
+    assert(event.school == cs.damage.s.Unknown)
+    assert(event.datatype == cs.damage.dt.damage)
+    assert(event.target == UnitName(cs.u.player))
     assert(event.sourcetype == cs.damage.st.Physical)
     assert(event.resisted == 2)
+  end
+
+  do
+    local msg = "Burning Ravager's Frostbolt hits you for 14 Fire damage. 12 resisted (all resisted) (10 resisted)"
+    local event = cs.damage.parser:parse(msg)
+    assert(event.action == "Frostbolt", event.action)
+    assert(event.source == "Burning Ravager")
+    assert(event.value == 14, event.value)
+    assert(event.school == cs.damage.s.Fire)
+    assert(event.datatype == cs.damage.dt.damage)
+    assert(event.target == UnitName(cs.u.player))
+    assert(event.sourcetype == cs.damage.st.Spell)
+    assert(event.resisted == 10)
   end
 end
 
