@@ -36,16 +36,6 @@ function Action:_seal_action(state_type)
     return
   end
 
-  if self.main_seal:reseal() == cs.Buff.success then
-    -- reseal and wait when it will be casted
-      return
-  end
-
-  -- cast spells
-  if state_type == pal.stt.def then
-    if pal.sp.HolyShield:cast() then return end
-  end
-
   if not self:_has_any_seal_debuff() then
     -- the target has no debuffs. judgement it.
     if self:_judgement_other() then
@@ -54,6 +44,16 @@ function Action:_seal_action(state_type)
     end
 
     self.main_seal:judgement_it()
+  end
+
+  if self.main_seal:reseal() == cs.Buff.success then
+    -- reseal and wait when it will be casted
+      return
+  end
+
+  -- cast spells
+  if state_type == pal.stt.def then
+    if pal.sp.HolyShield:cast() then return end
   end
 end
 
@@ -99,10 +99,8 @@ pal.actions.init = function()
     -- TODO: dont cast judgement if no mana to rebuff Righteousness
     if not cs.check_target(cs.t.close_30) then return end
 
-    if state_type ~= pal.stt.damage then
-      if self:_judgement_other() then
-        return
-      end
+    if self:_judgement_other() then
+      return
     end
 
     self.main_seal:reseal_and_judgement()
