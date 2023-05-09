@@ -164,6 +164,7 @@ cs.slot.Set.id = {}
 cs.slot.Set.id.weap_1 = 5
 cs.slot.Set.id.weap_2 = 6
 cs.slot.Set.id.weap_3 = 7
+cs.slot.Set.id.mining = 8
 
 local bar = 12 * 4
 

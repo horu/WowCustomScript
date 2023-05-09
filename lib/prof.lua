@@ -4,11 +4,6 @@ cs.prof = {}
 
 
 
----@type cs.Slot
-local mining_pick_slot = cs.Slot.build(cs.slot.prof)
-
-
-
 ---@class cs.prof.Mining
 cs.prof.Mining = cs.create_class()
 
@@ -35,7 +30,7 @@ function cs.prof.Mining:_cast_detected(unit_cast)
     return
   end
 
-  mining_pick_slot:try_use()
+  cs.slot.set_holder:equip_set(cs.slot.Set.id.mining)
 end
 
 
