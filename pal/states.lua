@@ -142,7 +142,8 @@ end
 
 
 function State:init()
-  self:recheck()
+  self:preaction()
+  self:postaction()
 end
 
 -- save current custom buffs
@@ -154,10 +155,10 @@ function State:reset_buffs()
   self:_every_buff(StateBuff.reset_current)
 end
 
-function State:recheck()
+function State:preaction()
   local set_id = self:_get_config().set_id
   cs.slot.set_holder:equip_set(set_id)
-  self:_rebuff()
+  self:rebuff_aura()
 end
 
 function State:rebuff_aura()
@@ -190,9 +191,7 @@ function State:_get_aura()
   return aura_name
 end
 
-
-function State:_rebuff()
-  self:rebuff_aura()
+function State:postaction()
   if self.buff_list.bless:rebuff() then
     -- rebless player first,
     return
@@ -267,9 +266,10 @@ function StateHolder:attack_action(action_name)
   cs.auto_attack()
   self:_update_frame()
 
+  self.cur_state:preaction()
   -- TODO: add usage blessing of freedom on freeze
   self:_do_action(action_name)
-  self.cur_state:recheck()
+  self.cur_state:postaction()
 
   cs.error_disabler:on()
 
