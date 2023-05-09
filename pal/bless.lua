@@ -58,6 +58,7 @@ cs_players_bless_dict = {}
 local rebuff_unit = function(unit)
 
   local _, class = UnitClass(unit)
+  class = class or ""
   local player_name = UnitName(unit) or ""
   local player_bless = cs_players_bless_dict[player_name]
 

@@ -60,7 +60,6 @@ local default_states_config = {
       },
       bless = {
         current = bn.Sanctuary,
-        no_combat = bn.Wisdom,
       },
     },
     BACK = {
