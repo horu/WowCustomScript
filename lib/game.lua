@@ -152,11 +152,12 @@ function cs.auto_attack()
     return
   end
 
-  if not cs.check_combat(cs.c.normal) then
-    AttackTarget()
-  elseif cs.check_target(cs.t.friend) then
+  if cs.check_target(cs.t.friend) then
     AssistUnit("target")
+  elseif not cs.check_combat(cs.c.normal) then
+    AttackTarget()
   end
+  return true
 end
 
 cs.auto_attack_nearby = function()
