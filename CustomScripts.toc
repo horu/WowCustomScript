@@ -4,7 +4,7 @@
 ## First created: Mar 2023
 ## Version: 1
 ## RequiredDeps: pfUI SuperMacro
-## SavedVariables: cs_states_dynamic_config cs_dps_sessions cs_map_data cs_item_sets
+## SavedVariables: cs_states_dynamic_config cs_dps_sessions cs_map_data cs_item_sets cs_debug_list
 lib\common.lua
 lib\console.lua
 lib\ui.lua

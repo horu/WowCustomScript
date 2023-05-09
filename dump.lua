@@ -103,6 +103,8 @@ local dump_table = function(name, tbl)
   end
 end
 
+cs_debug_list = {}
+
 local function all_dump()
   --dump_table("cs_map_data", cs_map_data)
   dump_table("cs_players_bless_dict", cs_players_bless_dict)
@@ -116,6 +118,12 @@ local function all_dump()
   cs.debug(cs.get_party_hp_sum())
   cs.debug(cs.st_map_checker)
   cs.debug(GetMapInfo())
+  cs.debug("---------------------------")
+  for npcinfo, names in pairs(cs_debug_list) do
+    local count = 0
+    for _,_ in pairs(names) do count = count + 1 end
+    cs.debug(string.format("%s: %d", npcinfo, count))
+  end
 end
 
 
