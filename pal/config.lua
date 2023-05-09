@@ -157,6 +157,6 @@ end
 
 pal.config.init = function()
   -- test
-  pal.config.reset()
+  --pal.config.reset()
 end
 
