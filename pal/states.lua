@@ -198,6 +198,7 @@ function State:_rebuff()
     return
   end
   if not cs.check_combat(1) then
+    if cs.prof.mining:buff() then return end
     pal.bless.blessing_everywhere()
   end
 end

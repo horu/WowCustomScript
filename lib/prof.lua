@@ -24,6 +24,17 @@ cs.prof.Mining.build = function()
   return mining
 end
 
+
+function cs.prof.Mining:buff()
+  if GetTrackingTexture() then
+    return cs.Buff.exists
+  end
+
+  cs.cast("Find Minerals")
+  cs_print("TRACK: Find Minerals")
+  return cs.Buff.success
+end
+
 ---@param unit_cast cs.spell.UnitCast
 function cs.prof.Mining:_cast_detected(unit_cast)
   if not unit_cast:find_icon_name("Trade_Mining") then
@@ -35,8 +46,8 @@ end
 
 
 
-local mining = cs.prof.Mining.build()
+cs.prof.mining = cs.prof.Mining.build()
 
 cs.prof.test = function()
-  mining:_cast_detected({find_icon_name = function(self, name) return name == "Trade_Mining" end})
+  cs.prof.mining:_cast_detected({find_icon_name = function(self, name) return name == "Trade_Mining" end})
 end
