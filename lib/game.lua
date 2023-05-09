@@ -266,7 +266,7 @@ function cs.MapChecker:_on_zone_changed()
   self.zone_text = GetMinimapZoneText() or self.zone_text
 
   local new_map_name = GetMapInfo()
-  if new_map_name ~= self.map_name then
+  if new_map_name and new_map_name ~= self.map_name then
     self.map_name = new_map_name
     for _, sub in self.subscribers do
       sub.func(sub.obj)
