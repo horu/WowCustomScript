@@ -45,7 +45,6 @@ local default_states_config = {
       },
       bless = {
         current = bn.Might,
-        no_combat = bn.Wisdom,
       },
     },
     DEF = {
@@ -76,7 +75,6 @@ local default_states_config = {
       },
       bless = {
         current = bn.Sanctuary,
-        no_combat = bn.Wisdom,
       },
     },
     MANA = {
@@ -91,7 +89,6 @@ local default_states_config = {
       },
       bless = {
         current = bn.Wisdom,
-        no_combat = bn.Wisdom,
       },
     },
     NORM = {
