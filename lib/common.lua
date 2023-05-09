@@ -2,6 +2,28 @@
 cs_common = cs_common or {}
 local cs = cs_common
 
+cs.type = {}
+cs.type.number = "number"
+cs.type.string = "string"
+cs.type.table = "table"
+cs.type.check = function(v, t)
+  return type(v) == t
+end
+
+cs.deepcopy = function(tbl)
+  if cs.type.check(tbl, cs.type.table) then
+    local result = {}
+    for key, value in pairs(tbl) do
+      local copy_key = cs.deepcopy(key)
+      local copy_value = cs.deepcopy(value)
+      result[copy_key] = copy_value
+    end
+    return result
+  end
+
+  return tbl
+end
+
 cs_print = function(msg)
   DEFAULT_CHAT_FRAME:AddMessage("|cffcccc33CS: |cffffff55" .. ( msg or "nil" ))
 end

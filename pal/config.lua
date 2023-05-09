@@ -38,7 +38,7 @@ local default_states_config = {
       hotkey = 1,
       color = cs.color.red_1,
 
-      use_slot = cs.slot.two_hand,
+      set_id = cs.slot.Set.id.weap_1,
 
       aura = {
         current = an.Retribution,
@@ -54,7 +54,7 @@ local default_states_config = {
       hotkey = 2,
       color = cs.color.white,
 
-      use_slot = cs.slot.one_hand_shield,
+      set_id = cs.slot.Set.id.weap_2,
 
       aura = {
         current = an.Devotion,
@@ -69,7 +69,7 @@ local default_states_config = {
       type = pal.stt.def,
       hotkey = 3,
       color = cs.color.purple,
-      use_slot = cs.slot.one_hand_shield,
+      set_id = cs.slot.Set.id.weap_2,
 
       aura = {
         current = an.Retribution,
@@ -84,7 +84,7 @@ local default_states_config = {
       type = pal.stt.def,
       hotkey = 4,
       color = cs.color.blue,
-      -- use_slot = cs.slot.one_hand_shield,
+      set_id = cs.slot.Set.id.weap_3,
 
       aura = {
         current = an.Retribution,
@@ -99,7 +99,7 @@ local default_states_config = {
       type = pal.stt.damage,
       hotkey = 5,
       color = cs.color.green,
-      use_slot = cs.slot.one_hand_shield,
+      set_id = cs.slot.Set.id.weap_3,
       aura = {
         current = an.Retribution,
       },
@@ -113,6 +113,7 @@ local default_states_config = {
       type = pal.stt.def,
       hotkey = 12 * 5 + 2,
       color = cs.color.yellow,
+      set_id = cs.slot.Set.id.weap_2,
 
       aura = {
         current = an.Concentration,
@@ -137,8 +138,12 @@ pal.config.get = function()
   return cs_states_dynamic_config
 end
 
+pal.config.get_default = function()
+  return default_states_config
+end
+
 pal.config.reset = function()
-  cs_states_dynamic_config = default_states_config
+  cs_states_dynamic_config = cs.deepcopy(default_states_config)
 end
 
 pal.config.get_state_holder = function()

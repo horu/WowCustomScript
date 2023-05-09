@@ -81,13 +81,20 @@ cs.slot.id.main_hand = 16
 cs.slot.id.off_hand = 17
 
 cs.slot.id.get_item_name = function(slot_id)
-  return cs.slot.link_to_name(GetInventoryItemLink(cs.u.player, slot_id))
+  return cs.slot.link_to_name(GetInventoryItemLink(cs.u.player, slot_id)) or ""
 end
 
 cs.slot.id.is_equipped = function(slot_id)
-  return cs.slot.id.get_item_name(slot_id) ~= nil
+  return cs.slot.id.get_item_name(slot_id) ~= ""
 end
 
+cs.slot.try_equip_slot = function(id, item_name)
+  if cs.slot.id.get_item_name(id) == item_name then
+    return
+  end
+
+  cs.slot.use_by_name(item_name)
+end
 
 
 ---@class cs.slot.Set
@@ -97,12 +104,18 @@ function cs.slot.Set:build(list)
   -- map slot_id: item_name
   self.list = {}
   for id, name in pairs(list) do
-    if name == "" then
+    if cs.type.check(name, cs.type.number) then
       -- Save current set by default
-      self.list[id] = cs.slot.id.get_item_name(id)
+      self.list[name] = cs.slot.id.get_item_name(name)
     else
       self.list[id] = name
     end
+  end
+end
+
+function cs.slot.Set:reset()
+  for id in pairs(self.list) do
+    self.list[id] = cs.slot.id.get_item_name(id)
   end
 end
 
@@ -115,17 +128,106 @@ function cs.slot.Set:is_equipped()
   return true
 end
 
-function cs.slot.Set:use()
+function cs.slot.Set:equip()
+  local main_hand = self.list[cs.slot.id.main_hand]
+  if main_hand then
+    -- main hand first
+    cs.slot.try_equip_slot(cs.slot.id.main_hand, main_hand)
+  end
+
   for id, name in pairs(self.list) do
-    if cs.slot.id.get_item_name(id) ~= name then
-      cs.slot.use_by_name(name)
-    end
+    cs.slot.try_equip_slot(id, name)
   end
 end
 
+function cs.slot.Set:to_config()
+  return self.list
+end
 
-cs.slot.test = function()
-  cs.debug(cs.slot.id.get_item_name(17))
+cs.slot.Set.create_weap = function()
+  return cs.slot.Set:new({cs.slot.id.main_hand, cs.slot.id.off_hand})
+end
+
+cs.slot.Set.create_arm = function()
+  -- TODO:
+  return cs.slot.Set:new({})
+end
+
+cs.slot.Set.from_config = function(list)
+  return cs.slot.Set:new(list)
 end
 
 
+cs.slot.Set.arm = "arm"
+cs.slot.Set.weap = "weap"
+cs.slot.Set.id = {}
+cs.slot.Set.id.weap_1 = 5
+cs.slot.Set.id.weap_2 = 6
+cs.slot.Set.id.weap_3 = 7
+
+local bar = 12 * 4
+
+-- TODO: fix it
+cs_item_sets = {
+  cs.slot.Set.create_arm():to_config(),
+  cs.slot.Set.create_arm():to_config(),
+  cs.slot.Set.create_arm():to_config(),
+  cs.slot.Set.create_arm():to_config(),
+  cs.slot.Set.create_weap():to_config(),
+  cs.slot.Set.create_weap():to_config(),
+  cs.slot.Set.create_weap():to_config(),
+  cs.slot.Set.create_weap():to_config(),
+}
+
+---@class cs.slot.SetHolder
+cs.slot.SetHolder = cs.class()
+
+function cs.slot.SetHolder:build()
+  ---@type cs.slot.Set[]
+  self.set_list = {}
+
+  self.current_set = 0
+
+  for id, list in pairs(cs_item_sets) do
+    self.set_list[id] = cs.slot.Set.from_config(list)
+
+    local longkey = bar + id
+    cs.ui.down_checker:add_sub(longkey, self, self._on_manual_changed)
+  end
+end
+
+function cs.slot.SetHolder:_on_manual_changed(longkey, duration)
+  local id = longkey - bar
+
+  if duration == cs.ui.down_checker.t.change then
+    self:equip_set(id)
+  elseif duration == cs.ui.down_checker.t.save then
+    self:_reset_set(id)
+  end
+end
+
+function cs.slot.SetHolder:equip_set(id)
+  if self.current_set == id then
+    return
+  end
+  self.current_set = id
+  ---@type cs.slot.Set
+  local set = self.set_list[id]
+  set:equip()
+end
+
+function cs.slot.SetHolder:_reset_set(id)
+  local set = self.set_list[id]
+
+  set:reset()
+  cs.print(set:to_config())
+  cs_item_sets[id] = set.list
+end
+
+
+cs.slot.init = function()
+  cs.slot.set_holder = cs.slot.SetHolder:new()
+end
+
+cs.slot.test = function()
+end

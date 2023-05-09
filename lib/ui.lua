@@ -141,13 +141,6 @@ end
 
 
 
-
-
-
-
-
-
-
 ---@class cs.ActionBarProxy
 cs.ActionBarProxy = cs.create_class()
 
@@ -163,15 +156,6 @@ function cs.ActionBarProxy.add_proxy(bar, button, callback, obj)
     this.cs_native_script()
   end)
 end
-
-
-
-
-
-
-
-
-
 
 
 
@@ -212,6 +196,7 @@ end
 
 function cs.ButtonChecker:_button_callback(bar, key)
   --cs.debug({bar, key, keystate})
+  -- TODO: fix bag when move icon to other
   local longkey = bar * 12 + key - 12
   local ts = GetTime()
   local click_info = { longkey = longkey, keystate = keystate, ts = ts, handler = 0 }
@@ -260,10 +245,39 @@ function cs.ButtonChecker:_check_loop()
   end
 end
 
-
-
-
 ---@type cs.ButtonChecker
 cs.st_button_checker = cs.ButtonChecker.build()
 
 
+
+---@cs.ui.DownChecker
+cs.ui.DownChecker = cs.class()
+
+cs.ui.DownChecker.t = {}
+cs.ui.DownChecker.t.change = 0.55
+cs.ui.DownChecker.t.save = 3
+cs.ui.DownChecker.t.reset = 6
+cs.ui.DownChecker.t.full_reset = 10
+
+function cs.ui.DownChecker:build()
+  self.sub_list = {}
+
+  cs.st_button_checker:add_down_pattern(self.t.change, self, self._down_button_event)
+  cs.st_button_checker:add_down_pattern(self.t.save, self, self._down_button_event)
+  cs.st_button_checker:add_down_pattern(self.t.reset, self, self._down_button_event)
+  cs.st_button_checker:add_down_pattern(self.t.full_reset, self, self._down_button_event)
+end
+
+function cs.ui.DownChecker:add_sub(longkey, obj, func)
+  self.sub_list[longkey] = { obj = obj, func = func }
+
+  cs.st_button_checker:add_button(longkey)
+end
+
+function cs.ui.DownChecker:_down_button_event(longkey, duration)
+  local sub = self.sub_list[longkey]
+
+  sub.func(sub.obj, longkey, duration)
+end
+
+cs.ui.down_checker = cs.ui.DownChecker:new()

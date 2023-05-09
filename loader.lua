@@ -15,6 +15,7 @@ end
 local main_load = function()
   cs.damage.init()
   cs.game.init()
+  cs.slot.init()
   cs.services.init()
   cs.dps.init()
   cs.stat.init()

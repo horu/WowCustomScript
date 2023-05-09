@@ -69,8 +69,15 @@ function StateBuff:rebuff(buff_name)
 end
 
 -- set buff and save it to config
+function StateBuff:reset_current()
+  local default = pal.config.get_default().states[self.id][self.name].current
+  cs.debug(default)
+  self:set_current(default)
+end
+
+-- set buff and save it to config
 function StateBuff:set_current(buff_name)
-  self:rebuff(buff_name or self:_get_config().current)
+  self:rebuff(buff_name)
   self:_get_config().current = self.current:get_name()
 end
 
@@ -103,23 +110,15 @@ end
 
 
 ---@class State
-local State = cs.create_class()
+local State = cs.class()
 
-State.build = function(id)
-  ---@type State
-  local state = State:new()
-
-  state.id = id
-  state.buff_list = {
+function State:build(id)
+  self.id = id
+  self.buff_list = {
     aura = StateBuff.build(id, "aura"),
     bless = StateBuff.build(id, "bless"),
   }
 
-  ---@type cs.MultiSlot
-  state.default_slot = state:_get_config().use_slot
-  state.slot = nil
-
-  return state
 end
 
 -- const
@@ -143,27 +142,22 @@ end
 
 
 function State:init()
-  if self.default_slot then
-    self.slot = cs.MultiSlot.build(self.default_slot)
-  else
-    self.slot = cs.MultiSlot.build(cs.slot.two_hand):is_equipped() and
-            cs.MultiSlot.build(cs.slot.two_hand) or cs.MultiSlot.build(cs.slot.one_hand_shield)
-  end
   self:recheck()
 end
 
 -- save current custom buffs
-function State:save_buffs()
+function State:save()
   self:_every_buff(StateBuff.save_buffed_to_config)
 end
 
 function State:reset_buffs()
-  self:_every_buff(StateBuff.set_current)
+  self:_every_buff(StateBuff.reset_current)
 end
 
 function State:recheck()
-  self.slot:try_use()
-  self:_standard_rebuff_attack()
+  local set_id = self:_get_config().set_id
+  cs.slot.set_holder:equip_set(set_id)
+  self:_rebuff()
 end
 
 function State:rebuff_aura()
@@ -197,7 +191,7 @@ function State:_get_aura()
 end
 
 
-function State:_standard_rebuff_attack()
+function State:_rebuff()
   self:rebuff_aura()
   if self.buff_list.bless:rebuff() then
     -- rebless player first,
@@ -229,11 +223,6 @@ end
 ---@class StateHolder
 local StateHolder = cs.create_class()
 
-StateHolder.handler_Change = 0.55
-StateHolder.handler_Save = 3
-StateHolder.handler_Reset = 6
-StateHolder.handler_FullReset = 10
-
 StateHolder.build = function()
   ---@type StateHolder
   local holder = StateHolder:new()
@@ -254,20 +243,15 @@ end
 -- before init
 function StateHolder:add_state(id)
   local config = pal.config.get_state(id)
-  self.states[config.hotkey] = State.build(id)
+  self.states[config.hotkey] = State:new(id)
 end
 
 function StateHolder:init()
   self:_change_state(pal.config.get_state_holder().cur_state)
 
   for longkey in pairs(self.states) do
-    cs.st_button_checker:add_button(longkey)
+    cs.ui.down_checker:add_sub(longkey, self, self._on_state_event)
   end
-
-  cs.st_button_checker:add_down_pattern(StateHolder.handler_Change, self, StateHolder._down_button_event)
-  cs.st_button_checker:add_down_pattern(StateHolder.handler_Save, self, StateHolder._down_button_event)
-  cs.st_button_checker:add_down_pattern(StateHolder.handler_Reset, self, StateHolder._down_button_event)
-  cs.st_button_checker:add_down_pattern(StateHolder.handler_FullReset, self, StateHolder._down_button_event)
 end
 
 -- const
@@ -326,20 +310,20 @@ function StateHolder:_update_frame()
   end, 5)
 end
 
-function StateHolder:_down_button_event(longkey, duration)
+function StateHolder:_on_state_event(longkey, duration)
   local state = self.states[longkey]
 
-  if duration >= StateHolder.handler_FullReset then
+  if duration == cs.ui.down_checker.t.full_reset then
     pal.config.reset()
     state:reset_buffs()
     cs.print("RESET CONFIG!")
-  elseif duration >= StateHolder.handler_Reset then
+  elseif duration == cs.ui.down_checker.t.reset then
     state:reset_buffs()
     cs.print("RESET STATE: "..self.cur_state:get_name())
-  elseif duration >= StateHolder.handler_Save then
-    self.cur_state:save_buffs()
+  elseif duration == cs.ui.down_checker.t.save then
+    self.cur_state:save()
     cs.print("SAVE STATE: "..self.cur_state:get_name())
-  elseif duration >= StateHolder.handler_Change then
+  elseif duration == cs.ui.down_checker.t.change then
     self:_change_state(longkey)
   end
 end
@@ -394,11 +378,11 @@ pal.states.test = function()
   end
 
   local init_state = pal.config.get_state_holder().cur_state
-  st_state_holder:_down_button_event(1, 1)
-  st_state_holder:_down_button_event(2, 1)
-  st_state_holder:_down_button_event(3, 1)
-  st_state_holder:_down_button_event(4, 1)
-  st_state_holder:_down_button_event(init_state, 1)
+  st_state_holder:_on_state_event(1, 1)
+  st_state_holder:_on_state_event(2, 1)
+  st_state_holder:_on_state_event(3, 1)
+  st_state_holder:_on_state_event(4, 1)
+  st_state_holder:_on_state_event(init_state, 1)
 end
 
 
