@@ -262,13 +262,14 @@ end
 function StateHolder:attack_action(action_name)
   cs.error_disabler:off()
 
-  -- TODO: cast before change state and rebuf ?
-  cs.auto_attack()
+  -- TODO: assist does not work
   self:_update_frame()
 
   self.cur_state:preaction()
   -- TODO: add usage blessing of freedom on freeze
-  self:_do_action(action_name)
+  if cs.auto_attack() then
+    self:_do_action(action_name)
+  end
   self.cur_state:postaction()
 
   cs.error_disabler:on()
