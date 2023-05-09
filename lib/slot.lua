@@ -77,6 +77,22 @@ cs.slot.use_by_name = UseItemByName
 cs.slot.link_to_name = ItemLinkToName
 
 cs.slot.id = {}
+
+cs.slot.id.head = 1
+cs.slot.id.neck = 2
+cs.slot.id.shoulder = 3
+cs.slot.id.shirt = 4
+cs.slot.id.chest = 5
+cs.slot.id.waist = 6
+cs.slot.id.legs = 7
+cs.slot.id.feet = 8
+cs.slot.id.wrist = 9
+cs.slot.id.hands = 10
+cs.slot.id.finger1 = 11
+cs.slot.id.finger2 = 12
+cs.slot.id.trinket1 = 13
+cs.slot.id.trinket2 = 14
+cs.slot.id.back = 14
 cs.slot.id.main_hand = 16
 cs.slot.id.off_hand = 17
 
@@ -144,19 +160,6 @@ function cs.slot.Set:to_config()
   return self.list
 end
 
-cs.slot.Set.create_weap = function()
-  return cs.slot.Set:new({cs.slot.id.main_hand, cs.slot.id.off_hand})
-end
-
-cs.slot.Set.create_arm = function()
-  -- TODO:
-  return cs.slot.Set:new({})
-end
-
-cs.slot.Set.from_config = function(list)
-  return cs.slot.Set:new(list)
-end
-
 
 cs.slot.Set.arm = "arm"
 cs.slot.Set.weap = "weap"
@@ -167,18 +170,42 @@ cs.slot.Set.id.weap_3 = 7
 cs.slot.Set.id.mining = 8
 
 local bar = 12 * 4
+local arm_set_list = {
+  cs.slot.id.head,
+  cs.slot.id.neck,
+  cs.slot.id.shoulder,
+  --cs.slot.id.shirt,
+  cs.slot.id.chest,
+  cs.slot.id.waist,
+  cs.slot.id.legs,
+  cs.slot.id.feet,
+  cs.slot.id.wrist,
+  cs.slot.id.hands,
+  --cs.slot.id.finger1,
+  --cs.slot.id.finger2,
+  --cs.slot.id.trinket1,
+  --cs.slot.id.trinket2,
+  cs.slot.id.back,
+}
+
+local weap_set_list = {
+  cs.slot.id.main_hand,
+  cs.slot.id.off_hand,
+}
 
 -- TODO: fix it
-cs_item_sets = {
-  cs.slot.Set.create_arm():to_config(),
-  cs.slot.Set.create_arm():to_config(),
-  cs.slot.Set.create_arm():to_config(),
-  cs.slot.Set.create_arm():to_config(),
-  cs.slot.Set.create_weap():to_config(),
-  cs.slot.Set.create_weap():to_config(),
-  cs.slot.Set.create_weap():to_config(),
-  cs.slot.Set.create_weap():to_config(),
+local default_item_sets = {
+  cs.slot.Set:new(arm_set_list):to_config(),
+  cs.slot.Set:new(arm_set_list):to_config(),
+  cs.slot.Set:new({}):to_config(),
+  cs.slot.Set:new({}):to_config(),
+  cs.slot.Set:new(weap_set_list):to_config(),
+  cs.slot.Set:new(weap_set_list):to_config(),
+  cs.slot.Set:new(weap_set_list):to_config(),
+  cs.slot.Set:new(weap_set_list):to_config(),
 }
+
+cs_item_sets = cs.deepcopy(default_item_sets)
 
 ---@class cs.slot.SetHolder
 cs.slot.SetHolder = cs.class()
@@ -190,7 +217,7 @@ function cs.slot.SetHolder:build()
   self.current_set = 0
 
   for id, list in pairs(cs_item_sets) do
-    self.set_list[id] = cs.slot.Set.from_config(list)
+    self.set_list[id] = cs.slot.Set:new(list)
 
     local longkey = bar + id
     cs.ui.down_checker:add_sub(longkey, self, self._on_manual_changed)
@@ -211,6 +238,7 @@ function cs.slot.SetHolder:equip_set(id)
   if self.current_set == id then
     return
   end
+  cs_print("SET: "..id)
   self.current_set = id
   ---@type cs.slot.Set
   local set = self.set_list[id]
@@ -218,10 +246,11 @@ function cs.slot.SetHolder:equip_set(id)
 end
 
 function cs.slot.SetHolder:_reset_set(id)
-  local set = self.set_list[id]
+  local set = cs.slot.Set:new(default_item_sets[id])
 
   set:reset()
-  cs.print(set:to_config())
+  cs.debug(set:to_config())
+  self.set_list[id] = set
   cs_item_sets[id] = set.list
 end
 
