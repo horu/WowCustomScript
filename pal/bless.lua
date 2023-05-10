@@ -56,7 +56,7 @@ end
 cs_players_bless_dict = {}
 
 local rebuff_unit = function(unit)
-
+  -- TODO: rebuff with other pal
   local _, class = UnitClass(unit)
   class = class or ""
   local player_name = UnitName(unit) or ""

@@ -253,11 +253,16 @@ cs.st_button_checker = cs.ButtonChecker.build()
 ---@cs.ui.DownChecker
 cs.ui.DownChecker = cs.class()
 
+-- timeout down
 cs.ui.DownChecker.t = {}
 cs.ui.DownChecker.t.change = 0.55
 cs.ui.DownChecker.t.save = 3
 cs.ui.DownChecker.t.reset = 6
 cs.ui.DownChecker.t.full_reset = 10
+
+-- click per sec
+cs.ui.DownChecker.c = {}
+cs.ui.DownChecker.c.save = 7
 
 function cs.ui.DownChecker:build()
   self.sub_list = {}
@@ -266,6 +271,8 @@ function cs.ui.DownChecker:build()
   cs.st_button_checker:add_down_pattern(self.t.save, self, self._down_button_event)
   cs.st_button_checker:add_down_pattern(self.t.reset, self, self._down_button_event)
   cs.st_button_checker:add_down_pattern(self.t.full_reset, self, self._down_button_event)
+
+  cs.st_button_checker:add_repeat_pattern(self.c.save, self, self._down_button_event)
 end
 
 function cs.ui.DownChecker:add_sub(longkey, obj, func)
@@ -274,10 +281,10 @@ function cs.ui.DownChecker:add_sub(longkey, obj, func)
   cs.st_button_checker:add_button(longkey)
 end
 
-function cs.ui.DownChecker:_down_button_event(longkey, duration)
+function cs.ui.DownChecker:_down_button_event(longkey, event)
   local sub = self.sub_list[longkey]
 
-  sub.func(sub.obj, longkey, duration)
+  sub.func(sub.obj, longkey, event)
 end
 
 cs.ui.down_checker = cs.ui.DownChecker:new()

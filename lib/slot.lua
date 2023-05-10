@@ -169,7 +169,7 @@ cs.slot.Set.id.weap_2 = 6
 cs.slot.Set.id.weap_3 = 7
 cs.slot.Set.id.mining = 8
 
-local bar = 12 * 4
+local bar = 12 * 3
 local arm_set_list = {
   cs.slot.id.head,
   cs.slot.id.neck,
@@ -214,8 +214,6 @@ function cs.slot.SetHolder:build()
   ---@type cs.slot.Set[]
   self.set_list = {}
 
-  self.current_set = 0
-
   for id, list in pairs(cs_item_sets) do
     self.set_list[id] = cs.slot.Set:new(list)
 
@@ -229,20 +227,18 @@ function cs.slot.SetHolder:_on_manual_changed(longkey, duration)
 
   if duration == cs.ui.down_checker.t.change then
     self:equip_set(id)
-  elseif duration == cs.ui.down_checker.t.save then
+  elseif duration == cs.ui.down_checker.c.save then
     self:_reset_set(id)
   end
 end
 
 function cs.slot.SetHolder:equip_set(id)
-  if self.current_set == id then
-    return
-  end
-  cs_print("SET: "..id)
-  self.current_set = id
   ---@type cs.slot.Set
   local set = self.set_list[id]
-  set:equip()
+  if not set:is_equipped() then
+    cs_print("SET: "..id)
+    set:equip()
+  end
 end
 
 function cs.slot.SetHolder:_reset_set(id)
