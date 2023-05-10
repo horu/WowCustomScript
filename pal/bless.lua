@@ -42,6 +42,19 @@ end
 
 -- Created container all available for player bless
 local avail_bless_dict = {}
+local update_bless_list = function()
+  avail_bless_dict = {}
+  cs.debug("update")
+  for bless_name, spell_name in pairs(bn.dict_all) do
+    local bless = pal.Bless.try_build(spell_name)
+    -- pal.bless[bless_name] = bless
+    if bless then
+      -- cs.print(bless:get_name())
+      avail_bless_dict[spell_name] = bless
+    end
+  end
+end
+local bless_updater = cs.create_simple_frame()
 
 pal.bless = {}
 pal.bless.get_buff = function(spell_name)
@@ -54,18 +67,12 @@ pal.bn.get_available = function()
 end
 
 
-
 pal.bless.init = function()
-  -- self bless list
-  -- TODO: rebuild when spell book changed
-  for bless_name, spell_name in pairs(bn.dict_all) do
-    local bless = pal.Bless.try_build(spell_name)
-    -- pal.bless[bless_name] = bless
-    if bless then
-      -- cs.print(bless:get_name())
-      avail_bless_dict[spell_name] = bless
-    end
-  end
+  bless_updater:RegisterEvent("SPELLS_CHANGED")
+  bless_updater:SetScript("OnEvent", function()
+    update_bless_list()
+  end)
+  update_bless_list()
 end
 
 
