@@ -16,6 +16,7 @@ pal.Seal.build = function(spell, target_debuff, target_hp_limit, judgement_targe
   ---@type pal.Seal
   local seal = pal.Seal:new()
 
+  ---@type cs.Buff
   seal.buff = cs.Buff.build(spell)
   seal.target_debuff = target_debuff
   seal.judgement = cs.Spell.build(spn.Judgement)

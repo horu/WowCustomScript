@@ -16,6 +16,7 @@ local Action = cs.create_class()
 Action.build = function(main_seal, run_func)
   local action = Action:new()
 
+  ---@type pal.Seal
   action.main_seal = main_seal
   ---@type function(self, state_type)
   action.run = run_func
@@ -36,25 +37,32 @@ function Action:_seal_action(state_type)
     return
   end
 
-  -- cast spells
+  -- reseal if has no other seal
+  local current_seal = pal.seal.get_current()
+  if not current_seal then
+    if self.main_seal:reseal() == cs.Buff.success then return end
+  end
+
+  -- cast shield for def
   if state_type == pal.stt.def then
     if pal.sp.HolyShield:cast() then return end
   end
 
   if not self:_has_any_seal_debuff() then
+    if cs.is_low_mana() then
+      return
+    end
+
     -- the target has no debuffs. judgement it.
     if self:_judgement_other() then
       -- wait another seal to judgement on the target
       return
     end
 
-    self.main_seal:judgement_it()
+    if self.main_seal:judgement_it() then return end
   end
 
-  if self.main_seal:reseal() == cs.Buff.success then
-    -- reseal and wait when it will be casted
-      return
-  end
+  self.main_seal:reseal()
 end
 
 function Action:_judgement_other()
@@ -84,11 +92,14 @@ pal.actions.init = function()
   pal.actions.damage = Action.build(seal.Righteousness, function(self, state_type)
     if not cs.check_target(cs.t.close_30) then return end
 
-    self.cast_order:cast()
+    if self.cast_order:cast() then return end
 
     local current_seal = pal.seal.get_current()
     if not current_seal or current_seal == pal.sn.Righteousness then
-      self.main_seal:reseal_and_judgement()
+      if self.main_seal:reseal() then return end
+      if not cs.is_low_mana() then
+        if self.main_seal:judgement_it() then return end
+      end
     end
 
   end)

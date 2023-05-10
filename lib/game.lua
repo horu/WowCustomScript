@@ -117,6 +117,16 @@ cs.get_party_max_hp_sum = function()
 end
 
 
+function cs.get_mana_level()
+  -- 0-1
+  return UnitMana(cs.u.player) / UnitManaMax(cs.u.player)
+end
+
+function cs.is_low_mana()
+  return cs.get_mana_level() <= 0.1
+end
+
+
 function cs.get_hp_level()
   -- 0-1
   return UnitHealth(cs.u.player) / UnitHealthMax(cs.u.player)
