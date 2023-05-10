@@ -198,7 +198,7 @@ function State:postaction()
   end
   if not cs.check_combat(1) then
     if cs.prof.mining:buff() then return end
-    pal.bless.blessing_everywhere()
+    pal.party.rebuff()
   end
 end
 

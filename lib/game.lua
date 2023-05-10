@@ -421,8 +421,11 @@ end
 
 -- combat
 cs.c = {}
+-- player attack with weapon
 cs.c.normal = cs.get_combat_info
+-- anybody attack player
 cs.c.aggro = cs.get_aggro_info
+-- common combat state, when mount is not available and other...
 cs.c.affect = cs.get_affect_info
 
 function cs.check_combat(m0or, m1or, m2or, m3or)

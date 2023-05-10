@@ -21,6 +21,7 @@ pal\common.lua
 pal\resist.lua
 pal\aura.lua
 pal\bless.lua
+pal\party.lua
 pal\heal.lua
 pal\seal.lua
 pal\config.lua
