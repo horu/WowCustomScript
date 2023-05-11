@@ -145,8 +145,12 @@ pal.actions.init = function()
 
   pal.actions.splash = Action.build(seal.Wisdom, function(self, state_type)
     cs.auto_attack_nearby()
-    -- TODO: add detect wisdom/light
-    pal.actions.wisdom:_seal_action(state_type)
+    local current_seal = pal.seal.get_current()
+    if current_seal == pal.sn.Light then
+      pal.actions.light:_seal_action(state_type)
+    else
+      pal.actions.wisdom:_seal_action(state_type)
+    end
     pal.sp.HolyShield_force:cast()
   end)
 
