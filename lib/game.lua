@@ -47,11 +47,11 @@ cs.t.undead = "cs.t.undead"
 -- check condition by OR
 function cs.check_unit(check, unit)
   if check == cs.t.close_9 then
-    return CheckInteractDistance("target", 1)
+    return CheckInteractDistance(unit, 1)
   elseif check == cs.t.close_10 then
-    return CheckInteractDistance("target", 2)
+    return CheckInteractDistance(unit, 2)
   elseif check == cs.t.close_30 then
-    return CheckInteractDistance("target", 4)
+    return CheckInteractDistance(unit, 4)
   elseif check == cs.t.fr_player then
     return cs.check_unit(cs.t.friend, unit) and cs.check_unit(cs.t.player, unit)
   elseif check == cs.t.en_player then

@@ -65,6 +65,10 @@ end
 
 local buff_party = function()
   cs.iterate_party(function(unit, i)
+    if cs.check_unit(cs.t.dead, unit) or not cs.check_unit(cs.t.close_30, unit) then
+      return
+    end
+
     rebuff_unit(unit)
     local _, class = UnitClass(unit)
     if class == cs.cl.HUNTER then
