@@ -42,6 +42,7 @@ end
 
 -- const
 function cs.Spell:get_cd()
+  -- Global CD is returned as well
   local ts_start, duration = GetSpellCooldown(self.id, self.book)
   if ts_start == 0 then
     -- no cd

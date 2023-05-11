@@ -37,22 +37,10 @@ function Action:_seal_action(state_type)
     return
   end
 
-  -- reseal if has no other seal
-  local current_seal = pal.seal.get_current()
-  if not current_seal then
-    if self.main_seal:reseal() == cs.Buff.success then return end
-  end
-
   -- cast shield for def
-  if state_type == pal.stt.def then
-    if pal.sp.HolyShield:cast() then return end
-  end
+  if pal.sp.HolyShield:cast() then return end
 
-  if not self:_has_any_seal_debuff() then
-    if cs.is_low_mana() then
-      return
-    end
-
+  if not self:_has_any_seal_debuff() and not cs.is_low_mana() then
     -- the target has no debuffs. judgement it.
     if self:_judgement_other() then
       -- wait another seal to judgement on the target
@@ -102,9 +90,10 @@ pal.actions.init = function()
       end
     end
 
+    pal.sp.CrusaderStrike:cast()
+
   end)
-  pal.actions.damage.cast_order = cs.SpellOrder.build(
-          pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike, pal.sp.HolyShield, pal.sp.CrusaderStrike)
+  pal.actions.damage.cast_order = cs.SpellOrder.build(pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike, pal.sp.HolyShield)
 
   pal.actions.right = Action.build(seal.Righteousness, function(self, state_type)
     -- TODO: dont cast judgement if no mana to rebuff Righteousness
