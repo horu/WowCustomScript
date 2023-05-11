@@ -62,7 +62,7 @@ function StateBuff:rebuff(buff_name)
     buff_name = self:_get_config().current
   end
 
-  -- aura/bless
+  -- pal.bless.get_buff / pal.aura.get_buff
   self.current = pal[self.name].get_buff(buff_name)
 
   return self.current:rebuff()

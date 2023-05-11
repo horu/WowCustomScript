@@ -70,6 +70,9 @@ end
 pal.bless.init = function()
   bless_updater:RegisterEvent("SPELLS_CHANGED")
   bless_updater:SetScript("OnEvent", function()
+    if cs.check_combat(cs.c.affect) then
+      return
+    end
     update_bless_list()
   end)
   update_bless_list()
