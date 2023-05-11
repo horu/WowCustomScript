@@ -123,7 +123,7 @@ function cs.get_mana_level()
 end
 
 function cs.is_low_mana()
-  return cs.get_mana_level() <= 0.1
+  return cs.get_mana_level() <= 0.15
 end
 
 
