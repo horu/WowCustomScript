@@ -443,6 +443,8 @@ function cs.spell.Bar:build(texture_dict, obj, on_click_func)
   self.on_click_func = on_click_func
   self.bar = cs.ui.ButtonBar:create(SIZE, cs.dict_keys_to_list(texture_dict, cs.type.string), self, self._on_click)
   self.bar:hide()
+
+  self.escape = cs.create_escape_press_detector(self.bar:get_native(), self.bar, self.bar.hide)
 end
 
 function cs.spell.Bar:show()

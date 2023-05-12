@@ -2,31 +2,36 @@
 local cs = cs_common
 local pal = cs.pal
 
-cs_players_bless_dict = {}
+pal.party = {}
 
-local rebuff_unit = function(unit)
-  -- TODO: rebuff with other pal
-  local _, class = UnitClass(unit)
-  class = class or ""
-  local player_name = UnitName(unit) or ""
-  local player_bless = cs_players_bless_dict[player_name]
+cs_players_data = {}
 
-  local exists_buff = cs.find_buff(pal.bn.list_all, unit)
-  if exists_buff then
-    if not player_bless or player_bless:get_name() ~= exists_buff then
-      player_bless = pal.Bless.try_build(exists_buff, unit)
-      if not player_bless then
-        -- unavailable bless. can not rebuff it.
-        return
-      end
 
-      cs_players_bless_dict[player_name] = player_bless
-    end
+---@class pal.party.Player
+pal.party.Player = cs.class()
 
-    return
+function pal.party.Player:build(unit)
+  self.unit = unit
+  self.name = UnitName(self.unit) or ""
+
+  cs_players_data[self.name] = cs_players_data[self.name] or {}
+  self.data = cs_players_data[self.name]
+end
+
+function pal.party.Player:set_bless(bless_name)
+  self.data.bless = pal.Bless.try_build(bless_name, self.unit)
+  assert(self.data.bless)
+end
+
+function pal.party.Player:rebless()
+  if cs.check_unit(cs.t.dead, self.unit) or not cs.check_unit(cs.t.close_30, self.unit) then
+    return cs.Buff.failed
   end
 
-  if not player_bless then
+  local _, class = UnitClass(self.unit)
+  class = class or "WARRIOR"
+
+  if not self.data.bless then
     local buff_map = {
       WARRIOR = pal.bn.Might,
       PALADIN = pal.bn.Might,
@@ -48,32 +53,34 @@ local rebuff_unit = function(unit)
       buff_name = pal.bn.Might
     end
 
-    player_bless = pal.Bless.try_build(buff_name, unit)
-    cs_players_bless_dict[player_name] = player_bless
+    self:set_bless(buff_name)
   end
 
-  local result = player_bless:rebuff()
+  local result = self.data.bless:rebuff()
 
   if result == cs.Buff.success then
-    local short = pal.to_print(player_bless:get_name())
-    local color = pfUI.api.GetUnitColor(unit)
-    cs.print(string.format("BUFF: %s FOR %s [%s] %s", short, player_name, unit, color .. class))
+    local short = pal.to_print(self.data.bless:get_name())
+    local color = pfUI.api.GetUnitColor(self.unit)
+    cs.print(string.format("BUFF: %s FOR %s [%s] %s", short, self.name, self.unit, color .. class))
   end
 
   return result
 end
 
+local rebless_unit = function(unit)
+  ---@type pal.party.Player
+  local player = pal.party.Player:create(unit)
+  player:rebless()
+end
+
 local buff_party = function()
   cs.iterate_party(function(unit, i)
-    if cs.check_unit(cs.t.dead, unit) or not cs.check_unit(cs.t.close_30, unit) then
-      return
-    end
-
-    rebuff_unit(unit)
+    rebless_unit(unit)
     local _, class = UnitClass(unit)
     if class == cs.cl.HUNTER then
       -- if class == cs.cl.HUNTER or class == cs.cl.WARLOCK then
-      rebuff_unit(cs.u.partypet[i])
+      local unit_pet = cs.u.partypet[i]
+      rebless_unit(unit_pet)
     end
   end)
 end
@@ -85,23 +92,22 @@ local function rebuff_anybody()
       local name = string.sub(alphabet, i, i)
       TargetByName(name)
       if cs.check_target(cs.t.fr_player) then
-        rebuff_unit("target")
+        rebless_unit("target")
       end
       ClearTarget()
     end
   end
 end
 
-pal.party = {}
 pal.party.rebuff = function()
   if cs.is_in_party() then
     pal.sp.Righteous:rebuff()
     buff_party()
   end
   if cs.check_target(cs.t.fr_player) then
-    rebuff_unit(cs.u.target)
+    rebless_unit(cs.u.target)
   elseif cs.check_mouse(cs.t.fr_player) then
-    rebuff_unit(cs.u.mouseover)
+    rebless_unit(cs.u.mouseover)
   end
 end
 
@@ -129,7 +135,13 @@ function pal.party.BuffBar:show()
 end
 
 function pal.party.BuffBar:_on_click(bless_name)
-  cs.debug(bless_name)
+  if not cs.check_target(cs.t.exists) then
+    return
+  end
+
+  local player = pal.party.Player:create(cs.u.target)
+  player:set_bless(bless_name)
+  player:rebless()
 end
 
 local buff_bar
@@ -145,12 +157,12 @@ end
 
 -- PUBLIC
 
-function cs_rebuff_unit()
+function cs_rebless_unit()
   local unit = cs.u.target
   if not cs.check_target(cs.t.exists) then
     unit = cs.u.mouseover
   end
-  rebuff_unit(unit)
+  rebless_unit(unit)
 end
 
 function cs_rebuff_anybody()

@@ -97,6 +97,7 @@ local function unit_dump(name)
 end
 
 local dump_table = function(name, tbl)
+  cs.print("===========================================")
   cs.print(name)
   for name, data in pairs(tbl) do
     cs.print(name..": "..cs.to_string_best_d(data))
@@ -107,7 +108,6 @@ cs_debug_list = {}
 
 local function all_dump()
   --dump_table("cs_map_data", cs_map_data)
-  dump_table("cs_players_bless_dict", cs_players_bless_dict)
 
   local bless_list = pal.bn.get_available()
   for _, id in pairs(bless_list) do
@@ -118,6 +118,8 @@ local function all_dump()
   cs.debug(cs.get_party_hp_sum())
   cs.debug(cs.st_map_checker)
   cs.debug(GetMapInfo())
+
+  dump_table("cs_players_data", cs_players_data)
 end
 
 

@@ -53,6 +53,18 @@ function cs.create_simple_frame()
   return f
 end
 
+function cs.create_escape_press_detector(native_parent, obj, func)
+  local f = CreateFrame("EditBox", nil, native_parent)
+  f.cs_obj = obj
+  f.cs_func = func
+  f:SetAutoFocus(true)
+  f:SetWidth(1)
+  f:SetHeight(1)
+  f:SetScript("OnEscapePressed", function()
+    this.cs_func(this.cs_obj)
+  end)
+  return f
+end
 
 
 -- relative
@@ -224,6 +236,10 @@ function cs.ui.ButtonBar:move(x, y)
     button:move(point)
     point = cs.ui.Point:create(0, 0, cs.ui.r.LEFT, button:get_native(), cs.ui.r.RIGHT)
   end
+end
+
+function cs.ui.ButtonBar:get_native()
+  return self.button_list[1]:get_native()
 end
 
 function cs.ui.ButtonBar:is_shown()
