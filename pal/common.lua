@@ -101,10 +101,13 @@ to_print_list[sn.Justice] = cs.color.green .. "SJ" .. "|r"
 to_print_list[sn.Wisdom] = cs.color.blue .. "SW" .. "|r"
 
 pal.to_print = function(spell_name)
-  if not spell_name then
-    return cs.color.grey.."XX".."|r"
+  if spell_name then
+    local result = to_print_list[spell_name]
+    if result then
+      return result
+    end
   end
-  return to_print_list[spell_name]
+  return cs.color.grey.."XX".."|r"
 end
 
 -- UnitDebuff

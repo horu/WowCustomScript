@@ -146,6 +146,9 @@ end
 cs.get_party_hp_sum = function()
   local sum = UnitHealthMax(cs.u.player)
   cs.iterate_party(function(unit)
+    if not cs.check_unit(cs.t.close_30, unit) then
+      return
+    end
     sum = sum + UnitHealthMax(unit)
   end)
   return sum
