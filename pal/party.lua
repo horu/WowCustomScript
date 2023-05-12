@@ -20,7 +20,7 @@ end
 
 function pal.party.Player:set_bless(bless_name)
   self.data.bless = pal.Bless.try_build(bless_name)
-  assert(self.data.bless)
+  assert(self.data.bless, bless_name)
 end
 
 function pal.party.Player:rebless()
@@ -121,7 +121,7 @@ function pal.party.BuffBar:build()
     ---@type pal.Bless
     local bless = pal.bless.get_buff(name)
     local texture = bless:get_texture()
-    table.insert(spell_list, {texture = texture, name = bless})
+    table.insert(spell_list, {texture = texture, name = name})
   end
 
   self.bar = cs.spell.Bar:create(spell_list, self, self._on_click)

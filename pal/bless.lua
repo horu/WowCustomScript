@@ -49,7 +49,6 @@ end
 local avail_bless_dict = {}
 local update_bless_list = function()
   avail_bless_dict = {}
-  cs.debug("update")
   for bless_name, spell_name in pairs(bn.dict_all) do
     local bless = pal.Bless.try_build(spell_name)
     -- pal.bless[bless_name] = bless
