@@ -49,14 +49,28 @@ end
 
 
 -- Button
----@param point cs.ui.Point
-function cs.create_simple_button(width, hight, point, on_click_func)
-  local f = CreateFrame("Button", nil, UIParent)
-  f:SetHeight(hight or 20)
-  f:SetWidth(width or 40)
-  f:SetPoint(point:unpack())
-  f:SetScript("OnClick", on_click_func)
-  return f
+---@class cs.ui.Button
+cs.ui.Button = cs.class()
+
+function cs.ui.Button:build(width, height, point, texture, on_click_func)
+  local b = CreateFrame("Button", nil, UIParent)
+  b:SetHeight(height)
+  b:SetWidth(width)
+  b:ClearAllPoints()
+  b:SetPoint(point:unpack())
+  b:SetScript("OnClick", on_click_func)
+  self.button = b
+
+  if texture then
+    local texture_frame = b:CreateTexture(nil, "BACKGROUND")
+    texture_frame:SetHeight(height)
+    texture_frame:SetWidth(width)
+    texture_frame:SetTexture(cs.type.check(texture, cs.type.table) and unpack(texture) or texture)
+    texture_frame:ClearAllPoints()
+    texture_frame:SetPoint(point:unpack())
+    self.texture = texture_frame
+  end
+
 end
 
 
@@ -250,7 +264,7 @@ cs.st_button_checker = cs.ButtonChecker.build()
 
 
 
----@cs.ui.DownChecker
+---@class cs.ui.DownChecker
 cs.ui.DownChecker = cs.class()
 
 -- timeout down

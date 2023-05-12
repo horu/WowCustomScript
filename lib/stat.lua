@@ -34,8 +34,8 @@ function cs.stat.Frame.build(self)
   self.text = cs.ui.Text:build_from_config(frame_config)
 
     -- Reset speed saved map size ratio
-  local button_point = cs.ui.Point.build(0, 0, cs.ui.r.BOTTOMLEFT, self.text.frame, cs.ui.r.BOTTOMLEFT)
-  self.button = cs.create_simple_button(nil, nil, button_point, function()
+  local button_point = cs.ui.Point.build(-290, 0, cs.ui.r.LEFT, self.text.frame, cs.ui.r.LEFT)
+  self.button = cs.ui.Button:new(40, 15, button_point, nil, function()
     cs.services.speed_checker:reset_speed()
   end)
 
