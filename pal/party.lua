@@ -113,17 +113,18 @@ end
 pal.party.BuffBar = cs.class()
 
 function pal.party.BuffBar:build()
-  local texture_dict = {} -- texture: bless_name
+  local spell_list = {} -- texture: bless_name
 
   local bless_name_list = pal.bn.get_available()
+  table.sort(bless_name_list)
   for _, name in pairs(bless_name_list) do
     ---@type pal.Bless
     local bless = pal.bless.get_buff(name)
     local texture = bless:get_texture()
-    texture_dict[texture] = bless:get_name()
+    table.insert(spell_list, {texture = texture, name = bless})
   end
 
-  self.bar = cs.spell.Bar:create(texture_dict, self, self._on_click)
+  self.bar = cs.spell.Bar:create(spell_list, self, self._on_click)
 end
 
 function pal.party.BuffBar:show()

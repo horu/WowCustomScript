@@ -433,15 +433,20 @@ cs.st_player_cast_detector = cs.spell.UnitCastDetector:new(cs.u.player)
 ---@class cs.spell.Bar
 cs.spell.Bar = cs.class()
 
----@param texture_dict table texture: spell_name
+---@param spell_list table {texture=texture, name=spell_name}
 ---@param func function func(obj, spell_name)
-function cs.spell.Bar:build(texture_dict, obj, on_click_func)
+function cs.spell.Bar:build(spell_list, obj, on_click_func)
   local SIZE = 30
 
-  self.texture_dict = texture_dict
+  self.texture_dict = {}
   self.obj = obj
   self.on_click_func = on_click_func
-  self.bar = cs.ui.ButtonBar:create(SIZE, cs.dict_keys_to_list(texture_dict, cs.type.string), self, self._on_click)
+  local texture_list = {}
+  for _, spell in pairs(spell_list) do
+    self.texture_dict[spell.texture] = spell.name
+    table.insert(texture_list, spell.texture)
+  end
+  self.bar = cs.ui.ButtonBar:create(SIZE, texture_list, self, self._on_click)
   self.bar:hide()
 
   self.escape = cs.create_escape_press_detector(self.bar:get_native(), self.bar, self.bar.hide)
