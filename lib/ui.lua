@@ -21,18 +21,24 @@ cs.color.none = "|r"
 cs.ui = {}
 
 --- @class cs.ui.Point
-cs.ui.Point = cs.create_class()
+cs.ui.Point = cs.class()
 
-cs.ui.Point.build = function(x, y, to_point, relative_frame, relative_point)
-  local point = cs.ui.Point:new()
-  point.impl = {
-    to_point or cs.ui.r.BOTTOMLEFT,
-    relative_frame,
-    relative_frame and (relative_point or cs.ui.r.BOTTOMLEFT),
-    x or 0,
-    y or 0,
-  }
-  return point
+function cs.ui.Point:build(x, y, to_point, relative_frame, relative_point)
+  if relative_frame then
+    self.impl = {
+      to_point or cs.ui.r.BOTTOMLEFT,
+      relative_frame,
+      relative_point or cs.ui.r.BOTTOMLEFT,
+      x or 0,
+      y or 0,
+    }
+  else
+    self.impl = {
+      to_point or cs.ui.r.BOTTOMLEFT,
+      x or 0,
+      y or 0,
+    }
+  end
 end
 
 function cs.ui.Point:unpack()
@@ -46,34 +52,6 @@ function cs.create_simple_frame()
   local f = CreateFrame("Frame", nil, UIParent)
   return f
 end
-
-
--- Button
----@class cs.ui.Button
-cs.ui.Button = cs.class()
-
-function cs.ui.Button:build(width, height, point, texture, on_click_func)
-  local b = CreateFrame("Button", nil, UIParent)
-  b:SetHeight(height)
-  b:SetWidth(width)
-  b:ClearAllPoints()
-  b:SetPoint(point:unpack())
-  b:SetScript("OnClick", on_click_func)
-  self.button = b
-
-  if texture then
-    local texture_frame = b:CreateTexture(nil, "BACKGROUND")
-    texture_frame:SetHeight(height)
-    texture_frame:SetWidth(width)
-    texture_frame:SetTexture(cs.type.check(texture, cs.type.table) and unpack(texture) or texture)
-    texture_frame:ClearAllPoints()
-    texture_frame:SetPoint(point:unpack())
-    self.texture = texture_frame
-  end
-
-end
-
-
 
 
 
@@ -151,7 +129,118 @@ function cs.ui.Text:add_line(number)
   text_frame:SetJustifyH(cs.ui.r.LEFT)
   table.insert(self.lines, number, text_frame)
 end
+
+function cs.ui.Text:get_native()
+  return self.lines[0]
+end
 --endregion
+
+
+
+-- Button
+---@class cs.ui.Button
+cs.ui.Button = cs.class()
+
+function cs.ui.Button:build(width, height, point, texture, on_click_obj, on_click_func)
+  local b = CreateFrame("Button", nil, UIParent)
+  b.cs_on_click_obj = on_click_obj
+  b.cs_on_click_func = on_click_func
+  b:SetHeight(height)
+  b:SetWidth(width)
+  b:SetScript("OnClick", function()
+    this.cs_on_click_func(this.cs_on_click_obj)
+  end)
+  self.button = b
+
+  if texture then
+    local texture_frame = b:CreateTexture(nil, "BACKGROUND")
+    texture_frame:SetHeight(height)
+    texture_frame:SetWidth(width)
+    texture_frame:SetTexture(cs.type.check(texture, cs.type.table) and unpack(texture) or texture)
+    self.texture = texture_frame
+  end
+
+  self:move(point)
+end
+
+---@param point cs.ui.Point
+function cs.ui.Button:move(point)
+  self.button:ClearAllPoints()
+  self.button:SetPoint(point:unpack())
+  if self.texture then
+    self.texture:ClearAllPoints()
+    self.texture:SetPoint(cs.ui.r.LEFT, self.button, cs.ui.r.LEFT, 0, 0)
+  end
+end
+
+function cs.ui.Button:get_native()
+  return self.button
+end
+
+function cs.ui.Button:is_shown()
+  return self.button:IsShown()
+end
+
+function cs.ui.Button:hide()
+  self.button:Hide()
+  if self.texture then
+    self.texture:Hide()
+  end
+end
+
+function cs.ui.Button:show()
+  self.button:Show()
+  if self.texture then
+    self.texture:Show()
+  end
+end
+
+
+
+---@class cs.ui.ButtonBar
+cs.ui.ButtonBar = cs.class()
+
+function cs.ui.ButtonBar:build(size, texture_list, obj, func)
+  local point = cs.ui.Point:create(0, 0)
+
+  ---@type cs.ui.Button[]
+  self.button_list = {}
+
+  for _, texture in pairs(texture_list) do
+    local callback = { texture = texture, obj = obj, func = func }
+    ---@type cs.ui.Button
+    local button = cs.ui.Button:new(size, size, point, texture, callback, function(callback)
+      callback.func(callback.obj, callback.texture)
+    end)
+    table.insert(self.button_list, button)
+  end
+
+  self:move(0, 0)
+end
+
+function cs.ui.ButtonBar:move(x, y)
+  local point = cs.ui.Point:create(x, y)
+  for _, button in pairs(self.button_list) do
+    button:move(point)
+    point = cs.ui.Point:create(0, 0, cs.ui.r.LEFT, button:get_native(), cs.ui.r.RIGHT)
+  end
+end
+
+function cs.ui.ButtonBar:is_shown()
+  return self.button_list[1]:is_shown()
+end
+
+function cs.ui.ButtonBar:hide()
+  for _, button in pairs(self.button_list) do
+    button:hide()
+  end
+end
+
+function cs.ui.ButtonBar:show()
+  for _, button in pairs(self.button_list) do
+    button:show()
+  end
+end
 
 
 

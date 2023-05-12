@@ -27,6 +27,11 @@ function pal.Bless.try_build(bless_name, unit)
   return bless
 end
 
+-- const
+function pal.Bless:get_texture()
+  return self.buff:get_texture()
+end
+
 function pal.Bless:get_name()
   return self.buff:get_name()
 end

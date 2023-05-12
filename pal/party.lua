@@ -107,6 +107,41 @@ end
 
 
 
+---@class pal.party.BuffBar
+pal.party.BuffBar = cs.class()
+
+function pal.party.BuffBar:build()
+  local texture_dict = {} -- texture: bless_name
+
+  local bless_name_list = pal.bn.get_available()
+  for _, name in pairs(bless_name_list) do
+    ---@type pal.Bless
+    local bless = pal.bless.get_buff(name)
+    local texture = bless:get_texture()
+    texture_dict[texture] = bless:get_name()
+  end
+
+  self.bar = cs.spell.Bar:create(texture_dict, self, self._on_click)
+end
+
+function pal.party.BuffBar:show()
+  self.bar:show()
+end
+
+function pal.party.BuffBar:_on_click(bless_name)
+  cs.debug(bless_name)
+end
+
+local buff_bar
+
+
+
+pal.party.init = function()
+  buff_bar = pal.party.BuffBar:create()
+end
+
+
+
 
 -- PUBLIC
 
@@ -120,4 +155,8 @@ end
 
 function cs_rebuff_anybody()
   rebuff_anybody()
+end
+
+function cs_buff_bar()
+  buff_bar:show()
 end

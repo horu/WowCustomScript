@@ -191,6 +191,9 @@ cs.create_class = function(class_tab)
     local obj = setmetatable(tab or {}, {__index = self})
     return obj
   end
+  function class:create(...)
+    return self.build(unpack(arg))
+  end
   return class
 end
 
@@ -204,6 +207,7 @@ cs.class = function()
     end
     return obj
   end
+  class.create = class.new
 
   return class
 end

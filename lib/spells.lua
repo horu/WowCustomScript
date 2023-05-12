@@ -41,6 +41,11 @@ cs.Spell.build = function(name, custom_ready_check)
 end
 
 -- const
+function cs.Spell:get_texture()
+  return GetSpellTexture(self.id, self.book)
+end
+
+-- const
 function cs.Spell:get_cd()
   -- Global CD is returned as well
   local ts_start, duration = GetSpellCooldown(self.id, self.book)
@@ -255,6 +260,11 @@ cs.Buff.build = function(name, unit, rebuff_timeout)
 end
 
 -- const
+function cs.Buff:get_texture()
+  return self.spell:get_texture()
+end
+
+-- const
 function cs.Buff:get_name()
   return self.name
 end
@@ -418,6 +428,39 @@ cs.st_target_cast_detector = cs.spell.UnitCastDetector:new(cs.u.target)
 cs.st_player_cast_detector = cs.spell.UnitCastDetector:new(cs.u.player)
 
 
+
+-- UI Spell Bar for spell clicks
+---@class cs.spell.Bar
+cs.spell.Bar = cs.class()
+
+---@param texture_dict table texture: spell_name
+---@param func function func(obj, spell_name)
+function cs.spell.Bar:build(texture_dict, obj, on_click_func)
+  local SIZE = 30
+
+  self.texture_dict = texture_dict
+  self.obj = obj
+  self.on_click_func = on_click_func
+  self.bar = cs.ui.ButtonBar:create(SIZE, cs.dict_keys_to_list(texture_dict, cs.type.string), self, self._on_click)
+  self.bar:hide()
+end
+
+function cs.spell.Bar:show()
+  if self.bar:is_shown() then
+    self.bar:hide()
+    return
+  end
+
+  self.bar:show()
+  local x, y = GetCursorPosition()
+  self.bar:move(x / UIParent:GetEffectiveScale(), y / UIParent:GetEffectiveScale())
+end
+
+function cs.spell.Bar:_on_click(texture)
+  local spell_name = self.texture_dict[texture]
+  self.on_click_func(self.obj, spell_name)
+  self.bar:hide()
+end
 
 
 
