@@ -37,10 +37,18 @@ function Action:_seal_action(state_type)
     return
   end
 
+  if not pal.seal.get_current() then
+    self.main_seal:reseal()
+  end
+
   -- cast shield for def
   if pal.sp.HolyShield:cast() then return end
 
-  if not self:_has_any_seal_debuff() and not cs.is_low_mana() then
+  if cs.is_low_mana() then
+    return
+  end
+
+  if not self:_has_any_seal_debuff() then
     -- the target has no debuffs. judgement it.
     if self:_judgement_other() then
       -- wait another seal to judgement on the target
