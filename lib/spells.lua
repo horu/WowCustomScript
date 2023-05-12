@@ -247,11 +247,10 @@ cs.Buff.success = 1
 cs.Buff.failed = 2
 
 --region
-cs.Buff.build = function(name, unit, rebuff_timeout)
+cs.Buff.build = function(name, rebuff_timeout)
   local buff = cs.Buff:new()
 
   buff.name = name
-  buff.unit = unit or cs.u.player
   buff.spell = cs.Spell.build(name)
   buff.cast_ts = 0
   buff.rebuff_timeout = rebuff_timeout
@@ -270,8 +269,7 @@ function cs.Buff:get_name()
 end
 
 -- const
-function cs.Buff:check_target_range()
-  local unit = self.unit
+function cs.Buff:check_target_range(unit)
   if unit == cs.u.player then
     return true
   end
@@ -280,8 +278,9 @@ function cs.Buff:check_target_range()
 end
 
 -- const
-function cs.Buff:check_exists()
-  return cs.find_buff(self.name, self.unit)
+function cs.Buff:check_exists(unit)
+  unit = unit or cs.u.player
+  return cs.find_buff(self.name, unit)
 end
 
 -- const
@@ -293,16 +292,17 @@ function cs.Buff:is_expired()
   return not cs.compare_time(self.rebuff_timeout, self.cast_ts)
 end
 
-function cs.Buff:rebuff()
-  if not self:check_target_range() then
+function cs.Buff:rebuff(unit)
+  unit = unit or cs.u.player
+  if not self:check_target_range(unit) then
     return cs.Buff.failed
   end
 
-  if self:check_exists() and not self:is_expired() then
+  if self:check_exists(unit) and not self:is_expired() then
     return cs.Buff.exists
   end
 
-  if self.spell:cast_to_unit(self.unit) then
+  if self.spell:cast_to_unit(unit) then
     self.cast_ts = GetTime()
     return cs.Buff.success
   end

@@ -19,15 +19,11 @@ function pal.party.Player:build(unit)
 end
 
 function pal.party.Player:set_bless(bless_name)
-  self.data.bless = pal.Bless.try_build(bless_name, self.unit)
+  self.data.bless = pal.Bless.try_build(bless_name)
   assert(self.data.bless)
 end
 
 function pal.party.Player:rebless()
-  if cs.check_unit(cs.t.dead, self.unit) or not cs.check_unit(cs.t.close_30, self.unit) then
-    return cs.Buff.failed
-  end
-
   local _, class = UnitClass(self.unit)
   class = class or "WARRIOR"
 
@@ -56,7 +52,7 @@ function pal.party.Player:rebless()
     self:set_bless(buff_name)
   end
 
-  local result = self.data.bless:rebuff()
+  local result = self.data.bless:rebuff(self.unit)
 
   if result == cs.Buff.success then
     local short = pal.to_print(self.data.bless:get_name())

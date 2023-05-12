@@ -11,7 +11,7 @@ local spn = pal.spn
 pal.Bless = cs.create_class()
 
 -- Bless can by anavailable, but buffed on the target.
-function pal.Bless.try_build(bless_name, unit)
+function pal.Bless.try_build(bless_name)
   if not cs.is_spell_available(bless_name) then
     return
   end
@@ -22,7 +22,7 @@ function pal.Bless.try_build(bless_name, unit)
   end
 
   local bless = pal.Bless:new()
-  bless.buff = cs.Buff.build(bless_name, unit, rebuff_timeout)
+  bless.buff = cs.Buff.build(bless_name, rebuff_timeout)
 
   return bless
 end
@@ -36,12 +36,12 @@ function pal.Bless:get_name()
   return self.buff:get_name()
 end
 
-function pal.Bless:rebuff()
-  if cs.check_combat() and self.buff:check_exists() then
+function pal.Bless:rebuff(unit)
+  if cs.check_combat() and self.buff:check_exists(unit) then
     return cs.Buff.exists
   end
 
-  return self.buff:rebuff()
+  return self.buff:rebuff(unit)
 end
 
 

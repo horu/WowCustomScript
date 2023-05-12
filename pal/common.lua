@@ -156,7 +156,7 @@ pal.common.init = function()
   end)
   pal.sp.HolyShield_force = cs.Spell.build(spn.HolyShield)
 
-  pal.sp.Righteous = cs.Buff.build(pal.spn.Righteous, nil, 28 * 60)
+  pal.sp.Righteous = cs.Buff.build(pal.spn.Righteous, 28 * 60)
 
   pal.sp.Cleanse = cs.Spell.build(pal.hn.Cleanse)
 end
