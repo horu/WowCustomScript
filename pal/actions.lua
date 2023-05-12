@@ -32,7 +32,7 @@ function Action:_seal_action(state_type)
     return
   end
 
-  if seal.Righteousness:judgement_it() then
+  if seal.Righteousness:wait_cd_and_judgement() then
     -- First wait Righteousness seal to judgement on the target ( damage )
     return
   end
@@ -55,7 +55,7 @@ function Action:_seal_action(state_type)
       return
     end
 
-    if self.main_seal:judgement_it() then return end
+    if self.main_seal:wait_cd_and_judgement() then return end
   end
 
   self.main_seal:reseal()
@@ -64,7 +64,7 @@ end
 function Action:_judgement_other()
   for _, it_seal in pairs(seal.list_all) do
     if it_seal ~= self.main_seal then
-      if it_seal:judgement_it(true) then
+      if it_seal:wait_cd_and_judgement(true) then
         return true
       end
     end
@@ -94,7 +94,7 @@ pal.actions.init = function()
     if not current_seal or current_seal == pal.sn.Righteousness then
       if self.main_seal:reseal() then return end
       if not cs.is_low_mana() then
-        if self.main_seal:judgement_it() then return end
+        if self.main_seal:judgement() then return end
       end
     end
 

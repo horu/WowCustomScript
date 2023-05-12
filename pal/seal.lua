@@ -19,6 +19,7 @@ pal.Seal.build = function(spell, target_debuff, target_hp_limit, judgement_targe
   ---@type cs.Buff
   seal.buff = cs.Buff.build(spell)
   seal.target_debuff = target_debuff
+  ---@type cs.Spell
   seal.judgement = cs.Spell.build(spn.Judgement)
   seal.judgement_target_hp_limit = judgement_target_hp_limit or 0
   seal.target_hp_limit = target_hp_limit or 0
@@ -36,6 +37,10 @@ end
 
 -- const
 function pal.Seal:is_judgement_available(from_other)
+  if not self:check_exists() then
+    return
+  end
+
   if self:check_target_debuff() then
     return
   end
@@ -81,7 +86,7 @@ function pal.Seal:reseal_and_judgement()
     return true
   end
 
-  return self:judgement_it()
+  return self:wait_cd_and_judgement()
 end
 
 -- return true on success cast
@@ -95,10 +100,16 @@ function pal.Seal:reseal_and_cast(...)
 end
 
 -- check the seal exists and the target has no the seal debuff
-function pal.Seal:judgement_it(from_other)
-  if self:check_exists() and self:is_judgement_available(from_other) then
+function pal.Seal:wait_cd_and_judgement(from_other)
+  if self:is_judgement_available(from_other) then
     self.judgement:cast()
     return true
+  end
+end
+
+function pal.Seal:judgement(from_other)
+  if self:is_judgement_available(from_other) then
+    return self.judgement:cast()
   end
 end
 --endregion
