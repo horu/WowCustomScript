@@ -175,7 +175,9 @@ pal.actions.init = function()
     cs.auto_attack_nearby()
 
     self:update_saved_action()
-    self:run_saved_action(state_type)
+    if not cs.is_low_mana() then
+      self:run_saved_action(state_type)
+    end
 
     pal.sp.HolyShield_force:cast()
   end)
@@ -191,7 +193,9 @@ pal.actions.init = function()
 
     if self.main_seal:judgement_only() then return end
 
-    self:run_saved_action(state_type)
+    if not cs.is_low_mana() then
+      self:run_saved_action(state_type)
+    end
   end, function(self)
     self.main_seal = seal.Justice
   end)
