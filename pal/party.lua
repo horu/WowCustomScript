@@ -27,26 +27,29 @@ function pal.party.Player:rebless()
   local _, class = UnitClass(self.unit)
   class = class or "WARRIOR"
 
+  local fight_bless = pal.bn.Might
+  local middle_bless = pal.bless.get_buff(pal.bn.Kings) and pal.bn.Kings or pal.bn.Might
+  local magic_bless = pal.bless.get_buff(pal.bn.Kings) and pal.bn.Kings or pal.bn.Wisdom
+
   if not self.data.bless then
     local buff_map = {
-      WARRIOR = pal.bn.Might,
-      PALADIN = pal.bn.Might,
-      HUNTER = pal.bn.Might,
-      ROGUE = pal.bn.Might,
+      WARRIOR = fight_bless,
+      ROGUE = fight_bless,
 
-      SHAMAN = pal.bn.Might,
-      DRUID = pal.bn.Might,
+      PALADIN = middle_bless,
+      HUNTER = middle_bless,
+      SHAMAN = middle_bless,
+      DRUID = middle_bless,
 
-      PRIEST = pal.bn.Wisdom,
-      MAGE = pal.bn.Wisdom,
-      WARLOCK = pal.bn.Wisdom,
+      PRIEST = magic_bless,
+      MAGE = magic_bless,
+      WARLOCK = magic_bless,
     }
 
-
-    local buff_name = class and buff_map[class] or pal.bn.Might
+    local buff_name = class and buff_map[class] or middle_bless
     if not buff_name then
       cs.print("BUFF NOT FOUND FOR "..class)
-      buff_name = pal.bn.Might
+      buff_name = middle_bless
     end
 
     self:set_bless(buff_name)
