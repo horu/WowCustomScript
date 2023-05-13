@@ -178,8 +178,8 @@ cs.SpeedChecker.build = function()
   end)
 
   -- To save calculated map size ratio to config
-  speed_checker.map_params = cs.st_map_checker:get_map_params()
-  cs.st_map_checker:subscribe(speed_checker, speed_checker._on_zone_changed)
+  speed_checker.map_params = cs.map.checker:get_map_params()
+  cs.map.checker:subscribe(speed_checker, speed_checker._on_zone_changed)
   --
   ---- Reset saved map size ratio
   --local button_point = cs.ui.Point.build(0, 0, cs.ui.r.BOTTOMLEFT, speed_checker.text.frame, cs.ui.r.BOTTOMLEFT)
@@ -212,7 +212,7 @@ function cs.SpeedChecker:reset_speed()
 end
 
 function cs.SpeedChecker:_on_zone_changed()
-  self.map_params = cs.st_map_checker:get_map_params()
+  self.map_params = cs.map.checker:get_map_params()
 end
 
 -- speed modificator on mount/buffs/talents/ghost

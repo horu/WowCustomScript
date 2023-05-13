@@ -100,7 +100,7 @@ end
 
 pal.party.rebuff = function()
   if cs.is_in_party() then
-    if not cs.st_map_checker:get_zone_params().pvp then
+    if not cs.map.checker:get_zone_params().pvp then
       pal.sp.Righteous:rebuff()
     end
     buff_party()

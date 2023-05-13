@@ -196,9 +196,17 @@ function State:postaction()
     -- rebless player first,
     return
   end
-  if not cs.check_combat(1) then
+  if not cs.check_combat(cs.c.affect) then
     if cs.prof.mining:buff() then return end
     pal.party.rebuff()
+
+    --TODO: add pvp tinker
+    local zone_params = cs.map.checker:get_zone_params()
+    if zone_params.argent_dawn then
+      cs.slot.set_holder:equip_set(cs.slot.Set.id.tinker_argent_dawn)
+    else
+      cs.slot.set_holder:equip_set(cs.slot.Set.id.tinker_regular)
+    end
   end
 end
 

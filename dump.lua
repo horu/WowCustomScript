@@ -116,7 +116,7 @@ local function all_dump()
   end
 
   cs.debug(cs.get_party_hp_sum())
-  cs.debug(cs.st_map_checker)
+  cs.debug(cs.map.checker)
   cs.debug(GetMapInfo())
 
   dump_table("cs_players_data", cs_players_data)

@@ -164,6 +164,9 @@ end
 cs.slot.Set.arm = "arm"
 cs.slot.Set.weap = "weap"
 cs.slot.Set.id = {}
+cs.slot.Set.id.tinker_pvp = 2 -- TODO: add
+cs.slot.Set.id.tinker_argent_dawn = 3
+cs.slot.Set.id.tinker_regular = 4
 cs.slot.Set.id.weap_1 = 5
 cs.slot.Set.id.weap_2 = 6
 cs.slot.Set.id.weap_3 = 7
@@ -197,8 +200,8 @@ local weap_set_list = {
 local default_item_sets = {
   cs.slot.Set:new(arm_set_list):to_config(),
   cs.slot.Set:new(arm_set_list):to_config(),
-  cs.slot.Set:new({}):to_config(),
-  cs.slot.Set:new({}):to_config(),
+  cs.slot.Set:new({cs.slot.id.trinket1}):to_config(),
+  cs.slot.Set:new({cs.slot.id.trinket1}):to_config(),
   cs.slot.Set:new(weap_set_list):to_config(),
   cs.slot.Set:new(weap_set_list):to_config(),
   cs.slot.Set:new(weap_set_list):to_config(),

@@ -173,7 +173,7 @@ function cs.auto_attack()
     return
   end
 
-  if cs.check_target(cs.t.en_player) and cs.st_map_checker:get_zone_params().nopvp then
+  if cs.check_target(cs.t.en_player) and cs.map.checker:get_zone_params().nopvp then
     ClearTarget()
     return
   end
@@ -322,18 +322,9 @@ function cs.MapChecker:_on_zone_changed()
 end
 --endregion cs.MapChecker
 
+cs.map = {}
 ---@type cs.MapChecker
-cs.st_map_checker = nil
-
-
-
-
-
-
-
-
-
-
+cs.map.checker = nil
 
 
 
@@ -508,7 +499,7 @@ end
 
 cs.game = {}
 cs.game.init = function()
-  cs.st_map_checker = cs.MapChecker:new()
+  cs.map.checker = cs.MapChecker:new()
 end
 
 cs.game.test = function()
