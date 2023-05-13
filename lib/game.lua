@@ -233,6 +233,19 @@ cs.MapChecker = cs.class()
 cs.MapChecker.zone_params = {}
 cs.MapChecker.zone_params["Booty Bay"] = { nopvp = true }
 
+cs.MapChecker.map_params = {}
+cs.MapChecker.map_params["WarsongGulch"] = { pvp = true }
+cs.MapChecker.map_params["ArathiBasin"] = { pvp = true }
+
+cs.MapChecker.map_params["EasternPlaguelands"] = { argent_dawn = true }
+cs.MapChecker.map_params["WesternPlaguelands"] = { argent_dawn = true }
+cs.MapChecker.map_params["Stratholme"] = { argent_dawn = true }
+cs.MapChecker.map_params["Scholomance"] = { argent_dawn = true }
+cs.MapChecker.map_params["Scholomance1f"] = { argent_dawn = true }
+cs.MapChecker.map_params["Scholomance2f"] = { argent_dawn = true }
+cs.MapChecker.map_params["Scholomance3f"] = { argent_dawn = true }
+cs.MapChecker.map_params["Scholomance4f"] = { argent_dawn = true }
+
 --region cs.MapChecker
 function cs.MapChecker:build()
   self.subscribers = {}
@@ -261,12 +274,18 @@ function cs.MapChecker:get_zone_text()
 end
 
 -- const
+-- from static zone_params/map_params
 function cs.MapChecker:get_zone_params()
-  local params = cs.MapChecker.zone_params[self.zone_text]
-  return params or {}
+  local zone_params = self.zone_params[self.zone_text] or {}
+  local map_params = self.map_params[self.map_name] or {}
+  for name, value in pairs(map_params) do
+    zone_params[name] = value
+  end
+  return zone_params
 end
 
 -- const
+-- from cs_map_data
 function cs.MapChecker:get_map_params()
   cs_map_data[self.map_name] = cs_map_data[self.map_name] or { name = self.map_name }
   return cs_map_data[self.map_name]

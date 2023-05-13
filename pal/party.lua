@@ -100,7 +100,9 @@ end
 
 pal.party.rebuff = function()
   if cs.is_in_party() then
-    pal.sp.Righteous:rebuff()
+    if not cs.st_map_checker:get_zone_params().pvp then
+      pal.sp.Righteous:rebuff()
+    end
     buff_party()
   end
   if cs.check_target(cs.t.fr_player) then
