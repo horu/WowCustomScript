@@ -4,9 +4,6 @@ local pal = cs.pal
 local spn = pal.spn
 local seal = pal.seal
 
----@type pal.Seal[]
-local debuffed_seal_list = {}
-
 
 
 ---@class Action
@@ -72,7 +69,7 @@ function Action:_judgement_other()
 end
 
 function Action:_has_any_seal_debuff()
-  for _, it_seal in pairs(debuffed_seal_list) do
+  for _, it_seal in pairs(seal.list_all) do
     if it_seal:check_target_debuff() then
       return true
     end
@@ -83,8 +80,6 @@ end
 
 pal.actions = {}
 pal.actions.init = function()
-  debuffed_seal_list = { seal.Light, seal.Wisdom, seal.Justice }
-
   pal.actions.damage = Action.build(seal.Righteousness, function(self, state_type)
     if not cs.check_target(cs.t.close_30) then return end
 
@@ -94,7 +89,7 @@ pal.actions.init = function()
     if not current_seal or current_seal == pal.sn.Righteousness then
       if self.main_seal:reseal() then return end
       if not cs.is_low_mana() then
-        if self.main_seal:judgement() then return end
+        if self.main_seal:judgement_it() then return end
       end
     end
 
@@ -155,6 +150,10 @@ pal.actions.init = function()
     self.cast_order:cast()
   end)
   pal.actions.stun.cast_order = cs.SpellOrder.build(pal.sp.TurnUndead, pal.spn.HammerJustice)
+
+  pal.actions.taunt = Action.build(seal.Justice, function(self, state_type)
+    self.main_seal:judgement_only()
+  end)
 
   pal.actions.dict = cs.filter_dict(pal.actions, "table")
 end

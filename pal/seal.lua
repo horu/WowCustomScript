@@ -89,16 +89,6 @@ function pal.Seal:reseal_and_judgement()
   return self:wait_cd_and_judgement()
 end
 
--- return true on success cast
-function pal.Seal:reseal_and_cast(...)
-  if self:reseal() then
-    return
-  end
-
-  local order = cs.SpellOrder.build(unpack(arg))
-  return order:cast()
-end
-
 -- check the seal exists and the target has no the seal debuff
 function pal.Seal:wait_cd_and_judgement(from_other)
   if self:is_judgement_available(from_other) then
@@ -107,10 +97,19 @@ function pal.Seal:wait_cd_and_judgement(from_other)
   end
 end
 
-function pal.Seal:judgement(from_other)
+function pal.Seal:judgement_it(from_other)
   if self:is_judgement_available(from_other) then
     return self.judgement:cast()
   end
+end
+
+-- seal buff is not needed. cast seal only before judgement and judgement next.
+function pal.Seal:judgement_only(from_other)
+  if self.judgement:get_cd() then
+    return true
+  end
+
+  return self:reseal_and_judgement()
 end
 --endregion
 
@@ -128,12 +127,12 @@ pal.seal.init = function()
   ---@type pal.Seal
   pal.seal.Crusader = pal.Seal.build(sn.Crusader, nil, nil, pal.Seal.no_judgement)
   ---@type pal.Seal
-  --TODO: add party korrect dependency
   pal.seal.Light = pal.Seal.build(sn.Light, "Spell_Holy_HealingAura", 0.1, 0.3)
   ---@type pal.Seal
   pal.seal.Wisdom = pal.Seal.build(sn.Wisdom, "Spell_Holy_RighteousnessAura", 0.1, 0.3)
   ---@type pal.Seal
-  pal.seal.Justice = pal.Seal.build(sn.Justice, "Spell_Holy_SealOfWrath")
+  --pal.seal.Justice = pal.Seal.build(sn.Justice, "Spell_Holy_SealOfWrath")
+  pal.seal.Justice = pal.Seal.build(sn.Justice)
   ---@type pal.Seal[]
   pal.seal.list_all = cs.dict_to_list(pal.seal, "table")
 end

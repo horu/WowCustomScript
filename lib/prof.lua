@@ -49,5 +49,5 @@ end
 cs.prof.mining = cs.prof.Mining.build()
 
 cs.prof.test = function()
-  cs.prof.mining:_cast_detected({find_icon_name = function(self, name) return name == "Trade_Mining" end})
+  --cs.prof.mining:_cast_detected({find_icon_name = function(self, name) return name == "Trade_Mining" end})
 end
