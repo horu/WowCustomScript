@@ -431,6 +431,9 @@ cs.c.aggro = cs.get_aggro_info
 -- common combat state, when mount is not available and other...
 cs.c.affect = cs.get_affect_info
 
+-- example: check_combat(2) - check normal + agro + 2 sec after
+-- example: check_combat() - check normal + agro
+-- example: check_combat(cs.c.affect) - check affect only
 function cs.check_combat(m0or, m1or, m2or, m3or)
   local to_check
   local time_after

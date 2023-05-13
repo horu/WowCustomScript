@@ -75,6 +75,8 @@ pal.hn.DivineProtection = "Divine Protection"
 pal.hn.BlessingProtection = "Blessing of Protection"
 pal.hn.LayOnHands = "Lay on Hands"
 pal.hn.Cleanse = "Cleanse"
+pal.hn.FOL = "Flash of Light"
+pal.hn.HL = "Holy Light"
 pal.hn.shield_list = {pal.hn.DivineShield, pal.hn.BlessingProtection}
 
 
@@ -123,6 +125,14 @@ pal.ud = {}
 -- SPell
 pal.sp = {}
 
+local buff_conc_aura_on_combat = function()
+  -- TODO cast aura on damage
+  if cs.check_combat(1) then
+    return cs.Buff.build(an.Concentration):rebuff()
+  end
+  return cs.Buff.exists
+end
+
 pal.common = {}
 pal.common.init = function()
   pal.sp.CrusaderStrike = cs.Spell.build(spn.CrusaderStrike, function(spell)
@@ -149,7 +159,9 @@ pal.common.init = function()
   pal.sp.TurnUndead = cs.Spell.build(spn.TurnUndead, function(spell)
     local is_moving = cs.services.speed_checker:is_moving()
     local target_is_undead = cs.check_target(cs.t.undead)
-    return target_is_undead and not is_moving
+    if target_is_undead and not is_moving then
+      return buff_conc_aura_on_combat() == cs.Buff.exists
+    end
   end)
 
   pal.sp.HolyShield = cs.Spell.build(spn.HolyShield, function(spell)
@@ -166,6 +178,12 @@ pal.common.init = function()
   pal.sp.Righteous = cs.Buff.build(pal.spn.Righteous, 28 * 60)
 
   pal.sp.Cleanse = cs.Spell.build(pal.hn.Cleanse)
+  pal.sp.FOL = cs.Spell.build(pal.hn.FOL, function()
+    return buff_conc_aura_on_combat() == cs.Buff.exists
+  end)
+  pal.sp.HL = cs.Spell.build(pal.hn.HL, function()
+    return buff_conc_aura_on_combat() == cs.Buff.exists
+  end)
 end
 
 

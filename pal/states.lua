@@ -276,19 +276,16 @@ function StateHolder:attack_action(action_name)
 
 end
 
-function StateHolder:heal_action(heal_cast)
+---@param heal_name pal.sp.FOL/pal.sp.HL
+function StateHolder:heal_action(heal_name)
   cs.error_disabler:off()
 
   if not pal.heal.check_no_control() then
     return
   end
 
-  -- TODO cast aura on damage
-  if cs.check_combat(1) then
-    cs.Buff.build(an.Concentration):rebuff()
-    if not pal.heal.check_hp() then
-      return
-    end
+  if cs.check_combat(1) and not pal.heal.check_hp() then
+    return
   end
   --
   --if cs.services.speed_checker:is_moving() then
@@ -301,7 +298,9 @@ function StateHolder:heal_action(heal_cast)
     self:_update_frame()
     return
   end
-  cs.cast_helpful(heal_cast)
+
+  local heal_spell = pal.sp[heal_name]
+  heal_spell:cast_helpful()
 
   cs.error_disabler:on()
 end
