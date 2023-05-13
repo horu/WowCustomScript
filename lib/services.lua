@@ -231,10 +231,10 @@ function cs.SpeedChecker:_get_speed_mod()
   local is_mounted = cs.has_buffs(cs.u.player, "inv_pet_speedy") or
           cs.has_buffs(cs.u.player, "Spell_Nature_Swiftness")
   if is_mounted then
-    local lvl = UnitLevel(cs.u.player)
-    if lvl < 40 then
+    local riding_rank = cs.skill.get_rank("Riding")
+    if not riding_rank or riding_rank < 75 then
       speed = 1.14 * speed * speed -- ????
-    elseif lvl < 60 then
+    elseif riding_rank < 150 then
       speed = 1.6 * speed
     else
       speed = 2 * speed
