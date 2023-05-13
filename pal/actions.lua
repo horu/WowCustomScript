@@ -7,19 +7,22 @@ local seal = pal.seal
 
 
 ---@class Action
-local Action = cs.create_class()
+local Action = cs.class()
 
 ---@param main_seal pal.Seal
-Action.build = function(main_seal, run_func)
-  local action = Action:new()
-
+function Action:build(main_seal, run_func, init_func)
   ---@type pal.Seal
-  action.main_seal = main_seal
+  self.main_seal = main_seal
   ---@type function(self, state_type)
-  action.run = run_func
+  self.run = run_func
 
-  --cs.debug(action)
-  return action
+  if init_func then
+    init_func(self)
+  end
+end
+
+function Action:get_seal_name()
+  return self.main_seal:get_name()
 end
 
 ---@param state_type pal.stt
@@ -78,9 +81,49 @@ end
 
 
 
+---@class FreeAction
+local FreeAction = cs.class()
+
+---@param main_seal pal.Seal
+function FreeAction:build(default_action, run_func, init_func)
+  ---@type Action
+  self.saved_action = default_action
+  ---@type function(self, state_type)
+  self.run = run_func
+
+  if init_func then
+    init_func(self)
+  end
+end
+
+function FreeAction:get_seal_name()
+  return
+end
+
+function FreeAction:update_saved_action(except_action)
+  local cur_seal_name = pal.seal.get_current()
+  if not cur_seal_name then
+    return
+  end
+
+  for _, action in pairs(pal.actions.dict) do
+    local seal_name = action:get_seal_name()
+    if action ~= except_action and seal_name == cur_seal_name then
+      self.saved_action = action
+      return
+    end
+  end
+end
+
+function FreeAction:run_saved_action(state_type)
+  self.saved_action:run(state_type)
+end
+
+
+
 pal.actions = {}
 pal.actions.init = function()
-  pal.actions.damage = Action.build(seal.Righteousness, function(self, state_type)
+  pal.actions.damage = Action:create(seal.Righteousness, function(self, state_type)
     if not cs.check_target(cs.t.close_30) then return end
 
     if self.cast_order:cast() then return end
@@ -95,10 +138,11 @@ pal.actions.init = function()
 
     pal.sp.CrusaderStrike:cast()
 
+  end, function(self)
+    self.cast_order = cs.SpellOrder.build(pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike, pal.sp.HolyShield)
   end)
-  pal.actions.damage.cast_order = cs.SpellOrder.build(pal.sp.Exorcism, pal.sp.HammerWrath, spn.HolyStrike, pal.sp.HolyShield)
 
-  pal.actions.right = Action.build(seal.Righteousness, function(self, state_type)
+  pal.actions.right = Action:create(seal.Righteousness, function(self, state_type)
     -- TODO: dont cast judgement if no mana to rebuff Righteousness
     if not cs.check_target(cs.t.close_30) then return end
 
@@ -109,7 +153,7 @@ pal.actions.init = function()
     self.main_seal:reseal_and_judgement()
   end)
 
-  pal.actions.crusader = Action.build(seal.Crusader, function(self, state_type)
+  pal.actions.crusader = Action:create(seal.Crusader, function(self, state_type)
     if not cs.check_target(cs.t.close_10) then return end
 
     if self:_judgement_other() then
@@ -119,40 +163,37 @@ pal.actions.init = function()
     self.main_seal:reseal()
   end)
 
-  pal.actions.wisdom = Action.build(seal.Wisdom, function(self, state_type)
-    self:_seal_action(state_type, {seal.Wisdom, seal.Light, seal.Justice})
-  end)
+  pal.actions.wisdom = Action:create(seal.Wisdom, Action._seal_action)
 
-  pal.actions.light = Action.build(seal.Light, function(self, state_type)
-    self:_seal_action(state_type, {seal.Light, seal.Wisdom, seal.Justice})
-  end)
+  pal.actions.light = Action:create(seal.Light, Action._seal_action)
 
-  pal.actions.justice = Action.build(seal.Justice, function(self, state_type)
-    self:_seal_action(state_type, {seal.Justice, seal.Light, seal.Wisdom})
-  end)
+  pal.actions.justice = Action:create(seal.Justice, Action._seal_action)
 
-  pal.actions.null = Action.build(seal.Wisdom, function(self, state_type)
-    -- cs.cast(spn.HolyStrike)
-  end)
+  pal.actions.null = FreeAction:create(nil, function() end)
 
-  pal.actions.splash = Action.build(seal.Wisdom, function(self, state_type)
+  pal.actions.splash = FreeAction:create(pal.actions.wisdom, function(self, state_type)
     cs.auto_attack_nearby()
-    local current_seal = pal.seal.get_current()
-    if current_seal == pal.sn.Light then
-      pal.actions.light:_seal_action(state_type)
-    else
-      pal.actions.wisdom:_seal_action(state_type)
-    end
+
+    self:update_saved_action()
+    self:run_saved_action(state_type)
+
     pal.sp.HolyShield_force:cast()
   end)
 
-  pal.actions.stun = Action.build(seal.Crusader, function(self, state_type)
+  pal.actions.stun = FreeAction:create(nil, function(self, state_type)
     self.cast_order:cast()
+  end, function(self)
+    self.cast_order = cs.SpellOrder.build(pal.sp.TurnUndead, pal.spn.HammerJustice)
   end)
-  pal.actions.stun.cast_order = cs.SpellOrder.build(pal.sp.TurnUndead, pal.spn.HammerJustice)
 
-  pal.actions.taunt = Action.build(seal.Justice, function(self, state_type)
-    self.main_seal:judgement_only()
+  pal.actions.taunt = FreeAction:create(pal.actions.wisdom, function(self, state_type)
+    self:update_saved_action(pal.actions.justice)
+
+    if self.main_seal:judgement_only() then return end
+
+    self:run_saved_action(state_type)
+  end, function(self)
+    self.main_seal = seal.Justice
   end)
 
   pal.actions.dict = cs.filter_dict(pal.actions, "table")

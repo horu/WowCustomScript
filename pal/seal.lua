@@ -106,7 +106,7 @@ end
 -- seal buff is not needed. cast seal only before judgement and judgement next.
 function pal.Seal:judgement_only(from_other)
   if self.judgement:get_cd() then
-    return true
+    return
   end
 
   return self:reseal_and_judgement()
