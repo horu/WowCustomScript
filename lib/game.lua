@@ -236,6 +236,7 @@ cs.MapChecker.zone_params["Booty Bay"] = { nopvp = true }
 cs.MapChecker.map_params = {}
 cs.MapChecker.map_params["WarsongGulch"] = { pvp = true }
 cs.MapChecker.map_params["ArathiBasin"] = { pvp = true }
+cs.MapChecker.map_params["AlteracValley"] = { pvp = true }
 
 cs.MapChecker.map_params["EasternPlaguelands"] = { argent_dawn = true }
 cs.MapChecker.map_params["WesternPlaguelands"] = { argent_dawn = true }
