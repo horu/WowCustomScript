@@ -169,7 +169,7 @@ pal.common.init = function()
       return
     end
 
-    local last_phy_ts = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical):get_last_ts()
+    local last_phy_ts = cs.damage.analyzer:get_last_ts(cs.damage.st.Physical)
     -- cs.debug(GetTime() - last_phy_ts)
     return cs.compare_time(5, last_phy_ts)
   end)

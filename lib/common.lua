@@ -300,11 +300,19 @@ end
 
 ---@class cs.FixTable
 cs.FixTable = cs.class()
-
+--region cs.FixTable
 function cs.FixTable:build(timeout, size_limit)
   self.timeout = timeout
   self.size_limit = size_limit
   self.list = {}
+end
+
+-- const
+function cs.FixTable:iterate_list(func)
+  self:_remove_expired()
+  for _, el in pairs(self.list) do
+    func(el.value)
+  end
 end
 
 -- const
@@ -395,7 +403,7 @@ function cs.FixTable:_remove_expired(ts)
     end
   end
 end
-
+--endregion cs.FixTable
 
 function cs.create_fix_table(size)
   return cs.FixTable:new(nil, size)

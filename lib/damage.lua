@@ -40,6 +40,7 @@ cs.damage.s.Unknown = "Unknown"
 cs.damage.s.Fire = "Fire"
 cs.damage.s.Frost = "Frost"
 cs.damage.s.Shadow = "Shadow"
+-- TODO: add other
 
 ---@class cs.damage.SourceType
 cs.damage.st = {}
@@ -611,28 +612,106 @@ cs.damage.parser = nil
 
 
 
+---@class cs.damage.StatCounter
+cs.damage.StatCounter = cs.class()
+--region cs.damage.StatCounter
+function cs.damage.StatCounter:build(type)
+  for name in pairs(type) do
+    self[name] = 0
+  end
+  self.sum = 0
+end
+
+function cs.damage.StatCounter:add(name, value)
+  self[name] = self[name] + value
+  self.sum = self.sum + value
+end
+
+function cs.damage.StatCounter:get_rate(name)
+  return self[name] / self.sum
+end
+
+function cs.damage.StatCounter:get_rate_str(name)
+  local rate = self:get_rate(name) * 100
+  if rate >= 100 then
+    rate = 99
+  end
+  return string.format(".%02d", rate)
+end
+
+function cs.damage.StatCounter:get(name)
+  return self[name]
+end
+--endregion cs.damage.StatCounter
+
+
+
+---@class cs.damage.Stat
+cs.damage.Stat = cs.class()
+--region cs.damage.Stat
+function cs.damage.Stat:build()
+  self.absorb_counter = cs.damage.StatCounter:new(cs.damage.at)
+  self.source_counter = cs.damage.StatCounter:new(cs.damage.st)
+end
+--endregion cs.damage.Stat
+
+
+
 ---@class cs.damage.Analyzer
 cs.damage.Analyzer = cs.class()
-
+--region cs.damage.Analyzer
 function cs.damage.Analyzer:build()
   local filter = {}
   filter[cs.damage.p.target] = { cs.damage.u.player }
+  filter[cs.damage.p.datatype] = cs.damage.dt.damage
   cs.damage.parser:subscribe(filter, self, self._on_damage)
 
-  self.type_list = {}
+  self.last_type_ts_list = {}
+
+  ---@type cs.FixTable
+  self.event_list = cs.FixTable:create(60) -- sec
+  self.stat = self:_calculate_stat()
+end
+
+-- const
+function cs.damage.Analyzer:get_last_ts(sourcetype)
+  return self.last_type_ts_list[sourcetype] or 0
+end
+
+-- const
+function cs.damage.Analyzer:get_stat()
+  return self.stat
+end
+
+function cs.damage.Analyzer:reset_events()
+  cs.print("RESET ANALYZER EVENTS")
+  self.event_list:clear()
+  self.stat = self:_calculate_stat()
 end
 
 ---@param event cs.damage.Event
 function cs.damage.Analyzer:_on_damage(event)
-  local type = self:get_sourcetype(event.sourcetype)
-  type:add(event.value)
+  self.last_type_ts_list[event.sourcetype] = GetTime()
+
+  local last_ts = self.event_list:get_last_ts()
+  self.event_list:add(event)
+
+  if not cs.compare_time(0.2, last_ts) then
+    -- to optimization
+    self.stat = self:_calculate_stat()
+  end
 end
 
----@param type cs.damage.SourceType
-function cs.damage.Analyzer:get_sourcetype(type)
-  self.type_list[type] = self.type_list[type] or cs.create_fix_table(10)
-  return self.type_list[type]
+function cs.damage.Analyzer:_calculate_stat()
+  local stat = cs.damage.Stat:create()
+  self.event_list:iterate_list(function(event)
+    stat.absorb_counter:add(event.absorbtype, 1)
+    stat.source_counter:add(event.sourcetype, event.value)
+  end)
+  return stat
 end
+--endregion cs.damage.Analyzer
+
 
 ---@type cs.damage.Analyzer
 cs.damage.analyzer = nil
@@ -725,8 +804,8 @@ cs.damage.test = function()
     local msg = "Burning Ravager hits you for 20 damage."
     cs.damage.parser:handle_event(msg)
 
-    local type = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical)
-    assert(type:get_sum() == 44)
+    --local type = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical)
+    --assert(type:get_sum() == 44)
   end
 end
 

@@ -27,6 +27,7 @@ function pal.resist.Analyzer:build()
 
   local filter = {}
   filter[cs.damage.p.target] = { cs.damage.u.player, cs.damage.u.party }
+  filter[cs.damage.p.datatype] = cs.damage.dt.damage
   cs.damage.parser:subscribe(filter, self, self._on_damage_detected)
 end
 
