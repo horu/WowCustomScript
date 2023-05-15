@@ -245,6 +245,7 @@ cs.MapChecker = cs.class()
 
 cs.MapChecker.zone_params = {}
 cs.MapChecker.zone_params["Booty Bay"] = { nopvp = true }
+cs.MapChecker.zone_params["Everlook"] = { nopvp = true }
 
 cs.MapChecker.map_params = {}
 cs.MapChecker.map_params["WarsongGulch"] = { pvp = true }

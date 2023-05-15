@@ -46,6 +46,15 @@ cs.damage.st = {}
 cs.damage.st.Physical = "Physical"
 cs.damage.st.Spell = "Spell"
 
+---@class cs.damage.AbsorbType
+cs.damage.at = {}
+cs.damage.at.none = "none"
+cs.damage.at.miss = "miss"
+cs.damage.at.dodge = "dodge"
+cs.damage.at.parry = "parry"
+cs.damage.at.block = "block"
+cs.damage.at.resist = "resist"
+
 
 -- Copy grom ShaguDPS
 
@@ -390,12 +399,14 @@ local combatlog_strings = {
 ---@field public school
 ---@field public datatype
 ---@field public sourcetype
+---@field public absorbtype
 cs.damage.Event = cs.create_class()
 
 function cs.damage.Event.build(...)
   local event = cs.damage.Event:new()
 
-  event.source, event.action, event.target, event.value, event.school, event.datatype, event.sourcetype, event.resisted = unpack(arg)
+  event.source, event.action, event.target, event.value,
+  event.school, event.datatype, event.sourcetype, event.resisted, event.absorbtype = unpack(arg)
   return event
 end
 
@@ -480,8 +491,9 @@ function cs.damage.Parser:parse(msg, msg_event)
   defaults.attack = "Auto Hit"
   defaults.spell = cs.damage.a.unknown
   defaults.value = 0
-  defaults.resisted = 0
   defaults.sourcetype = cs.damage.st.Physical
+  defaults.resisted = 0
+  defaults.absorbtype = cs.damage.at.none
 
   -- TODO: add parser for c_hp_m
   if msg_event == cs.chat.c_hp_m then
@@ -489,6 +501,21 @@ function cs.damage.Parser:parse(msg, msg_event)
   end
 
   if msg_event == cs.chat.c_c_vs_s_m or msg_event == cs.chat.c_hp_m then
+    local absorbtype
+    if string.find(msg, " attacks. You block.") then
+      absorbtype = cs.damage.at.block
+    elseif string.find(msg, " attacks. You parry.") then
+      absorbtype = cs.damage.at.parry
+    elseif string.find(msg, " attacks. You dodge.") then
+      absorbtype = cs.damage.at.dodge
+    elseif string.find(msg, " misses you.") then
+      absorbtype = cs.damage.at.miss
+    end
+
+    if not absorbtype then
+      return
+    end
+
     return cs.damage.Event.build(
             cs.damage.a.unknown,
             defaults.attack,
@@ -497,7 +524,8 @@ function cs.damage.Parser:parse(msg, msg_event)
             defaults.school,
             cs.damage.dt.damage,
             cs.damage.st.Physical,
-            defaults.resisted
+            defaults.resisted,
+            absorbtype
     )
   end
 
@@ -508,6 +536,7 @@ function cs.damage.Parser:parse(msg, msg_event)
     if result then
       local pack_event = { data[2](defaults, a1, a2, a3, a4, a5, a6) }
       table.insert(pack_event, defaults.resisted)
+      table.insert(pack_event, defaults.absorbtype)
 
       local event = cs.damage.Event.build(unpack(pack_event))
 
@@ -516,11 +545,13 @@ function cs.damage.Parser:parse(msg, msg_event)
       local _, _, resisted_str = string.find(msg, "%((%d+) resisted%)")
       if resisted_str then
         event.resisted = tonumber(resisted_str)
+        event.absorbtype = cs.damage.at.resist
       end
 
       local _, _, blocked_str = string.find(msg, "%((%d+) blocked%)")
       if blocked_str then
         event.resisted = tonumber(blocked_str)
+        event.absorbtype = cs.damage.at.block
       end
 
       return event
@@ -591,8 +622,6 @@ function cs.damage.Analyzer:build()
   self.type_list = {}
 end
 
-
-
 ---@param event cs.damage.Event
 function cs.damage.Analyzer:_on_damage(event)
   local type = self:get_sourcetype(event.sourcetype)
@@ -609,11 +638,12 @@ end
 cs.damage.analyzer = nil
 
 
+
+
 cs.damage.init = function()
   cs.damage.parser = cs.damage.Parser:new()
   cs.damage.analyzer = cs.damage.Analyzer:new()
 end
-
 
 cs.damage.test = function()
   local dmg_24_fire = "Burning Ravager hits you for 24 Fire damage."
@@ -631,24 +661,34 @@ cs.damage.test = function()
     assert(event.resisted == 0)
   end
 
-  -- analyzer
-  do
-    cs.damage.parser:handle_event(dmg_24_fire)
-
-    local msg = "Burning Ravager hits you for 20 damage."
-    cs.damage.parser:handle_event(msg)
-
-    local type = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical)
-    assert(type:get_sum() == 44)
-  end
-
   -- miss
   do
-    local event = cs.damage.parser:parse("", cs.chat.c_c_vs_s_m)
+    local event = cs.damage.parser:parse("Skeleton attacks. You block.", cs.chat.c_c_vs_s_m)
     assert(event.value == 0)
     assert(event.target == cs.damage.t.you)
     assert(event.sourcetype == cs.damage.st.Physical)
     assert(event.resisted == 0)
+    assert(event.absorbtype == cs.damage.at.block)
+  end
+
+  do
+    local event = cs.damage.parser:parse("Skeletona aa aa attacks. You parry.", cs.chat.c_c_vs_s_m)
+    assert(event.absorbtype == cs.damage.at.parry)
+  end
+
+  do
+    local event = cs.damage.parser:parse("Skeleton asd attacks. You dodge.", cs.chat.c_c_vs_s_m)
+    assert(event.absorbtype == cs.damage.at.dodge)
+  end
+
+  do
+    local event = cs.damage.parser:parse("Skeleton sda misses you.", cs.chat.c_c_vs_s_m)
+    assert(event.absorbtype == cs.damage.at.miss)
+  end
+
+  do
+    local event = cs.damage.parser:parse("Ofasdsd asd attacks. Ofasdsd asda parry.", cs.chat.c_c_vs_s_m)
+    assert(not event)
   end
 
   -- blocked
@@ -676,6 +716,17 @@ cs.damage.test = function()
     assert(event.target == UnitName(cs.u.player))
     assert(event.sourcetype == cs.damage.st.Spell)
     assert(event.resisted == 10)
+  end
+
+  -- analyzer
+  do
+    cs.damage.parser:handle_event(dmg_24_fire)
+
+    local msg = "Burning Ravager hits you for 20 damage."
+    cs.damage.parser:handle_event(msg)
+
+    local type = cs.damage.analyzer:get_sourcetype(cs.damage.st.Physical)
+    assert(type:get_sum() == 44)
   end
 end
 
