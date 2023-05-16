@@ -669,7 +669,7 @@ function cs.damage.Analyzer:build()
   self.last_type_ts_list = {}
 
   ---@type cs.FixTable
-  self.event_list = cs.FixTable:create(60) -- sec
+  self.event_list = cs.FixTable:create(nil, 300) -- sec
   self.stat = self:_calculate_stat()
 end
 

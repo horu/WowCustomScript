@@ -229,7 +229,8 @@ function cs.SpeedChecker:_get_speed_mod()
   end
 
   local is_mounted = cs.has_buffs(cs.u.player, "inv_pet_speedy") or
-          cs.has_buffs(cs.u.player, "Spell_Nature_Swiftness")
+                     cs.has_buffs(cs.u.player, "Spell_Nature_Swiftness") or
+                     cs.has_buffs(cs.u.player, "Ability_Mount_Charger")
   if is_mounted then
     local riding_rank = cs.skill.get_rank("Riding")
     if not riding_rank or riding_rank < 75 then
