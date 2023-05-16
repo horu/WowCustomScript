@@ -27,7 +27,7 @@ end
 
 ---@param state_type pal.stt
 function Action:_seal_action(state_type)
-  if not cs.check_target(cs.t.close_10) then
+  if not cs.check_target(cs.t.close_30) then
     -- the target is far away
     return
   end
