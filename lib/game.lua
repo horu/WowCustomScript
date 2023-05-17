@@ -357,7 +357,7 @@ function cs.CombatChecker.build()
 
   local y = 43
   local diff_y = 17
-  local x = 370
+  local x = GetScreenWidth() / 2 - 10
   local diff_x = 0
 
   checker.data = {}
