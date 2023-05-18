@@ -1,20 +1,6 @@
 
 local cs = cs_common
 
---class
-cs.cl = {}
-cs.cl.WARRIOR = "WARRIOR"
-cs.cl.PALADIN = "PALADIN"
-cs.cl.HUNTER = "HUNTER"
-cs.cl.ROGUE = "ROGUE"
-
-cs.cl.SHAMAN = "SHAMAN"
-cs.cl.DRUID = "DRUID"
-
-cs.cl.PRIEST = "PRIEST"
-cs.cl.MAGE = "MAGE"
-cs.cl.WARLOCK = "WARLOCK"
-
 
 --units
 cs.u = {}
@@ -96,6 +82,36 @@ function cs.check_target_hp_perc(limit_perc)
 end
 
 
+
+--class
+cs.cl = {}
+cs.cl.WARRIOR = "WARRIOR"
+cs.cl.PALADIN = "PALADIN"
+cs.cl.HUNTER = "HUNTER"
+cs.cl.ROGUE = "ROGUE"
+
+cs.cl.SHAMAN = "SHAMAN"
+cs.cl.DRUID = "DRUID"
+
+cs.cl.PRIEST = "PRIEST"
+cs.cl.MAGE = "MAGE"
+cs.cl.WARLOCK = "WARLOCK"
+
+cs.cl.get = function(unit)
+  local _, class = UnitClass(unit or cs.u.player)
+  return class
+end
+
+
+
+cs.race = {}
+cs.race.NightElf = "Night Elf"
+cs.race.get = function(unit)
+  return UnitRace(unit or cs.u.player)
+end
+
+
+
 function cs.get_talent_rank(name)
   for page = 1,3 do
     for id = 1, 50 do
@@ -127,11 +143,6 @@ cs.skill.get_rank = function(skill_name)
       return rank
     end
   end
-end
-
-function cs.get_class(unit)
-  local _, class = UnitClass(unit or cs.u.player)
-  return class
 end
 
 function cs.get_mana_level()

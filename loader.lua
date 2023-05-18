@@ -8,7 +8,7 @@ local main_tests = function()
   cs.prof.test()
   cs.slot.test()
 
-  if cs.get_class() == cs.cl.PALADIN then
+  if cs.cl.get() == cs.cl.PALADIN then
     cs.pal.resist.test()
     cs.pal.states.test()
   end
@@ -22,7 +22,7 @@ local main_load = function()
   cs.dps.init()
   cs.stat.init()
 
-  if cs.get_class() == cs.cl.PALADIN then
+  if cs.cl.get() == cs.cl.PALADIN then
     cs.pal.common.init()
     cs.pal.resist.init()
     cs.pal.bless.init()
@@ -34,7 +34,7 @@ local main_load = function()
     cs.pal.states.init()
   end
 
-  if cs.get_class() == cs.cl.DRUID then
+  if cs.cl.get() == cs.cl.DRUID then
     cs.dru.common.init()
   end
 

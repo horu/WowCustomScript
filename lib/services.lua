@@ -218,6 +218,9 @@ end
 -- speed modificator on mount/buffs/talents/ghost
 function cs.SpeedChecker:_get_speed_mod()
   if UnitIsDeadOrGhost("player") then
+    if cs.race.get() == cs.race.NightElf then
+      return 1.5
+    end
     return 1.25
   end
 
