@@ -129,6 +129,10 @@ cs.skill.get_rank = function(skill_name)
   end
 end
 
+function cs.get_class(unit)
+  local _, class = UnitClass(unit or cs.u.player)
+  return class
+end
 
 function cs.get_mana_level()
   -- 0-1

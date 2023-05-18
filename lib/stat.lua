@@ -67,10 +67,14 @@ function cs.stat.Frame:_update_left()
   local armor = cs.ur.get_total_resist(cs.ur.Physical) / 1000
 
   -- TODO: remove it
-  local fire_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.s.Fire)
-  local frost_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.s.Frost)
-  local shadow_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.s.Shadow)
-  local phy_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.st.Physical)
+  --local fire_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.s.Fire)
+  --local frost_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.s.Frost)
+  --local shadow_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.s.Shadow)
+  --local phy_damage = cs.pal.resist.analyzer:get_sum_damage(cs.damage.st.Physical)
+  local fire_damage = 0
+  local frost_damage = 0
+  local shadow_damage = 0
+  local phy_damage = 0
 
   local text = string.format("%1.2f %s(%4d) %s(%4d) %s(%4d) |r%1.1f(%4d)",
           speed or -1,

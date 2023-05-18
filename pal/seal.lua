@@ -82,7 +82,7 @@ end
 
 -- return true on success cast
 function pal.Seal:reseal_and_judgement()
-  if self:reseal() then
+  if self:reseal() ~= cs.Buff.exists then
     return true
   end
 
@@ -104,7 +104,7 @@ function pal.Seal:judgement_it(from_other)
 end
 
 -- seal buff is not needed. cast seal only before judgement and judgement next.
-function pal.Seal:judgement_only(from_other)
+function pal.Seal:judgement_only()
   if self.judgement:get_cd() then
     return
   end

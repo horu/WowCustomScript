@@ -8,8 +8,10 @@ local main_tests = function()
   cs.prof.test()
   cs.slot.test()
 
-  cs.pal.resist.test()
-  cs.pal.states.test()
+  if cs.get_class() == cs.cl.PALADIN then
+    cs.pal.resist.test()
+    cs.pal.states.test()
+  end
 end
 
 local main_load = function()
@@ -20,15 +22,21 @@ local main_load = function()
   cs.dps.init()
   cs.stat.init()
 
-  cs.pal.common.init()
-  cs.pal.resist.init()
-  cs.pal.bless.init()
-  cs.pal.party.init()
-  cs.pal.heal.init()
-  cs.pal.seal.init()
-  cs.pal.actions.init()
-  cs.pal.config.init()
-  cs.pal.states.init()
+  if cs.get_class() == cs.cl.PALADIN then
+    cs.pal.common.init()
+    cs.pal.resist.init()
+    cs.pal.bless.init()
+    cs.pal.party.init()
+    cs.pal.heal.init()
+    cs.pal.seal.init()
+    cs.pal.actions.init()
+    cs.pal.config.init()
+    cs.pal.states.init()
+  end
+
+  if cs.get_class() == cs.cl.DRUID then
+    cs.dru.common.init()
+  end
 
   main_tests()
   cs.print(cs.color.green.."+++++++++++++++++++++++++++ CS LOADED +++++++++++++++++++++++++++")
