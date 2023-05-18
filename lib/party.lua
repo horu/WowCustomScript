@@ -49,9 +49,14 @@ local function rebuff_anybody()
 end
 
 cs.party.rebuff = function()
+  if cs.check_combat(cs.c.affect) then
+    return
+  end
+
   if cs.is_in_party() then
     buff_party()
   end
+
   if cs.check_target(cs.t.fr_player) then
     rebuff_unit(cs.u.target)
   elseif cs.check_mouse(cs.t.fr_player) then

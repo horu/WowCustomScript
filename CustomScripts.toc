@@ -18,6 +18,7 @@ lib\dps.lua
 lib\spells.lua
 lib\prof.lua
 lib\stat.lua
+lib\party.lua
 
 pal\common.lua
 pal\resist.lua

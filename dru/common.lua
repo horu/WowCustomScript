@@ -7,6 +7,11 @@ dru.sn = {}
 dru.sn.Rejuvenation = "Rejuvenation"
 dru.sn.HealingTouch = "Healing Touch"
 
+dru.buff = {}
+dru.buff.create_mark = function()
+  return cs.Buff:create("Mark of the Wild", 28 * 60)
+end
+
 -- SPell
 dru.sp = {}
 
@@ -24,7 +29,7 @@ dru.common.init = function()
   end)
 
   dru.sp.RJ = cs.Buff:create(dru.sn.Rejuvenation)
-  dru.sp.MarkWild = cs.Buff:create("Mark of the Wild", 28 * 60)
+  dru.sp.MarkWild = dru.buff.create_mark()
   dru.sp.Thorns = cs.Buff:create("Thorns", 9 * 60)
 
   -- Bear
@@ -56,11 +61,27 @@ end
 dru.form.handler = dru.form.Handler:create()
 
 dru.rebuff = function()
-  if not cs.check_combat(cs.c.affect) then
-    dru.sp.MarkWild:rebuff()
-    dru.sp.Thorns:rebuff()
+  if cs.check_combat(cs.c.affect) then
+    return
+  end
+
+  dru.sp.MarkWild:rebuff()
+  dru.sp.Thorns:rebuff()
+end
+
+
+
+function cs.party.Player:rebuff()
+  if not self.data.dru_mark then
+    self.data.dru_mark = dru.buff.create_mark()
+  end
+
+  if self.data.dru_mark:rebuff(self.unit) then
+    dru.form.handler:set(dru.form.humanoid)
   end
 end
+
+
 
 -- PUBLIC
 
@@ -90,6 +111,8 @@ cs_dru_range_attack =function()
   end
 
   dru.rebuff()
+
+  cs.party.rebuff()
 end
 
 cs_dru_root = function()
