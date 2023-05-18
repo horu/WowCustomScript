@@ -310,6 +310,10 @@ function cs.Buff:rebuff(unit)
   return cs.Buff.failed
 end
 
+function cs.Buff:cancel()
+  CancelBuff(self.name)
+end
+
 --endregion
 
 
