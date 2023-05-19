@@ -70,9 +70,13 @@ dru.common.init = function()
   dru.sp.Regrowth = cs.Spell:create("Regrowth")
 
   dru.sp.Wrath = cs.Spell:create("Wrath")
+  dru.sp.Hibernate = cs.Spell:create("Hibernate")
   dru.sp.EntanglingRoots = cs.Spell:create("Entangling Roots")
   dru.sp.Moonfire = cs.Spell:create("Moonfire", function(spell)
     return not cs.has_debuffs(cs.u.target, "Spell_Nature_StarFall")
+  end)
+  dru.sp.FaerieFire = cs.Spell:create("Faerie Fire", function(spell)
+    return not cs.has_debuffs(cs.u.target, "Spell_Nature_FaerieFire")
   end)
 
   dru.sp.RJ = cs.Buff:create(dru.sn.Rejuvenation)
@@ -121,34 +125,29 @@ cs_dru_bear_splash = function()
   dru.sp.Swipe:cast()
 end
 
-cs_dru_bear_cast = function(name)
-  cs.auto_attack()
+cs_dru_cast = function(form_str, name_str)
+  local form = dru.form[form_str]
+  if form == dru.form.bear then
+    cs.auto_attack()
+  end
 
-  dru.form.handler:set(dru.form.bear)
+  dru.form.handler:set(form)
 
-  dru.sp[name]:cast()
+  dru.sp[name_str]:cast()
 end
 
 cs_dru_range_attack =function()
-  cs.error_disabler:off()
   cs.auto_attack()
 
   dru.form.handler:set(dru.form.humanoid)
 
-  if not dru.sp.Moonfire:cast() then
-    dru.sp.Wrath:cast()
-  end
+  if dru.sp.FaerieFire:cast() then return end
+  if dru.sp.Moonfire:cast() then return end
+  if dru.sp.Wrath:cast() then return end
 
   dru.rebuff()
 
   cs.party.rebuff()
-  cs.error_disabler:on()
-end
-
-cs_dru_root = function()
-  dru.form.handler:set(dru.form.humanoid)
-
-  dru.sp.EntanglingRoots:cast()
 end
 
 cs_dru_RJ = function()
