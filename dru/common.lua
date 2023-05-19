@@ -2,6 +2,8 @@ local cs = cs_common
 cs.dru = {}
 local dru = cs.dru
 
+dru.common = {}
+
 dru.sn = {}
 
 dru.sn.Rejuvenation = "Rejuvenation"
@@ -17,25 +19,6 @@ dru.sp = {}
 
 -- BuffSPell
 dru.bsp = {}
-
-dru.common = {}
-dru.common.init = function()
-  -- Human
-  dru.sp.HT = cs.Spell:create(dru.sn.HealingTouch)
-  dru.sp.Wrath = cs.Spell:create("Wrath")
-  dru.sp.EntanglingRoots = cs.Spell:create("Entangling Roots")
-  dru.sp.Moonfire = cs.Spell:create("Moonfire", function(spell)
-    return not cs.has_debuffs(cs.u.target, "Spell_Nature_StarFall")
-  end)
-
-  dru.sp.RJ = cs.Buff:create(dru.sn.Rejuvenation)
-  dru.sp.MarkWild = dru.buff.create_mark()
-  dru.sp.Thorns = cs.Buff:create("Thorns", 9 * 60)
-
-  -- Bear
-  dru.sp.Maul = cs.Spell:create("Maul")
-  dru.sp.Growl = cs.Spell:create("Growl")
-end
 
 
 dru.form = {}
@@ -58,8 +41,6 @@ function dru.form.Handler:set(form)
   self.forms[form]:rebuff()
 end
 
-dru.form.handler = dru.form.Handler:create()
-
 dru.rebuff = function()
   if cs.check_combat(cs.c.affect) then
     return
@@ -79,6 +60,29 @@ function cs.party.Player:rebuff()
   if self.data.dru_mark:rebuff(self.unit) then
     dru.form.handler:set(dru.form.humanoid)
   end
+end
+
+
+
+dru.common.init = function()
+  -- Human
+  dru.sp.HT = cs.Spell:create(dru.sn.HealingTouch)
+  dru.sp.Wrath = cs.Spell:create("Wrath")
+  dru.sp.EntanglingRoots = cs.Spell:create("Entangling Roots")
+  dru.sp.Moonfire = cs.Spell:create("Moonfire", function(spell)
+    return not cs.has_debuffs(cs.u.target, "Spell_Nature_StarFall")
+  end)
+
+  dru.sp.RJ = cs.Buff:create(dru.sn.Rejuvenation)
+  dru.sp.MarkWild = dru.buff.create_mark()
+  dru.sp.Thorns = cs.Buff:create("Thorns", 9 * 60)
+
+  -- Bear
+  dru.sp.Maul = cs.Spell:create("Maul")
+  dru.sp.Growl = cs.Spell:create("Growl")
+  dru.sp.Enrage = cs.Spell:create("Enrage")
+
+  dru.form.handler = dru.form.Handler:create()
 end
 
 
