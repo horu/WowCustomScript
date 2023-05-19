@@ -69,11 +69,14 @@ dru.common.init = function()
   dru.sp.HT = cs.Spell:create(dru.sn.HealingTouch)
   dru.sp.Regrowth = cs.Spell:create("Regrowth")
 
-  dru.sp.Wrath = cs.Spell:create("Wrath")
+  dru.sp.Wrath = cs.Spell:create("Wrath", function(spell)
+    return not cs.services.speed_checker:is_moving() and cs.has_debuffs(cs.u.target, "Spell_Nature_StarFall")
+  end)
   dru.sp.Hibernate = cs.Spell:create("Hibernate")
   dru.sp.EntanglingRoots = cs.Spell:create("Entangling Roots")
   dru.sp.Moonfire = cs.Spell:create("Moonfire", function(spell)
-    return not cs.has_debuffs(cs.u.target, "Spell_Nature_StarFall")
+    --return not cs.has_debuffs(cs.u.target, "Spell_Nature_StarFall")
+    return true
   end)
   dru.sp.FaerieFire = cs.Spell:create("Faerie Fire", function(spell)
     return not cs.has_debuffs(cs.u.target, "Spell_Nature_FaerieFire")
@@ -87,7 +90,7 @@ dru.common.init = function()
   dru.sp.Maul = cs.Spell:create("Maul")
   dru.sp.Growl = cs.Spell:create("Growl")
   dru.sp.Enrage = cs.Spell:create("Enrage", function()
-    return not cs.compare_unit_hp_rate(0.6) and not cs.check_target_hp(0.3 * cs.get_party_hp_sum())
+    return not cs.compare_unit_hp_rate(0.8) and not cs.check_target_hp(0.3 * cs.get_party_hp_sum())
   end)
   dru.sp.DemoralizingRoar = cs.Spell:create("Demoralizing Roar", function()
     return not cs.has_debuffs(cs.u.target, "Ability_Druid_DemoralizingRoar")
@@ -143,8 +146,8 @@ cs_dru_range_attack =function()
 
   if cs.check_target(cs.t.attackable) then
     if dru.sp.FaerieFire:cast() then return end
-    if dru.sp.Moonfire:cast() then return end
     if dru.sp.Wrath:cast() then return end
+    if dru.sp.Moonfire:cast() then return end
   end
 
   dru.rebuff()
