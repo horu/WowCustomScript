@@ -67,6 +67,8 @@ end
 dru.common.init = function()
   -- Human
   dru.sp.HT = cs.Spell:create(dru.sn.HealingTouch)
+  dru.sp.Regrowth = cs.Spell:create("Regrowth")
+
   dru.sp.Wrath = cs.Spell:create("Wrath")
   dru.sp.EntanglingRoots = cs.Spell:create("Entangling Roots")
   dru.sp.Moonfire = cs.Spell:create("Moonfire", function(spell)
@@ -80,7 +82,14 @@ dru.common.init = function()
   -- Bear
   dru.sp.Maul = cs.Spell:create("Maul")
   dru.sp.Growl = cs.Spell:create("Growl")
-  dru.sp.Enrage = cs.Spell:create("Enrage")
+  dru.sp.Enrage = cs.Spell:create("Enrage", function()
+    return not cs.compare_unit_hp_rate(0.6) and not cs.check_target_hp(0.3 * cs.get_party_hp_sum())
+  end)
+  dru.sp.DemoralizingRoar = cs.Spell:create("Demoralizing Roar", function()
+    return not cs.has_debuffs(cs.u.target, "Ability_Druid_DemoralizingRoar")
+  end)
+  dru.sp.Swipe = cs.Spell:create("Swipe")
+  dru.sp.Bash = cs.Spell:create("Bash")
 
   dru.form.handler = dru.form.Handler:create()
 end
@@ -94,18 +103,34 @@ cs_dru_close_attack = function()
 
   dru.form.handler:set(dru.form.bear)
 
+  if not cs.check_target(cs.t.attackable) then
+    return
+  end
+
+  if dru.sp.Enrage:cast() then return end
+
   dru.sp.Maul:cast()
 end
 
-cs_dru_taunt = function()
+cs_dru_bear_splash = function()
   cs.auto_attack()
 
   dru.form.handler:set(dru.form.bear)
 
-  dru.sp.Growl:cast()
+  if dru.sp.DemoralizingRoar:cast() then return end
+  dru.sp.Swipe:cast()
+end
+
+cs_dru_bear_cast = function(name)
+  cs.auto_attack()
+
+  dru.form.handler:set(dru.form.bear)
+
+  dru.sp[name]:cast()
 end
 
 cs_dru_range_attack =function()
+  cs.error_disabler:off()
   cs.auto_attack()
 
   dru.form.handler:set(dru.form.humanoid)
@@ -117,6 +142,7 @@ cs_dru_range_attack =function()
   dru.rebuff()
 
   cs.party.rebuff()
+  cs.error_disabler:on()
 end
 
 cs_dru_root = function()
@@ -137,8 +163,7 @@ cs_dru_RJ = function()
   dru.sp.RJ:rebuff()
 end
 
-cs_dru_HT = function()
+cs_dru_helpful = function(name)
   dru.form.handler:set(dru.form.humanoid)
-
-  dru.sp.HT:cast_helpful()
+  dru.sp[name]:cast_helpful()
 end

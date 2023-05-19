@@ -62,24 +62,6 @@ function cs.check_mouse(check)
   return cs.check_unit(check, cs.u.mouseover)
 end
 
-function cs.check_target_hp(limit)
-  if not limit then
-    return
-  end
-
-  local target_hp = UnitHealth(cs.u.target) or 0
-  return target_hp <= limit
-end
-
-function cs.check_target_hp_perc(limit_perc)
-  if not limit_perc then
-    return
-  end
-
-  local target_hp_max_perc = UnitHealthMax(cs.u.target) or 0
-  local limit_hp = limit_perc * target_hp_max_perc
-  return cs.check_target_hp(limit_hp)
-end
 
 
 
@@ -145,6 +127,38 @@ cs.skill.get_rank = function(skill_name)
   end
 end
 
+function cs.check_unit_hp(limit, unit)
+  unit = unit or cs.u.player
+  if not limit then
+    return
+  end
+
+  local unit_hp = UnitHealth(unit) or 0
+  return unit_hp <= limit
+end
+
+function cs.check_target_hp(limit)
+  return cs.check_unit_hp(limit, cs.u.target)
+end
+
+function cs.get_hp_level(unit)
+  unit = unit or cs.u.player
+  return UnitHealth(unit) / UnitHealthMax(unit)
+end
+
+---@param hp_rate 0.0-1.0
+function cs.compare_unit_hp_rate(hp_rate, unit)
+  unit = unit or cs.u.player
+
+  if not hp_rate then
+    return
+  end
+
+  local target_hp_max_perc = UnitHealthMax(unit) or 0
+  local limit_hp = hp_rate * target_hp_max_perc
+  return cs.check_unit_hp(limit_hp, unit)
+end
+
 function cs.get_mana_level()
   -- 0-1
   return UnitMana(cs.u.player) / UnitManaMax(cs.u.player)
@@ -154,11 +168,6 @@ function cs.is_low_mana()
   return cs.get_mana_level() <= 0.15
 end
 
-
-function cs.get_hp_level()
-  -- 0-1
-  return UnitHealth(cs.u.player) / UnitHealthMax(cs.u.player)
-end
 
 function cs.is_in_party()
   return GetNumPartyMembers() ~= 0

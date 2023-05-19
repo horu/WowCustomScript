@@ -145,7 +145,7 @@ pal.common.init = function()
   end)
 
   pal.sp.HammerWrath = cs.Spell.build(spn.HammerWrath, function(spell)
-    if not cs.check_target_hp_perc(0.19) then
+    if not cs.compare_unit_hp_rate(0.19, cs.u.target) then
       return
     end
 
