@@ -141,9 +141,11 @@ cs_dru_range_attack =function()
 
   dru.form.handler:set(dru.form.humanoid)
 
-  if dru.sp.FaerieFire:cast() then return end
-  if dru.sp.Moonfire:cast() then return end
-  if dru.sp.Wrath:cast() then return end
+  if cs.check_target(cs.t.attackable) then
+    if dru.sp.FaerieFire:cast() then return end
+    if dru.sp.Moonfire:cast() then return end
+    if dru.sp.Wrath:cast() then return end
+  end
 
   dru.rebuff()
 
