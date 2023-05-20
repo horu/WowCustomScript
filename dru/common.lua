@@ -21,15 +21,9 @@ dru.sp = {}
 dru.bsp = {}
 
 
-dru.rebuff = function()
-  if cs.check_combat(cs.c.affect) then
-    return
-  end
-
-  dru.sp.MarkWild:rebuff()
-  dru.sp.Thorns:rebuff()
+local check_target_hp = function(rate)
+  return not cs.check_target_hp(rate * cs.get_party_hp_sum())
 end
-
 
 
 dru.common.init = function()
@@ -47,10 +41,10 @@ dru.common.init = function()
     return true
   end)
   dru.sp.FaerieFire = cs.Spell:create("Faerie Fire", function(spell)
-    return not cs.has_debuffs(cs.u.target, "Spell_Nature_FaerieFire")
+    return not cs.has_debuffs(cs.u.target, "Spell_Nature_FaerieFire") and check_target_hp(0.3)
   end)
   dru.sp.InsectSwarm = cs.Spell:create("Insect Swarm", function(spell)
-    return not cs.has_debuffs(cs.u.target, "Spell_Nature_InsectSwarm")
+    return not cs.has_debuffs(cs.u.target, "Spell_Nature_InsectSwarm") and check_target_hp(0.3)
   end)
 
   dru.sp.RJ = cs.Buff:create(dru.sn.Rejuvenation)
@@ -61,7 +55,7 @@ dru.common.init = function()
   dru.sp.Maul = cs.Spell:create("Maul")
   dru.sp.Growl = cs.Spell:create("Growl")
   dru.sp.Enrage = cs.Spell:create("Enrage", function()
-    return not cs.compare_unit_hp_rate(0.8) and not cs.check_target_hp(0.3 * cs.get_party_hp_sum())
+    return not cs.compare_unit_hp_rate(0.8) and check_target_hp(0.3)
   end)
   dru.sp.DemoralizingRoar = cs.Spell:create("Demoralizing Roar", function()
     return not cs.has_debuffs(cs.u.target, "Ability_Druid_DemoralizingRoar")

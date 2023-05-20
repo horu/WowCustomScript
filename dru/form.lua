@@ -67,6 +67,21 @@ function dru.form.Handler:set(form_name)
 end
 
 
+
+dru.rebuff = function()
+  if cs.check_combat(cs.c.affect) then
+    return
+  end
+
+  if dru.sp.MarkWild:rebuff() or dru.sp.Thorns:rebuff() then
+    dru.form.handler:set(dru.form.humanoid)
+  end
+
+end
+
+
+
+
 function cs.party.Player:rebuff()
   if not self.data.dru_mark then
     self.data.dru_mark = dru.buff.create_mark()
@@ -108,9 +123,8 @@ end
 cs_dru_range_attack =function()
   cs.auto_attack()
 
-  dru.form.handler:set(dru.form.humanoid)
-
   if cs.check_target(cs.t.attackable) then
+    dru.form.handler:set(dru.form.humanoid)
     if dru.sp.FaerieFire:cast() then return end
     if dru.sp.InsectSwarm:cast() then return end
     if dru.sp.Wrath:cast() then return end
