@@ -68,20 +68,6 @@ end
 
 
 
-dru.rebuff = function()
-  if cs.check_combat(cs.c.affect) then
-    return
-  end
-
-  if dru.sp.MarkWild:rebuff() or dru.sp.Thorns:rebuff() then
-    dru.form.handler:set(dru.form.humanoid)
-  end
-
-end
-
-
-
-
 function cs.party.Player:rebuff()
   if not self.data.dru_mark then
     self.data.dru_mark = dru.buff.create_mark()
@@ -89,7 +75,23 @@ function cs.party.Player:rebuff()
 
   if self.data.dru_mark:rebuff(self.unit) then
     dru.form.handler:set(dru.form.humanoid)
+    return true
   end
+end
+
+
+
+dru.rebuff = function()
+  if cs.check_combat(cs.c.affect) then
+    return
+  end
+
+  if dru.sp.MarkWild:rebuff() or dru.sp.Thorns:rebuff() then
+    dru.form.handler:set(dru.form.humanoid)
+    return true
+  end
+
+  return cs.party.rebuff()
 end
 
 
@@ -104,6 +106,8 @@ end
 -- PUBLIC
 
 cs_dru_form_action = function(form_name, action_name)
+  if dru.rebuff() then return end
+
   local form = dru.form.handler:set(form_name)
   local action = form[action_name]
 
@@ -138,8 +142,6 @@ cs_dru_range_attack =function()
   end
 
   dru.rebuff()
-
-  cs.party.rebuff()
 end
 
 cs_dru_RJ = function()
