@@ -170,6 +170,23 @@ cs.debug = cs_debug
 
 
 
+-- regex
+
+-- example: cs.regex("Fire damage. (10 resisted)", "%((%d+) resisted%)") == 10
+cs.regex = function(str, pattern)
+  local result = { string.find(str, pattern) }
+  if table.getn(result) < 3 then
+    return
+  end
+
+  for i=1,2 do
+    table.remove(result, 1)
+  end
+
+  return unpack(result)
+end
+
+
 
 -- common
 cs.error_disabler = {}

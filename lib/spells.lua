@@ -8,16 +8,57 @@ local find_spell = function(name)
   local id = 0
   local it_name = ""
   while it_name ~= name do
-    id = id+1
+    id = id + 1
     it_name = GetSpellName(id, "spell")
     if not it_name then
       return
     end
   end
+
+  -- find max rank
+  while it_name == name do
+    id = id + 1
+    it_name = GetSpellName(id, "spell")
+  end
+  id = id - 1
+
   return id, "spell"
 end
 
 
+
+---@class cs.SpellTooltip
+cs.SpellTooltip = cs.class()
+function cs.SpellTooltip:build(spell_id)
+  GameTooltip:SetOwner(UIParent, "ANCHOR_NONE")
+  GameTooltip:SetSpell(spell_id, 1)
+
+  -- Retrieve the tooltip text from specific lines
+  self.tooltip = {}
+  for i = 1, GameTooltip:NumLines() do
+      local line = getglobal("GameTooltipTextLeft" .. i)
+      if line then
+          table.insert(self.tooltip, line:GetText())
+      end
+  end
+
+  GameTooltip:Hide()
+
+  self.mana = self:parse_mana()
+end
+
+function cs.SpellTooltip:parse_mana()
+  for _, line in pairs(self.tooltip) do
+    local patterns = { "(%d+) Mana", "(%d+) Energy", "(%d+) Rage" }
+    for _, pattern in ipairs(patterns) do
+      local mana = cs.regex(line, pattern)
+      if mana then
+        return tonumber(mana)
+      end
+    end
+  end
+  return 0
+end
 
 -- spells
 ---@class cs.Spell
@@ -37,7 +78,14 @@ cs.Spell.build = function(name, custom_ready_check)
   spell.cast_ts = 0
   spell.custom_ready_check = custom_ready_check
 
+  spell.tooltip = cs.SpellTooltip:create(spell.id)
+
   return spell
+end
+
+-- const
+function cs.Spell:get_tooltip()
+  return self.tooltip
 end
 
 -- const
