@@ -22,7 +22,7 @@ dru.bsp = {}
 
 
 local check_target_hp = function(rate)
-  return not cs.check_target_hp(rate * cs.get_party_hp_sum())
+  return not cs.check_target_hp(rate * cs.get_party_hp_sum()) or not cs.compare_unit_hp_rate(0.95, cs.u.target)
 end
 
 

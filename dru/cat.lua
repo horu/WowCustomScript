@@ -65,8 +65,6 @@ function dru.cat.Form:cancel()
 end
 
 function dru.cat.Form:attack()
-  cs.auto_attack()
-
   if not cs.check_target(cs.t.attackable) then
     return
   end
@@ -74,6 +72,8 @@ function dru.cat.Form:attack()
   if dru.sp.Prowl:check_exists() then
     if dru.sp.Shred:cast() then return end
   end
+
+  cs.auto_attack()
 
   if self.rip:cast() then return end
 

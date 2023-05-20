@@ -91,7 +91,6 @@ dru.rebuff = function()
     return true
   end
 
-  return cs.party.rebuff()
 end
 
 
@@ -142,6 +141,7 @@ cs_dru_range_attack =function()
   end
 
   dru.rebuff()
+  return cs.party.rebuff()
 end
 
 cs_dru_RJ = function()
