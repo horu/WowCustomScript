@@ -21,26 +21,6 @@ dru.sp = {}
 dru.bsp = {}
 
 
-dru.form = {}
-dru.form.bear = "Bear Form"
-dru.form.humanoid = "humanoid"
-dru.form.Handler = cs.class()
-function dru.form.Handler:build()
-  self.forms = {}
-  self.forms[dru.form.bear] = cs.Buff:create(dru.form.bear)
-end
-
-function dru.form.Handler:set(form)
-  if form == dru.form.humanoid then
-    for _, it in pairs(self.forms) do
-      it:cancel()
-    end
-    return
-  end
-
-  self.forms[form]:rebuff()
-end
-
 dru.rebuff = function()
   if cs.check_combat(cs.c.affect) then
     return
@@ -48,18 +28,6 @@ dru.rebuff = function()
 
   dru.sp.MarkWild:rebuff()
   dru.sp.Thorns:rebuff()
-end
-
-
-
-function cs.party.Player:rebuff()
-  if not self.data.dru_mark then
-    self.data.dru_mark = dru.buff.create_mark()
-  end
-
-  if self.data.dru_mark:rebuff(self.unit) then
-    dru.form.handler:set(dru.form.humanoid)
-  end
 end
 
 
@@ -101,77 +69,8 @@ dru.common.init = function()
   dru.sp.Swipe = cs.Spell:create("Swipe")
   dru.sp.Bash = cs.Spell:create("Bash")
 
-  dru.form.handler = dru.form.Handler:create()
+  -- Cat
+  dru.sp.Claw = cs.Spell:create("Claw")
+  dru.sp.Rip = cs.Spell:create("Rip")
 end
 
-
-
--- PUBLIC
-
-cs_dru_close_attack = function()
-  cs.auto_attack()
-
-  dru.form.handler:set(dru.form.bear)
-
-  if not cs.check_target(cs.t.attackable) then
-    return
-  end
-
-  if dru.sp.Enrage:cast() then return end
-
-  dru.sp.Maul:cast()
-end
-
-cs_dru_bear_splash = function()
-  cs.auto_attack()
-
-  dru.form.handler:set(dru.form.bear)
-
-  if dru.sp.DemoralizingRoar:cast() then return end
-  dru.sp.Swipe:cast()
-end
-
-cs_dru_cast = function(form_str, name_str)
-  local form = dru.form[form_str]
-  if form == dru.form.bear then
-    cs.auto_attack()
-  end
-
-  dru.form.handler:set(form)
-
-  dru.sp[name_str]:cast()
-end
-
-cs_dru_range_attack =function()
-  cs.auto_attack()
-
-  dru.form.handler:set(dru.form.humanoid)
-
-  if cs.check_target(cs.t.attackable) then
-    if dru.sp.FaerieFire:cast() then return end
-    if dru.sp.InsectSwarm:cast() then return end
-    if dru.sp.Wrath:cast() then return end
-    if dru.sp.Moonfire:cast() then return end
-  end
-
-  dru.rebuff()
-
-  cs.party.rebuff()
-end
-
-cs_dru_RJ = function()
-  dru.form.handler:set(dru.form.humanoid)
-
-  if cs.check_target(cs.t.friend) then
-    local buff = cs.Buff:create(dru.sn.Rejuvenation)
-    buff:rebuff(cs.u.target)
-    return
-  end
-
-  dru.sp.RJ:rebuff()
-end
-
-cs_dru_helpful = function(name)
-  dru.form.handler:set(dru.form.humanoid)
-  dru.sp[name]:cast_helpful()
-end

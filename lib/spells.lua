@@ -34,11 +34,11 @@ function cs.SpellTooltip:build(spell_id)
   GameTooltip:SetSpell(spell_id, 1)
 
   -- Retrieve the tooltip text from specific lines
-  self.tooltip = {}
+  self.text = {}
   for i = 1, GameTooltip:NumLines() do
       local line = getglobal("GameTooltipTextLeft" .. i)
       if line then
-          table.insert(self.tooltip, line:GetText())
+          table.insert(self.text, line:GetText())
       end
   end
 
@@ -48,7 +48,7 @@ function cs.SpellTooltip:build(spell_id)
 end
 
 function cs.SpellTooltip:parse_mana()
-  for _, line in pairs(self.tooltip) do
+  for _, line in pairs(self.text) do
     local patterns = { "(%d+) Mana", "(%d+) Energy", "(%d+) Rage" }
     for _, pattern in ipairs(patterns) do
       local mana = cs.regex(line, pattern)

@@ -36,6 +36,7 @@ local main_load = function()
 
   if cs.cl.get() == cs.cl.DRUID then
     cs.dru.common.init()
+    cs.dru.form.init()
   end
 
   main_tests()
