@@ -30,6 +30,7 @@ dru.common.init = function()
   -- Human
   dru.sp.HT = cs.Spell:create(dru.sn.HealingTouch)
   dru.sp.Regrowth = cs.Spell:create("Regrowth")
+  dru.sp.RemoveCurse = cs.Spell:create("Remove Curse")
 
   dru.sp.Wrath = cs.Spell:create("Wrath", function(spell)
     return not cs.services.speed_checker:is_moving() and cs.has_debuffs(cs.u.target, "Spell_Nature_StarFall")
@@ -69,6 +70,12 @@ dru.common.init = function()
   dru.sp.Rip = cs.Spell:create("Rip", function(spell)
     return not cs.has_debuffs(cs.u.target, "Ability_GhoulFrenzy")
   end)
+  dru.sp.Rake = cs.Spell:create("Rake", function(spell)
+    return not cs.has_debuffs(cs.u.target, "TODO") and check_target_hp(0.3)
+  end)
   dru.sp.Prowl = cs.Buff:create("Prowl")
+  dru.sp.TigerFury = cs.Buff:create("Tiger's Fury", nil, function()
+    return cs.check_target(cs.t.close_10)
+  end)
 end
 

@@ -116,11 +116,17 @@ cs.Spell.build = function(name, custom_ready_check)
   --spell.name = GetSpellName(id_name, book)
   assert(spell.id, string.format("spell not found: '%s'", (name or "nil")))
   spell.cast_ts = 0
+  spell.fail_ts = 0
   spell.custom_ready_check = custom_ready_check
 
   spell.tooltip = cs.SpellTooltip:create(spell.id)
 
   return spell
+end
+
+-- const
+function cs.Spell:is_failed(for_last_ts)
+  return cs.compare_time(for_last_ts, self.fail_ts)
 end
 
 -- const
@@ -162,6 +168,8 @@ end
 function cs.Spell:_on_cast(event)
   if event == cs.spell.sc.stop then
     self.cast_ts = GetTime()
+  else
+    self.fail_ts = GetTime()
   end
 end
 
@@ -346,12 +354,12 @@ cs.Buff.success = 1
 cs.Buff.failed = 2
 
 --region cs.Buff
-cs.Buff.build = function(name, rebuff_timeout)
+cs.Buff.build = function(name, rebuff_timeout, custom_ready_check)
   local buff = cs.Buff:new()
 
   buff.name = name
   buff.texture_name = nil
-  buff.spell = cs.Spell:create(name)
+  buff.spell = cs.Spell:create(name, custom_ready_check)
   buff.rebuff_timeout = rebuff_timeout
 
   return buff

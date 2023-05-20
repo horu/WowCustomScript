@@ -19,6 +19,10 @@ function dru.bear.Form:cancel()
   self.buff:cancel()
 end
 
+function dru.bear.Form:check_exists()
+  return self.buff:check_exists()
+end
+
 function dru.bear.Form:attack()
   cs.auto_attack()
 
@@ -66,6 +70,13 @@ function dru.form.Handler:set(form_name)
   return form
 end
 
+function dru.form.Handler:get()
+  for _, form in pairs(self.forms) do
+    if form:check_exists() then
+      return form
+    end
+  end
+end
 
 
 function cs.party.Player:rebuff()
@@ -156,7 +167,16 @@ cs_dru_RJ = function()
   dru.sp.RJ:rebuff()
 end
 
-cs_dru_helpful = function(name)
+cs_dru_heal = function()
   dru.form.handler:set(dru.form.humanoid)
-  dru.sp[name]:cast_helpful()
+
+  if dru.form.handler:get() then
+    return
+  end
+
+  if not dru.sp.RemoveCurse:is_failed(0.5) then
+    if dru.sp.RemoveCurse:cast_helpful() then return end
+  end
+
+  dru.sp.Regrowth:cast_helpful()
 end

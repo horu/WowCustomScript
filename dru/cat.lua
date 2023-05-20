@@ -46,6 +46,8 @@ function dru.cat.Rip:cast()
   return self.spell:cast()
 end
 
+
+
 ---@class dru.cat.Form
 dru.cat.Form = cs.class()
 dru.cat.Form.name = "Cat Form"
@@ -64,6 +66,10 @@ function dru.cat.Form:cancel()
   self.buff:cancel()
 end
 
+function dru.cat.Form:check_exists()
+  return self.buff:check_exists()
+end
+
 function dru.cat.Form:attack()
   if not cs.check_target(cs.t.attackable) then
     return
@@ -74,6 +80,8 @@ function dru.cat.Form:attack()
   end
 
   cs.auto_attack()
+
+  dru.sp.TigerFury:rebuff()
 
   if self.rip:cast() then return end
 
