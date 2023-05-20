@@ -20,6 +20,7 @@ local main_load = function()
   cs.slot.init()
   cs.services.init()
   cs.dps.init()
+  cs.spell.init()
   cs.stat.init()
 
   if cs.cl.get() == cs.cl.PALADIN then

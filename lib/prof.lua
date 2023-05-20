@@ -16,7 +16,7 @@ function cs.prof.Mining:build()
   --  cs.debug({event,arg1,arg2,arg3,arg4,arg5})
   --end)
 
-  --cs.st_player_cast_detector:subscribe(mining, mining._cast_detected)
+  --cs.spell.player_cast_detector:subscribe(mining, mining._cast_detected)
 end
 
 

@@ -62,6 +62,44 @@ end
 
 
 
+
+cs.spell = {}
+cs.spell.sc = {}
+cs.spell.sc.failed = "SPELLCAST_FAILED"
+cs.spell.sc.stop = "SPELLCAST_STOP"
+
+---@class cs.spell.SelfCastDetector
+cs.spell.SelfCastDetector = cs.class()
+function cs.spell.SelfCastDetector:build()
+  self.f = cs.create_simple_frame()
+  self.f.cs_self = self
+  self.f:RegisterEvent(cs.spell.sc.failed)
+  self.f:RegisterEvent(cs.spell.sc.stop)
+  self.f:SetScript("OnEvent", function()
+    this.cs_self:_on_cast(event)
+  end)
+
+  self.sub = nil
+end
+
+---@param spell cs.Spell
+function cs.spell.SelfCastDetector:subscribe(spell)
+  self.sub = spell
+end
+
+function cs.spell.SelfCastDetector:_on_cast(event)
+  if not self.sub then
+    return
+  end
+
+  self.sub:_on_cast(event)
+  self.sub = nil
+end
+
+cs.spell.self_cast_detector = cs.spell.SelfCastDetector:create()
+
+
+
 -- spells
 ---@class cs.Spell
 cs.Spell = cs.create_class()
@@ -83,6 +121,11 @@ cs.Spell.build = function(name, custom_ready_check)
   spell.tooltip = cs.SpellTooltip:create(spell.id)
 
   return spell
+end
+
+-- const
+function cs.Spell:get_cast_ts()
+  return self.cast_ts
 end
 
 -- const
@@ -110,9 +153,15 @@ end
 
 function cs.Spell:cast(to_self)
   if self:is_ready() then
+    cs.spell.self_cast_detector:subscribe(self)
     CastSpellByName(self.name, to_self)
-    self.cast_ts = GetTime()
     return true
+  end
+end
+
+function cs.Spell:_on_cast(event)
+  if event == cs.spell.sc.stop then
+    self.cast_ts = GetTime()
   end
 end
 
@@ -225,7 +274,6 @@ function cs.find_buff(check_list, unit)
 end
 
 
-cs.spell = {}
 
 cs.buff = {}
 cs.buff.count_limit = 40
@@ -290,8 +338,6 @@ end
 
 
 
-
-
 ---@class cs.Buff
 cs.Buff = cs.create_class()
 
@@ -299,17 +345,20 @@ cs.Buff.exists = nil
 cs.Buff.success = 1
 cs.Buff.failed = 2
 
---region
+--region cs.Buff
 cs.Buff.build = function(name, rebuff_timeout)
   local buff = cs.Buff:new()
 
   buff.name = name
   buff.texture_name = nil
-  buff.spell = cs.Spell.build(name)
-  buff.cast_ts = 0
+  buff.spell = cs.Spell:create(name)
   buff.rebuff_timeout = rebuff_timeout
 
   return buff
+end
+
+function cs.Buff:get_reminder()
+  return self.rebuff_timeout - (GetTime() - self.spell:get_cast_ts())
 end
 
 -- TODO: use it
@@ -381,7 +430,11 @@ function cs.Buff:is_expired()
     return
   end
 
-  return not cs.compare_time(self.rebuff_timeout, self.cast_ts)
+  return not cs.compare_time(self.rebuff_timeout, self.spell:get_cast_ts())
+end
+
+function cs.Buff:is_rebuff_need(unit)
+  return not self:check_exists(unit) or self:is_expired()
 end
 
 function cs.Buff:rebuff(unit)
@@ -390,12 +443,11 @@ function cs.Buff:rebuff(unit)
     return cs.Buff.failed
   end
 
-  if self:check_exists(unit) and not self:is_expired() then
+  if not self:is_rebuff_need(unit) then
     return cs.Buff.exists
   end
 
   if self.spell:cast_to_unit(unit) then
-    self.cast_ts = GetTime()
     return cs.Buff.success
   end
 
@@ -406,7 +458,7 @@ function cs.Buff:cancel()
   CancelBuff(self.name)
 end
 
---endregion
+--endregion cs.Buff
 
 
 
@@ -519,9 +571,9 @@ function cs.spell.UnitCastDetector:_check_loop()
 end
 
 ---@type cs.spell.UnitCastDetector
-cs.st_target_cast_detector = cs.spell.UnitCastDetector:new(cs.u.target)
+cs.spell.target_cast_detector = cs.spell.UnitCastDetector:new(cs.u.target)
 ---@type cs.spell.UnitCastDetector
-cs.st_player_cast_detector = cs.spell.UnitCastDetector:new(cs.u.player)
+cs.spell.player_cast_detector = cs.spell.UnitCastDetector:new(cs.u.player)
 
 
 
@@ -566,6 +618,8 @@ function cs.spell.Bar:_on_click(texture)
 end
 
 
+cs.spell.init = function()
+end
 
 cs.spell.test = function()
   cs.has_buffs()
