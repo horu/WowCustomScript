@@ -33,7 +33,7 @@ end
 function dru.cat.Rip:get_hp_limit()
   local combo_points = GetComboPoints(cs.u.player, cs.u.target)
   if combo_points > 1 then
-    return self.dam_by_combo[combo_points] * 4 * (GetNumPartyMembers() + 1)
+    return self.dam_by_combo[combo_points] * 5 * (GetNumPartyMembers() + 1)
   end
   return 0
 end
@@ -81,9 +81,11 @@ function dru.cat.Form:attack()
 
   cs.auto_attack()
 
+  if self.rip:cast() then return end
+
   dru.sp.TigerFury:rebuff()
 
-  if self.rip:cast() then return end
+  if dru.sp.Rake:cast() then return end
 
   dru.sp.Claw:cast()
 end
