@@ -71,6 +71,10 @@ function dru.cat.Form:attack()
     return
   end
 
+  if dru.sp.Prowl:check_exists() then
+    if dru.sp.Shred:cast() then return end
+  end
+
   if self.rip:cast() then return end
 
   dru.sp.Claw:cast()

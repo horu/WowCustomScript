@@ -120,6 +120,12 @@ cs_dru_cast = function(form_name, spell_name)
   dru.sp[spell_name]:cast()
 end
 
+cs_dru_buff = function(form_name, spell_name)
+  dru.form.handler:set(form_name)
+
+  dru.sp[spell_name]:rebuff()
+end
+
 cs_dru_range_attack =function()
   cs.auto_attack()
 

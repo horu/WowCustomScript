@@ -65,8 +65,10 @@ dru.common.init = function()
 
   -- Cat
   dru.sp.Claw = cs.Spell:create("Claw")
+  dru.sp.Shred = cs.Spell:create("Shred")
   dru.sp.Rip = cs.Spell:create("Rip", function(spell)
     return not cs.has_debuffs(cs.u.target, "Ability_GhoulFrenzy")
   end)
+  dru.sp.Prowl = cs.Buff:create("Prowl")
 end
 
