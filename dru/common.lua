@@ -81,6 +81,9 @@ dru.common.init = function()
   dru.sp.FaerieFire = cs.Spell:create("Faerie Fire", function(spell)
     return not cs.has_debuffs(cs.u.target, "Spell_Nature_FaerieFire")
   end)
+  dru.sp.InsectSwarm = cs.Spell:create("Insect Swarm", function(spell)
+    return not cs.has_debuffs(cs.u.target, "Spell_Nature_InsectSwarm")
+  end)
 
   dru.sp.RJ = cs.Buff:create(dru.sn.Rejuvenation)
   dru.sp.MarkWild = dru.buff.create_mark()
@@ -146,6 +149,7 @@ cs_dru_range_attack =function()
 
   if cs.check_target(cs.t.attackable) then
     if dru.sp.FaerieFire:cast() then return end
+    if dru.sp.InsectSwarm:cast() then return end
     if dru.sp.Wrath:cast() then return end
     if dru.sp.Moonfire:cast() then return end
   end
