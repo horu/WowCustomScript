@@ -60,6 +60,8 @@ function cs.SpellTooltip:parse_mana()
   return 0
 end
 
+
+
 -- spells
 ---@class cs.Spell
 cs.Spell = cs.create_class()
@@ -225,6 +227,9 @@ end
 
 cs.spell = {}
 
+cs.buff = {}
+cs.buff.count_limit = 40
+
 -- find buff/debuff by icon name
 ---@class cs.spell.UnitBuff @buff on the unit
 ---@field public icon string
@@ -253,7 +258,7 @@ cs.get_buff_list = function(unit, b_fun)
   if not b_fun then b_fun = UnitBuff end
 
   local buff_list = {}
-  for i=1, 100 do
+  for i=1, cs.buff.count_limit do
     local buff = cs.spell.UnitBuff.build(b_fun(unit, i))
     if not buff then break end
 
@@ -262,12 +267,12 @@ cs.get_buff_list = function(unit, b_fun)
   return buff_list
 end
 
-cs.has_buffs = function(unit, buff_icon_str, min_count, b_fun)
-  if not buff_icon_str then buff_icon_str = "" end
+cs.has_buffs = function(unit, texture_name, min_count, b_fun)
+  if not texture_name then texture_name = "" end
 
   local buff_list = cs.get_buff_list(unit, b_fun)
   for _, buff in pairs(buff_list) do
-    if string.find(buff.icon, buff_icon_str) and (not min_count or buff.count >= min_count) then
+    if string.find(buff.icon, texture_name) and (not min_count or buff.count >= min_count) then
       return buff
     end
   end
@@ -299,11 +304,50 @@ cs.Buff.build = function(name, rebuff_timeout)
   local buff = cs.Buff:new()
 
   buff.name = name
+  buff.texture_name = nil
   buff.spell = cs.Spell.build(name)
   buff.cast_ts = 0
   buff.rebuff_timeout = rebuff_timeout
 
   return buff
+end
+
+-- TODO: use it
+function cs.Buff:get_timeout()
+  if not self.texture_name then
+    local tooltip = CreateFrame("GameTooltip", "MyBuffTooltip", nil, "GameTooltipTemplate")
+    tooltip:SetOwner(UIParent, "ANCHOR_NONE")
+
+    for i = 0, cs.buff.count_limit do  -- Iterate through player buffs (40 is the maximum number of buffs in WoW Classic)
+      local buff_texture = GetPlayerBuffTexture(i)
+
+      if buff_texture then
+        tooltip:SetPlayerBuff(i)
+
+        local text = getglobal("MyBuffTooltipTextLeft1"):GetText()
+
+        tooltip:Hide()
+
+        if text == self.name then
+          -- Print the remaining time of the buff to the chat frame or do something else with it
+          self.texture_name = buff_texture
+          break
+        end
+      end
+    end
+  end
+
+  for i = 0, cs.buff.count_limit do  -- Iterate through player buffs (40 is the maximum number of buffs in WoW Classic)
+    local buff_texture = GetPlayerBuffTexture(i)
+    local buff_time_left = GetPlayerBuffTimeLeft(i)
+
+    if buff_texture and buff_time_left then
+      if buff_texture == buff.texture_name then
+        -- Print the remaining time of the buff to the chat frame or do something else with it
+        return buff_time_left
+      end
+    end
+  end
 end
 
 -- const
