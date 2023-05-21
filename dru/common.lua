@@ -7,6 +7,7 @@ dru.common = {}
 dru.sn = {}
 
 dru.sn.Rejuvenation = "Rejuvenation"
+dru.sn.AbolishPoison = "Abolish Poison"
 dru.sn.HealingTouch = "Healing Touch"
 
 dru.buff = {}
@@ -53,6 +54,7 @@ dru.common.init = function()
   dru.sp.RJ = cs.Buff:create(dru.sn.Rejuvenation)
   dru.sp.MarkWild = dru.buff.create_mark()
   dru.sp.Thorns = cs.Buff:create("Thorns", 9 * 60)
+  dru.sp.AbolishPoison = cs.Buff:create("Abolish Poison")
 
   -- Bear
   dru.sp.Maul = cs.Spell:create("Maul")

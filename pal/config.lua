@@ -107,7 +107,7 @@ local default_states_config = {
     HEAL = {
       name = pal.stn.HEAL,
       type = pal.stt.def,
-      hotkey = 12 * 5 + 2,
+      hotkey = 6,
       color = cs.color.yellow,
       set_id = cs.slot.Set.id.weap_2,
 

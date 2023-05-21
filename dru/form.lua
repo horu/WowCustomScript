@@ -84,9 +84,12 @@ function cs.party.Player:rebuff()
     self.data.dru_mark = dru.buff.create_mark()
   end
 
-  if self.data.dru_mark:rebuff(self.unit) then
+  local result = self.data.dru_mark:rebuff(self.unit)
+  if result then
     dru.form.handler:set(dru.form.humanoid)
-    cs.print(string.format("BUFF: FOR %s [%s] %s", self.name, self.unit, cs.cl.get(self.unit)))
+    if result == cs.Buff.success then
+      cs.print(string.format("BUFF: FOR %s [%s] %s", self.name, self.unit, cs.cl.get(self.unit)))
+    end
     return true
   end
 end
@@ -161,12 +164,15 @@ cs_dru_RJ = function()
   dru.form.handler:set(dru.form.humanoid)
 
   if cs.check_target(cs.t.friend) then
-    local buff = cs.Buff:create(dru.sn.Rejuvenation)
-    buff:rebuff(cs.u.target)
+    if cs.Buff:create(dru.sn.Rejuvenation):rebuff(cs.u.target) == cs.Buff.exists then
+      cs.Buff:create(dru.sn.AbolishPoison):rebuff(cs.u.target)
+    end
     return
   end
 
-  dru.sp.RJ:rebuff()
+  if dru.sp.RJ:rebuff() == cs.Buff.exists then
+    dru.sp.AbolishPoison:rebuff()
+  end
 end
 
 cs_dru_heal = function()
