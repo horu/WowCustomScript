@@ -93,7 +93,7 @@ end
 
 
 dru.rebuff = function()
-  if cs.check_combat(cs.c.affect) then
+  if not cs.party.can_rebuff() then
     return
   end
 

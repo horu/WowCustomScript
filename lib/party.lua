@@ -48,8 +48,12 @@ local function rebuff_anybody()
   end
 end
 
+cs.party.can_rebuff =function()
+  return not cs.check_combat(cs.c.affect) and not cs.check_target(cs.t.attackable)
+end
+
 cs.party.rebuff = function()
-  if cs.check_combat(cs.c.affect) then
+  if not cs.party.can_rebuff() then
     return
   end
 
