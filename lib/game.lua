@@ -49,6 +49,9 @@ function cs.check_unit(check, unit)
   elseif check == cs.t.beast then
     local unit_type = UnitCreatureType(unit)
     return unit_type == "Beast" or unit_type == "Dragonkin"
+  elseif check == cs.t.non_bleedable then
+    local unit_type = UnitCreatureType(unit)
+    return unit_type == "Mechanical" or unit_type == "Undead" or unit_type == "Elemental"
   elseif check == cs.t.attackable then
     return cs.check_unit(cs.t.exists, unit) and
             not cs.check_unit(cs.t.friend, unit) and
