@@ -86,6 +86,7 @@ function cs.party.Player:rebuff()
 
   if self.data.dru_mark:rebuff(self.unit) then
     dru.form.handler:set(dru.form.humanoid)
+    cs.print(string.format("BUFF: FOR %s [%s] %s", self.name, self.unit, cs.cl.get(self.unit)))
     return true
   end
 end
@@ -143,8 +144,9 @@ end
 cs_dru_range_attack =function()
   cs.auto_attack()
 
+  dru.form.handler:set(dru.form.humanoid)
+
   if cs.check_target(cs.t.attackable) then
-    dru.form.handler:set(dru.form.humanoid)
     if dru.sp.FaerieFire:cast() then return end
     if dru.sp.InsectSwarm:cast() then return end
     if dru.sp.Wrath:cast() then return end

@@ -75,7 +75,7 @@ function dru.cat.Form:attack()
     return
   end
 
-  if dru.sp.Prowl:check_exists() then
+  if not dru.sp.Shred:is_failed(3) then
     if dru.sp.Shred:cast() then return end
   end
 
