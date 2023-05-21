@@ -446,6 +446,10 @@ function cs.Buff:is_rebuff_need(unit)
 end
 
 function cs.Buff:rebuff(unit)
+  if cs.compare_time(2, self.spell:get_cast_ts()) then
+    -- fix bag with fast change buff/cancel
+    return cs.Buff.failed
+  end
   unit = unit or cs.u.player
   if not self:check_target_range(unit) then
     return cs.Buff.failed
