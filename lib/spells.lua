@@ -446,7 +446,7 @@ function cs.Buff:is_rebuff_need(unit)
 end
 
 function cs.Buff:rebuff(unit)
-  if cs.compare_time(1, self.spell:get_cast_ts()) then
+  if cs.compare_time(1.5, self.spell:get_cast_ts()) then
     -- fix bag with fast change buff/cancel
     return cs.Buff.failed
   end
