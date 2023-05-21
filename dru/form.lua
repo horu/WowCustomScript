@@ -182,7 +182,7 @@ cs_dru_heal = function()
     return
   end
 
-  if not dru.sp.RemoveCurse:is_failed(0.5) then
+  if not dru.sp.RemoveCurse:is_failed(0.8) then
     if dru.sp.RemoveCurse:cast_helpful() then return end
   end
 

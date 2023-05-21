@@ -63,7 +63,7 @@ cs.party.rebuff = function()
 
   if cs.check_target(cs.t.fr_player) then
     rebuff_unit(cs.u.target)
-  elseif cs.check_mouse(cs.t.fr_player) then
+  elseif cs.check_mouse(cs.t.fr_player) and not UnitIsPVP(cs.u.mouseover) then
     rebuff_unit(cs.u.mouseover)
   end
 end
