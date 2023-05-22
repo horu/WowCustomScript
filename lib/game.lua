@@ -134,6 +134,9 @@ cs.skill.get_rank = function(skill_name)
   end
 end
 
+
+
+
 function cs.check_unit_hp(limit, unit)
   unit = unit or cs.u.player
   if not limit then
@@ -166,6 +169,9 @@ function cs.compare_unit_hp_rate(hp_rate, unit)
   return cs.check_unit_hp(limit_hp, unit)
 end
 
+
+
+
 function cs.get_mana_level()
   -- 0-1
   return UnitMana(cs.u.player) / UnitManaMax(cs.u.player)
@@ -174,6 +180,22 @@ end
 function cs.is_low_mana()
   return cs.get_mana_level() <= 0.15
 end
+
+
+
+cs.is_swimming = function()
+  local frames = { MirrorTimer1, MirrorTimer2, MirrorTimer3 }
+  for _, frame in pairs(frames) do
+    if frame:IsShown() then
+      local text = frame.label:GetText()
+      if text and string.find(text, "Breath") then
+        return true
+      end
+    end
+  end
+end
+
+
 
 
 function cs.is_in_party()
@@ -197,6 +219,9 @@ cs.get_party_hp_sum = function()
   end)
   return sum
 end
+
+
+
 
 function cs.auto_attack()
   if not cs.check_target(cs.t.exists) then

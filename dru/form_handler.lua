@@ -85,8 +85,17 @@ end
 
 -- PUBLIC
 
-cs_dru_form = function(form_name)
-  dru.ff.handler:set(form_name)
+cs_dru_travel = function()
+  if dru.ff.handler:get() == dru.ff.aquatic then
+    return
+  end
+
+  if cs.is_swimming() then
+    dru.ff.handler:set(dru.ff.aquatic)
+    return
+  end
+
+  dru.ff.handler:set(dru.ff.travel)
 end
 
 cs_dru_form_action = function(form_name, action_name)
