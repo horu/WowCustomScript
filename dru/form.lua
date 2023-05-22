@@ -36,7 +36,7 @@ function dru.bear.Form:attack()
 end
 
 function dru.bear.Form:splash()
-  cs.auto_attack()
+  if not cs.auto_attack() then return end
 
   if dru.sp.FaerieFire_Feral:cast() then return end
   if dru.sp.DemoralizingRoar:cast() then return end

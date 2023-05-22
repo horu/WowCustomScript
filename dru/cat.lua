@@ -71,19 +71,17 @@ function dru.cat.Form:check_exists()
 end
 
 function dru.cat.Form:attack()
-  if not dru.sp.Prowl:check_exists() then
-    cs.auto_attack()
-  end
-
-  if not cs.check_target(cs.t.attackable) then
-    return
+  if dru.sp.Prowl:check_exists() then
+    if not cs.check_target(cs.t.attackable) then return end
+  else
+    if not cs.auto_attack() then return end
+    if dru.sp.FaerieFire_Feral:cast() then return end
   end
 
   if not dru.sp.Shred:is_failed(3) then
     if dru.sp.Shred:cast() then return end
   end
 
-  if dru.sp.FaerieFire_Feral:cast() then return end
   if self.rip:cast() then return end
   if dru.sp.TigerFury:rebuff() then return end
   if dru.sp.Rake:cast() then return end
