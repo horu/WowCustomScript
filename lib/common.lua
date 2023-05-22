@@ -219,11 +219,16 @@ cs.class = function(base)
   local class = {}
   if base then
     setmetatable(class ,{__index = base})
+    class._cs_base_build = base.build
+    class.build = function()  end
   end
 
   function class:new(...)
     local obj = setmetatable({}, self)
     self.__index = self
+    if self._cs_base_build then
+      self._cs_base_build(obj, unpack(arg))
+    end
     if self.build then
       self.build(obj, unpack(arg))
     end

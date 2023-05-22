@@ -52,8 +52,6 @@ end
 dru.cat.Form = cs.class(dru.form.Base)
 dru.cat.Form.name = "Cat Form"
 function dru.cat.Form:build()
-  self.buff = cs.Buff:create(self.name)
-
   ---@type dru.cat.Rip
   self.rip = dru.cat.Rip:create()
 end
