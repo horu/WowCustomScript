@@ -49,25 +49,13 @@ end
 
 
 ---@class dru.cat.Form
-dru.cat.Form = cs.class()
+dru.cat.Form = cs.class(dru.form.Base)
 dru.cat.Form.name = "Cat Form"
 function dru.cat.Form:build()
   self.buff = cs.Buff:create(self.name)
 
   ---@type dru.cat.Rip
   self.rip = dru.cat.Rip:create()
-end
-
-function dru.cat.Form:set()
-  self.buff:rebuff()
-end
-
-function dru.cat.Form:cancel()
-  self.buff:cancel()
-end
-
-function dru.cat.Form:check_exists()
-  return self.buff:check_exists()
 end
 
 function dru.cat.Form:attack()

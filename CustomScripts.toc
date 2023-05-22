@@ -32,8 +32,10 @@ pal\actions.lua
 pal\states.lua
 
 dru\common.lua
-dru\cat.lua
 dru\form.lua
+dru\bear.lua
+dru\cat.lua
+dru\form_handler.lua
 
 loader.lua
 dump.lua
