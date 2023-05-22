@@ -83,11 +83,9 @@ function dru.cat.Form:attack()
     if dru.sp.Shred:cast() then return end
   end
 
+  if dru.sp.FaerieFire_Feral:cast() then return end
   if self.rip:cast() then return end
-
-  dru.sp.TigerFury:rebuff()
-
+  if dru.sp.TigerFury:rebuff() then return end
   if dru.sp.Rake:cast() then return end
-
-  dru.sp.Claw:cast()
+  if dru.sp.Claw:cast() then return end
 end

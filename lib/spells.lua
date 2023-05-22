@@ -160,7 +160,7 @@ end
 function cs.Spell:cast(to_self)
   if self:is_ready() then
     cs.spell.self_cast_detector:subscribe(self)
-    CastSpellByName(self.name, to_self)
+    CastSpellByName(self.name.."()", to_self)
     return true
   end
 end
