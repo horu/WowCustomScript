@@ -205,7 +205,8 @@ end
 cs.create_class = function(class_tab)
   local class = class_tab or {}
   function class:new(tab)
-    local obj = setmetatable(tab or {}, {__index = self})
+    local obj = setmetatable(tab or {}, self)
+    self.__index = self
     return obj
   end
   function class:create(...)
@@ -214,11 +215,15 @@ cs.create_class = function(class_tab)
   return class
 end
 
-cs.class = function()
+cs.class = function(base)
   local class = {}
+  if base then
+    setmetatable(class ,{__index = base})
+  end
 
   function class:new(...)
-    local obj = setmetatable({}, {__index = self})
+    local obj = setmetatable({}, self)
+    self.__index = self
     if self.build then
       self.build(obj, unpack(arg))
     end
