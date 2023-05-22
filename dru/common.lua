@@ -31,7 +31,9 @@ dru.common.init = function()
   -- Human
   dru.sp.HT = cs.Spell:create(dru.sn.HealingTouch)
   dru.sp.Regrowth = cs.Spell:create("Regrowth")
-  dru.sp.RemoveCurse = cs.Spell:create("Remove Curse")
+  dru.sp.RemoveCurse = cs.Spell:create("Remove Curse", function(spell)
+    return not spell:is_failed(0.8)
+  end)
 
   dru.sp.Wrath = cs.Spell:create("Wrath", function(spell)
     return not cs.services.speed_checker:is_moving() and cs.has_debuffs(cs.u.target, "Spell_Nature_StarFall")
@@ -73,7 +75,9 @@ dru.common.init = function()
 
   -- Cat
   dru.sp.Claw = cs.Spell:create("Claw")
-  dru.sp.Shred = cs.Spell:create("Shred")
+  dru.sp.Shred = cs.Spell:create("Shred", function(spell)
+    return not spell:is_failed(3)
+  end)
   dru.sp.Rip = cs.Spell:create("Rip", function(spell)
     return not cs.has_debuffs(cs.u.target, "Ability_GhoulFrenzy") and not cs.check_target(cs.t.non_bleedable)
   end)
