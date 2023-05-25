@@ -158,6 +158,7 @@ cs_dru_heal = function()
   dru.ff.handler:set(dru.ff.humanoid)
 
   if dru.ff.handler:get() then
+    -- to prevent RemoveCurse failes before cancel form
     return
   end
 

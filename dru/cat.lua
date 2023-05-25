@@ -30,16 +30,20 @@ function dru.cat.Rip:build()
   assert(self.dam_by_combo[5])
 end
 
-function dru.cat.Rip:get_hp_limit()
+function dru.cat.Rip:is_ready()
   local combo_points = GetComboPoints(cs.u.player, cs.u.target)
-  if combo_points > 1 then
-    return self.dam_by_combo[combo_points] * 5 * (GetNumPartyMembers() + 1)
+  if combo_points == 5 then
+    return true
   end
-  return 0
+
+  if combo_points > 1 then
+    local hp_limit = self.dam_by_combo[combo_points] * 5 * (GetNumPartyMembers() + 1)
+    return cs.check_target_hp(hp_limit)
+  end
 end
 
 function dru.cat.Rip:cast()
-  if not cs.check_target_hp(self:get_hp_limit()) then
+  if not self:is_ready() then
     return
   end
 
