@@ -171,6 +171,9 @@ end
 
 
 
+function cs.get_mana()
+  return UnitMana(cs.u.player)
+end
 
 function cs.get_mana_level()
   -- 0-1

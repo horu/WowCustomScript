@@ -82,13 +82,18 @@ dru.common.init = function()
     return dru.sp.Prowl:check_exists()
   end)
   dru.sp.Rip = cs.Spell:create("Rip", function(spell)
-    return not cs.has_debuffs(cs.u.target, "Ability_GhoulFrenzy") and not cs.check_target(cs.t.non_bleedable)
+    return not cs.has_debuffs(cs.u.target, "Ability_GhoulFrenzy") and
+            not cs.check_target(cs.t.non_bleedable) and
+            check_target_hp(0.3) and
+            GetComboPoints(cs.u.player, cs.u.target) == 1
   end)
+  dru.sp.FerociousBite = cs.Spell:create("Ferocious Bite")
   dru.sp.Rake = cs.Spell:create("Rake", function(spell)
     return not cs.has_debuffs(cs.u.target, "Ability_Druid_Disembowel") and
             check_target_hp(0.3) and
             not cs.check_target(cs.t.non_bleedable)
   end)
+
   dru.sp.Prowl = cs.Buff:create("Prowl")
   dru.sp.TigerFury = cs.Buff:create("Tiger's Fury", nil, function()
     return cs.check_target(cs.t.close_10)
