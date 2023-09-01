@@ -136,7 +136,7 @@ end
 
 
 
-
+--- @return true if <=
 function cs.check_unit_hp(limit, unit)
   unit = unit or cs.u.player
   if not limit then
@@ -147,6 +147,7 @@ function cs.check_unit_hp(limit, unit)
   return unit_hp <= limit
 end
 
+--- @return true if <=
 function cs.check_target_hp(limit)
   return cs.check_unit_hp(limit, cs.u.target)
 end
@@ -224,9 +225,7 @@ cs.get_party_hp_sum = function()
 end
 
 
-
-
-function cs.auto_attack()
+function cs.prepare_attack()
   if not cs.check_target(cs.t.exists) then
     -- no auto check target
     return
@@ -239,9 +238,20 @@ function cs.auto_attack()
 
   if cs.check_target(cs.t.friend) then
     AssistUnit("target")
-  elseif not cs.check_combat(cs.c.normal) then
+  end
+
+  return true
+end
+
+function cs.auto_attack()
+  if not cs.prepare_attack() then
+    return
+  end
+
+  if not cs.check_combat(cs.c.normal) then
     AttackTarget()
   end
+
   return true
 end
 

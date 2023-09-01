@@ -40,6 +40,10 @@ local main_load = function()
     cs.dru.ff.init()
   end
 
+  if cs.cl.get() == cs.cl.HUNTER then
+    cs.hunt.common.init()
+  end
+
   main_tests()
   cs.print(cs.color.green.."+++++++++++++++++++++++++++ CS LOADED +++++++++++++++++++++++++++")
 end

@@ -37,5 +37,7 @@ dru\bear.lua
 dru\cat.lua
 dru\form_handler.lua
 
+hunt\common.lua
+
 loader.lua
 dump.lua
