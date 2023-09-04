@@ -4,12 +4,12 @@ local cs = cs_common
 
 
 -- return spell_id, book
-local find_spell = function(name)
+local find_spell_for_book = function(name, spell_book)
   local id = 0
   local it_name = ""
   while it_name ~= name do
     id = id + 1
-    it_name = GetSpellName(id, "spell")
+    it_name = GetSpellName(id, spell_book)
     if not it_name then
       return
     end
@@ -18,13 +18,21 @@ local find_spell = function(name)
   -- find max rank
   while it_name == name do
     id = id + 1
-    it_name = GetSpellName(id, "spell")
+    it_name = GetSpellName(id, spell_book)
   end
   id = id - 1
 
-  return id, "spell"
+  return id
 end
 
+local find_spell = function(name)
+  for _, book in ipairs({"spell", "pet"}) do
+    local id = find_spell_for_book(name, book)
+    if id then
+      return id, book
+    end
+  end
+end
 
 
 ---@class cs.SpellTooltip
