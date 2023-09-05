@@ -109,6 +109,21 @@ cs.spell.self_cast_detector = cs.spell.SelfCastDetector:create()
 
 
 -- spells
+
+---@class cs.EmptySpell
+--- Empty spell if not available
+cs.EmptySpell = cs.class()
+function cs.EmptySpell.is_exists() return false end
+function cs.EmptySpell:is_failed(for_last_ts) return end
+function cs.EmptySpell:get_cast_ts() return 0 end
+function cs.EmptySpell:get_tooltip() return end
+function cs.EmptySpell:get_texture() return "TODO" end
+function cs.EmptySpell:get_cd() return 999 end
+function cs.EmptySpell:cast(to_self) return end
+function cs.EmptySpell:cast_to_unit(unit) return end
+function cs.EmptySpell:cast_helpful() return end
+function cs.EmptySpell:is_ready() return false end
+
 ---@class cs.Spell
 cs.Spell = cs.create_class()
 
@@ -118,11 +133,15 @@ cs.Spell.build = function(name, custom_ready_check)
   local spell = cs.Spell:new()
 
   spell.id, spell.book = find_spell(name)
+  if not spell.id then
+    return cs.EmptySpell:create()
+  end
+
   spell.name = name
   --spell.id = id_name
   --spell.book = book
   --spell.name = GetSpellName(id_name, book)
-  assert(spell.id, string.format("spell not found: '%s'", (name or "nil")))
+  -- assert(spell.id, string.format("spell not found: '%s'", (name or "nil")))
   spell.cast_ts = 0
   spell.fail_ts = 0
   spell.custom_ready_check = custom_ready_check
@@ -130,6 +149,11 @@ cs.Spell.build = function(name, custom_ready_check)
   spell.tooltip = cs.SpellTooltip:create(spell.id)
 
   return spell
+end
+
+-- const
+function cs.Spell.is_exists()
+  return true
 end
 
 -- const

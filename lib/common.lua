@@ -201,7 +201,7 @@ function cs.error_disabler.on(self)
   end
 end
 
-
+-- old
 cs.create_class = function(class_tab)
   local class = class_tab or {}
   function class:new(tab)
@@ -215,6 +215,8 @@ cs.create_class = function(class_tab)
   return class
 end
 
+
+-- new
 cs.class = function(base)
   local class = {}
   if base then
