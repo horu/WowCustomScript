@@ -28,7 +28,7 @@ hunt.common.init = function()
             not cs.compare_unit_hp_rate(0.25, cs.u.target)
   end)
   hunt.sp.AimedShot = cs.Spell:create("Aimed Shot", function(spell)
-    return not cs.services.speed_checker:is_moving()
+    return not cs.services.speed_checker:is_moving() and not cs.check_combat()
   end)
 
   -- Melee
@@ -39,6 +39,8 @@ hunt.common.init = function()
   hunt.bsp.HawkAspect = cs.Buff:create("Aspect of the Hawk")
   hunt.bsp.MonkeyAspect = cs.Buff:create("Aspect of the Monkey")
   hunt.bsp.CheetahAspect = cs.Buff:create("Aspect of the Cheetah")
+
+  hunt.sp.CallPet = cs.Spell:create("Call Pet")
 
   -- Pet
   hunt.sp.Growl = cs.Spell:create("Growl")
@@ -57,6 +59,10 @@ function hunt.auto_shot()
 end
 
 cs_hunt_shot = function()
+  if not cs.check_unit(cs.t.exists, cs.u.pet) then
+    hunt.sp.CallPet:cast()
+  end
+
   if not cs.check_combat() then
     hunt.bsp.CheetahAspect:rebuff()
   end
