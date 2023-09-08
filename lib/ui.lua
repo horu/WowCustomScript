@@ -314,7 +314,7 @@ function cs.ButtonChecker:add_repeat_pattern(cps, callback_obj, callback_func)
 end
 
 function cs.ButtonChecker:_button_callback(bar, key)
-  --cs.debug({bar, key, keystate})
+  --cs_debug({bar, key, keystate})
   -- TODO: fix bag when move icon to other
   local longkey = bar * 12 + key - 12
   local ts = GetTime()

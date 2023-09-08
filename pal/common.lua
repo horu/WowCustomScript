@@ -170,7 +170,7 @@ pal.common.init = function()
     end
 
     local last_phy_ts = cs.damage.analyzer:get_last_ts(cs.damage.st.Physical)
-    -- cs.debug(GetTime() - last_phy_ts)
+    -- cs_debug(GetTime() - last_phy_ts)
     return cs.compare_time(5, last_phy_ts)
   end)
   pal.sp.HolyShield_force = cs.Spell.build(spn.HolyShield)

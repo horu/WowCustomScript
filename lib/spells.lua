@@ -134,6 +134,7 @@ cs.Spell.build = function(name, custom_ready_check)
 
   spell.id, spell.book = find_spell(name)
   if not spell.id then
+    cs_warning('Invalid spell: ' .. name)
     return cs.EmptySpell:create()
   end
 

@@ -248,7 +248,7 @@ function cs.slot.SetHolder:_reset_set(id)
   local set = cs.slot.Set:new(default_item_sets[id])
 
   set:reset()
-  cs.debug(set:to_config())
+  cs_debug(set:to_config())
   self.set_list[id] = set
   cs_item_sets[id] = set.list
 end

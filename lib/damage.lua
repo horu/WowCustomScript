@@ -498,7 +498,7 @@ function cs.damage.Parser:parse(msg, msg_event)
 
   -- TODO: add parser for c_hp_m
   if msg_event == cs.chat.c_hp_m then
-    cs.debug(msg)
+    cs_debug(msg)
   end
 
   if msg_event == cs.chat.c_c_vs_s_m or msg_event == cs.chat.c_hp_m then

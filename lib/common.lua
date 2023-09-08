@@ -66,12 +66,6 @@ cs_stack = function(condition)
   cs_print("STACK END")
 end
 
-cs_error = function(msg)
-  cs_stack(true)
-  cs_print("|cffcc3333ERROR: |cffff7777".. (msg or "nil" ))
-end
-seterrorhandler(cs_error)
-
 
 cs.print = cs_print
 cs.stack = cs_stack
@@ -166,8 +160,21 @@ cs_debug = function(...)
   cs.print(line..": "..full_msg)
 end
 
-cs.debug = cs_debug
+cs_warning = function(...)
+  local stack_level = 3
 
+  local line = get_stack_line(stack_level)
+
+  local full_msg = cs.to_string_best_d(unpack(arg))
+  cs.print("|cffFFA500" .. line ..": "..full_msg)
+end
+
+cs_error = function(msg)
+  cs_stack(true)
+  cs_print("|cffcc3333ERROR: |cffff7777".. (msg or "nil" ))
+end
+
+seterrorhandler(cs_error)
 
 
 -- regex

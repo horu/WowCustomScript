@@ -115,9 +115,9 @@ local function all_dump()
     dump_table(id, buff)
   end
 
-  cs.debug(cs.get_party_hp_sum())
-  cs.debug(cs.map.checker)
-  cs.debug(GetMapInfo())
+  cs_debug(cs.get_party_hp_sum())
+  cs_debug(cs.map.checker)
+  cs_debug(GetMapInfo())
 
   dump_table("cs_players_data", cs_players_data)
 end
@@ -141,7 +141,7 @@ function cs_dump_unit()
     for t, list in pairs({ buffs = buffs, debuffs = debuffs, casts = casts }) do
       cs.print(t .. ":")
       for _, buff in pairs(list) do
-        cs.debug(buff)
+        cs_debug(buff)
       end
     end
 

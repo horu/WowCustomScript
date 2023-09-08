@@ -24,7 +24,7 @@ pal.Seal.build = function(spell, target_debuff, target_hp_limit, judgement_targe
   seal.judgement_target_hp_limit = judgement_target_hp_limit or 0
   seal.target_hp_limit = target_hp_limit or 0
 
-  --cs.debug(seal)
+  --cs_debug(seal)
 
   return seal
 end

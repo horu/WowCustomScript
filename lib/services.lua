@@ -56,7 +56,7 @@ function cs.Targeter:set_last_target()
 end
 
 function cs.Targeter:deffered_set_combat_mode()
-  --cs.debug(self)
+  --cs_debug(self)
   if self.in_progress ~= 2 then
     return
   end
@@ -73,7 +73,7 @@ function cs.Targeter:deffered_set_combat_mode()
 end
 
 function cs.Targeter:completion()
-  --cs.debug(self)
+  --cs_debug(self)
   if self.in_progress ~= 3 then
     return
   end

@@ -26,7 +26,7 @@ function dru.cat.Rip:build()
     self.dam_by_combo[i] = tonumber(self.dam_by_combo[i])
   end
 
-  cs.debug(self.dam_by_combo)
+  cs_debug(self.dam_by_combo)
   assert(self.dam_by_combo[5])
 end
 
@@ -74,7 +74,7 @@ function dru.cat.Bite:build()
     self.dam_by_combo[i] = tonumber(self.dam_by_combo[i])
   end
 
-  cs.debug(self.dam_by_combo)
+  cs_debug(self.dam_by_combo)
   assert(self.dam_by_combo[5])
 end
 

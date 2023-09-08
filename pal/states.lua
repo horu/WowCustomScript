@@ -71,7 +71,7 @@ end
 -- set buff and save it to config
 function StateBuff:reset_current()
   local default = pal.config.get_default().states[self.id][self.name].current
-  cs.debug(default)
+  cs_debug(default)
   self:set_current(default)
 end
 
@@ -370,7 +370,7 @@ pal.states.init = function()
   st_state_holder = StateHolder.build()
 
   local states = pal.config.get_state_list()
-  cs.debug(states)
+  cs_debug(states)
   for _, id in pairs(states) do
     st_state_holder:add_state(id)
   end
