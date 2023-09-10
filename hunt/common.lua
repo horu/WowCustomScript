@@ -40,7 +40,10 @@ hunt.common.init = function()
   hunt.bsp.MonkeyAspect = cs.Buff:create("Aspect of the Monkey")
   hunt.bsp.CheetahAspect = cs.Buff:create("Aspect of the Cheetah")
 
+  -- For pet
   hunt.sp.CallPet = cs.Spell:create("Call Pet")
+  hunt.sp.MendPet = cs.Spell:create("Mend Pet")
+  hunt.sp.RevivePet = cs.Spell:create("Revive Pet")
 
   -- Pet
   hunt.sp.FuriousHowl = cs.Spell:create("Furious Howl", function()
@@ -69,6 +72,7 @@ cs_hunt_shot = function()
     hunt.sp.CallPet:cast()
   end
 
+  hunt.bsp.HawkAspect:rebuff()
   if not cs.check_combat() then
     hunt.bsp.CheetahAspect:rebuff()
   end
@@ -89,4 +93,12 @@ cs_hunt_melee = function()
 
   cs.auto_attack()
   hunt.sp.RaptorStrike:cast()
+end
+
+cs_hunt_heal_pet = function()
+  if cs.check_unit(cs.t.dead, cs.u.pet) then
+    hunt.sp.RevivePet:cast()
+  else
+    hunt.sp.MendPet:cast()
+  end
 end
