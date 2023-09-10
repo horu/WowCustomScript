@@ -68,11 +68,13 @@ function hunt.auto_shot()
 end
 
 cs_hunt_shot = function()
+  cs.prof.finder:buff()
+
   if not cs.check_unit(cs.t.exists, cs.u.pet) then
     hunt.sp.CallPet:cast()
   end
 
-  hunt.bsp.HawkAspect:rebuff()
+  --hunt.bsp.HawkAspect:rebuff()
   if not cs.check_combat() then
     hunt.bsp.CheetahAspect:rebuff()
   end

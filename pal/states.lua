@@ -197,7 +197,7 @@ function State:postaction()
     return
   end
   if not cs.check_combat(cs.c.affect) then
-    if cs.prof.mining:buff() then return end
+    if cs.prof.finder:buff() then return end
     pal.party.rebuff()
 
     --TODO: add pvp tinker

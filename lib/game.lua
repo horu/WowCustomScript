@@ -125,6 +125,8 @@ end
 cs.skill = {}
 cs.skill.n = {}
 cs.skill.n.riding = "Riding"
+cs.skill.n.herbalism = "Herbalism"
+cs.skill.n.mining = "Mining"
 
 cs.skill.get_rank = function(skill_name)
   for i=1, GetNumSkillLines() do

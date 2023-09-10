@@ -19,12 +19,7 @@ function cs.prof.Mining:build()
   --cs.spell.player_cast_detector:subscribe(mining, mining._cast_detected)
 end
 
-
 function cs.prof.Mining:buff()
-  if GetTrackingTexture() then
-    return cs.Buff.exists
-  end
-
   cs.cast("Find Minerals")
   cs_print("TRACK: Find Minerals")
   return cs.Buff.success
@@ -39,8 +34,40 @@ function cs.prof.Mining:_cast_detected(unit_cast)
   cs.slot.set_holder:equip_set(cs.slot.Set.id.mining)
 end
 
-cs.prof.mining = cs.prof.Mining:create()
 
+---@class cs.prof.
+cs.prof.Herbs = cs.class()
+
+function cs.prof.Herbs:buff()
+  cs.cast("Find Herbs")
+  cs_print("TRACK: Find Herbs")
+  return cs.Buff.success
+end
+
+
+---@class cs.prof.Finder
+cs.prof.Finder = cs.class()
+
+function cs.prof.Finder:build()
+  self.mining = cs.prof.Mining:create()
+  self.herbs = cs.prof.Herbs:create()
+end
+
+function cs.prof.Finder:buff()
+  if GetTrackingTexture() or cs.check_combat(cs.c.affect) then
+    return cs.Buff.exists
+  end
+
+  if cs.skill.get_rank(cs.skill.n.mining) then
+    return self.mining:buff()
+  end
+
+  if cs.skill.get_rank(cs.skill.n.herbalism) then
+    return self.herbs:buff()
+  end
+end
+
+cs.prof.finder = cs.prof.Finder:create()
 
 
 -----@class cs.prof.Skinning
