@@ -83,7 +83,9 @@ cs_hunt_shot = function()
   PetAttack()
   hunt.sp.Charge:cast()
   hunt.sp.FuriousHowl:cast()
-  hunt.sp.Growl:cast()
+  if not cs.is_in_party() then
+    hunt.sp.Growl:cast()
+  end
   if hunt.sp.Mark:cast() then return end
   if hunt.sp.AimedShot:cast() then return end
   if hunt.sp.SerpentSting:cast() then return end

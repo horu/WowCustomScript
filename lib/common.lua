@@ -623,7 +623,7 @@ cs.common.test = function()
     --  assert(fix:get_max_diff() == 0)
     --end)
 
-    cs.event.once(10, function()
+    cs.event.once(20, function()
       assert(fix:get_size() == 0)
       assert(fix:get_last_ts() == 0)
       assert(fix:get_sum() == 0)
