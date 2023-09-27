@@ -8,6 +8,7 @@ cs.u.mouseover = "mouseover"
 cs.u.target = "target"
 cs.u.player = "player"
 cs.u.pet = "pet"
+cs.u.targettarget = "targettarget"
 cs.u.party = {}
 for i=1,5 do table.insert(cs.u.party, i, "party"..i) end
 cs.u.partypet = {}

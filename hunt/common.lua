@@ -44,6 +44,9 @@ hunt.common.init = function()
   hunt.sp.CallPet = cs.Spell:create("Call Pet")
   hunt.sp.MendPet = cs.Spell:create("Mend Pet")
   hunt.sp.RevivePet = cs.Spell:create("Revive Pet")
+  hunt.sp.Intimidation = cs.Spell:create("Intimidation", function(spell)
+    return not cs.compare_unit_hp_rate(0.9, cs.u.target) or cs.check_unit(cs.t.self, cs.u.targettarget)
+  end)
 
   -- Pet
   hunt.sp.FuriousHowl = cs.Spell:create("Furious Howl", function()
@@ -87,6 +90,7 @@ cs_hunt_shot = function()
     hunt.sp.Growl:cast()
   end
   if hunt.sp.Mark:cast() then return end
+  if hunt.sp.Intimidation:cast() then return end
   if hunt.sp.AimedShot:cast() then return end
   if hunt.sp.SerpentSting:cast() then return end
   if hunt.sp.ArcaneShot:cast() then return end
