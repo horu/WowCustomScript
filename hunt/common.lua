@@ -58,6 +58,9 @@ hunt.common.init = function()
   hunt.sp.Charge = cs.Spell:create("Charge", function()
     return not cs.compare_unit_hp_rate(0.8, cs.u.target)
   end)
+  hunt.sp.Dash = cs.Spell:create("Dash", function()
+    return cs.check_target(cs.t.attackable) and not cs.check_combat(cs.c.affect)
+  end)
 end
 
 function hunt.auto_shot()
@@ -87,6 +90,7 @@ function hunt.main_attack()
   PetAttack()
   hunt.sp.Charge:cast()
   hunt.sp.FuriousHowl:cast()
+  -- hunt.sp.Dash:cast()
   if not cs.is_in_party() then
     hunt.sp.Growl:cast()
   end
@@ -101,7 +105,7 @@ function hunt.main_attack()
   if hunt.sp.AimedShot:cast() then return end
   if hunt.sp.SerpentSting:cast() then return end
   if hunt.sp.ArcaneShot:cast() then return end
-  if hunt.sp.ConcussiveShot:cast() then return end
+--  if hunt.sp.ConcussiveShot:cast() then return end
 end
 
 cs_hunt_light = function()
