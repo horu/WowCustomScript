@@ -19,6 +19,7 @@ hunt.common.init = function()
   -- Shot
   hunt.sp.AutoShot = cs.Spell:create("Auto Shot")
   hunt.sp.ArcaneShot = cs.Spell:create("Arcane Shot")
+  hunt.sp.ConcussiveShot = cs.Spell:create("Concussive Shot")
   hunt.sp.Mark = cs.Spell:create("Hunter's Mark", function(spell)
     return not cs.has_debuffs(cs.u.target, "Ability_Hunter_SniperShot") and
             not cs.compare_unit_hp_rate(0.25, cs.u.target)
@@ -39,6 +40,7 @@ hunt.common.init = function()
   hunt.bsp.HawkAspect = cs.Buff:create("Aspect of the Hawk")
   hunt.bsp.MonkeyAspect = cs.Buff:create("Aspect of the Monkey")
   hunt.bsp.CheetahAspect = cs.Buff:create("Aspect of the Cheetah")
+  hunt.bsp.WolfAspect = cs.Buff:create("Aspect of the Wolf")
 
   -- For pet
   hunt.sp.CallPet = cs.Spell:create("Call Pet")
@@ -70,16 +72,15 @@ function hunt.auto_shot()
   return true
 end
 
-cs_hunt_shot = function()
+function hunt.check_melee()
+  return cs.check_unit(cs.t.close_9, cs.u.target)
+end
+
+function hunt.main_attack()
   cs.prof.finder:buff()
 
   if not cs.check_unit(cs.t.exists, cs.u.pet) then
     hunt.sp.CallPet:cast()
-  end
-
-  --hunt.bsp.HawkAspect:rebuff()
-  if not cs.check_combat() then
-    hunt.bsp.CheetahAspect:rebuff()
   end
 
   hunt.auto_shot()
@@ -92,7 +93,7 @@ cs_hunt_shot = function()
   if hunt.sp.Mark:cast() then return end
   if hunt.sp.Intimidation:cast() then return end
 
-  if cs.check_unit(cs.t.close_9, cs.u.target) then
+  if hunt.check_melee() then
     cs.auto_attack()
     if hunt.sp.RaptorStrike:cast() then return end
   end
@@ -100,6 +101,23 @@ cs_hunt_shot = function()
   if hunt.sp.AimedShot:cast() then return end
   if hunt.sp.SerpentSting:cast() then return end
   if hunt.sp.ArcaneShot:cast() then return end
+  if hunt.sp.ConcussiveShot:cast() then return end
+end
+
+cs_hunt_light = function()
+  hunt.bsp.CheetahAspect:rebuff()
+
+  hunt.main_attack()
+end
+
+cs_hunt_heavy = function()
+  if hunt.check_melee() then
+    hunt.bsp.WolfAspect:rebuff()
+  else
+    hunt.bsp.HawkAspect:rebuff()
+  end
+
+  hunt.main_attack()
 end
 
 cs_hunt_melee = function()
