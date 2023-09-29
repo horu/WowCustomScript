@@ -91,6 +91,12 @@ cs_hunt_shot = function()
   end
   if hunt.sp.Mark:cast() then return end
   if hunt.sp.Intimidation:cast() then return end
+
+  if cs.check_unit(cs.t.close_9, cs.u.target) then
+    cs.auto_attack()
+    if hunt.sp.RaptorStrike:cast() then return end
+  end
+
   if hunt.sp.AimedShot:cast() then return end
   if hunt.sp.SerpentSting:cast() then return end
   if hunt.sp.ArcaneShot:cast() then return end
