@@ -13,6 +13,11 @@ hunt.sp = {}
 -- BuffSPell
 hunt.bsp = {}
 
+
+function hunt.check_melee()
+  return cs.check_target(cs.t.close_9)
+end
+
 hunt.common = {}
 
 hunt.common.init = function()
@@ -33,7 +38,12 @@ hunt.common.init = function()
   end)
 
   -- Melee
-  hunt.sp.RaptorStrike = cs.Spell:create("Raptor Strike")
+  hunt.sp.RaptorStrike = cs.Spell:create("Raptor Strike", function()
+    return hunt.check_melee()
+  end)
+  hunt.sp.WingClip = cs.Spell:create("Wing Clip", function()
+    return hunt.check_melee()
+  end)
 
 
   -- Aspect
@@ -73,10 +83,6 @@ function hunt.auto_shot()
   --  AttackTarget()
   --end
   return true
-end
-
-function hunt.check_melee()
-  return cs.check_unit(cs.t.close_9, cs.u.target)
 end
 
 function hunt.main_attack()
@@ -124,11 +130,9 @@ cs_hunt_heavy = function()
   hunt.main_attack()
 end
 
-cs_hunt_melee = function()
-  hunt.bsp.MonkeyAspect:rebuff()
-
-  cs.auto_attack()
-  hunt.sp.RaptorStrike:cast()
+cs_hunt_daze = function()
+  if hunt.sp.WingClip:cast() then return end
+  if hunt.sp.ConcussiveShot:cast() then return end
 end
 
 cs_hunt_heal_pet = function()
