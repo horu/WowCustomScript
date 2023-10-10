@@ -31,11 +31,15 @@ hunt.common.init = function()
   end)
   hunt.sp.SerpentSting = cs.Spell:create("Serpent Sting", function(spell)
     return not cs.has_debuffs(cs.u.target, "Ability_Hunter_Quickshot") and
-            not cs.compare_unit_hp_rate(0.25, cs.u.target)
+            (not cs.compare_unit_hp_rate(0.25, cs.u.target) or cs.check_target(cs.t.player))
+  end)
+  hunt.sp.ViperSting = cs.Spell:create("Viper Sting", function(spell)
+    return not cs.has_debuffs(cs.u.target, "Ability_Hunter_AimedShot")
   end)
   hunt.sp.AimedShot = cs.Spell:create("Aimed Shot", function(spell)
     return not cs.services.speed_checker:is_moving() and not cs.check_combat()
   end)
+  hunt.sp.TrueShot = cs.Spell:create("Trueshot")
 
   -- Melee
   hunt.sp.RaptorStrike = cs.Spell:create("Raptor Strike", function()
@@ -57,7 +61,9 @@ hunt.common.init = function()
   hunt.sp.MendPet = cs.Spell:create("Mend Pet")
   hunt.sp.RevivePet = cs.Spell:create("Revive Pet")
   hunt.sp.Intimidation = cs.Spell:create("Intimidation", function(spell)
-    return not cs.compare_unit_hp_rate(0.9, cs.u.target) or cs.check_unit(cs.t.self, cs.u.targettarget)
+    return not cs.compare_unit_hp_rate(0.9, cs.u.target) or
+            cs.check_unit(cs.t.self, cs.u.targettarget) or
+            cs.check_target(cs.t.player)
   end)
 
   -- Pet
@@ -109,8 +115,15 @@ function hunt.main_attack()
   end
 
   if hunt.sp.AimedShot:cast() then return end
-  if hunt.sp.SerpentSting:cast() then return end
+
+  if cs.check_target(cs.t.player) and UnitMana(cs.u.target) > 100 then
+    if hunt.sp.ViperSting:cast() then return end
+  else
+    if hunt.sp.SerpentSting:cast() then return end
+  end
+
   if hunt.sp.ArcaneShot:cast() then return end
+  if hunt.sp.TrueShot:cast() then return end
 --  if hunt.sp.ConcussiveShot:cast() then return end
 end
 
