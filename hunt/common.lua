@@ -49,6 +49,10 @@ hunt.common.init = function()
     return hunt.check_melee()
   end)
 
+  -- Buff
+  hunt.sp.RapidFire = cs.Spell:create("Rapid Fire", function(spell)
+    return cs.check_combat(cs.c.affect) and not cs.compare_unit_hp_rate(0.9, cs.u.target)
+  end)
 
   -- Aspect
   hunt.bsp.HawkAspect = cs.Buff:create("Aspect of the Hawk")
@@ -106,24 +110,26 @@ function hunt.main_attack()
   if not cs.is_in_party() then
     hunt.sp.Growl:cast()
   end
-  if hunt.sp.Mark:cast() then return end
-  if hunt.sp.Intimidation:cast() then return end
+  hunt.sp.Mark:cast()
+  hunt.sp.Intimidation:cast()
 
   if hunt.check_melee() then
     cs.auto_attack()
     if hunt.sp.RaptorStrike:cast() then return end
-  end
-
-  if hunt.sp.AimedShot:cast() then return end
-
-  if cs.check_target(cs.t.player) and UnitMana(cs.u.target) > 100 then
-    if hunt.sp.ViperSting:cast() then return end
   else
-    if hunt.sp.SerpentSting:cast() then return end
+    hunt.sp.RapidFire:cast()
   end
 
-  if hunt.sp.ArcaneShot:cast() then return end
-  if hunt.sp.TrueShot:cast() then return end
+  hunt.sp.AimedShot:cast()
+
+  if cs.check_target(cs.t.player) and UnitMana(cs.u.target) > 200 then
+    hunt.sp.ViperSting:cast()
+  else
+    hunt.sp.SerpentSting:cast()
+  end
+
+  hunt.sp.ArcaneShot:cast()
+  hunt.sp.TrueShot:cast()
 --  if hunt.sp.ConcussiveShot:cast() then return end
 end
 
