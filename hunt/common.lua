@@ -54,6 +54,11 @@ hunt.common.init = function()
     return cs.check_combat(cs.c.affect) and not cs.compare_unit_hp_rate(0.9, cs.u.target)
   end)
 
+  -- Traps
+  hunt.sp.FrostTrap = cs.Spell:create("Frost Trap", function(spell)
+    return not cs.check_target(cs.t.exists) or cs.check_target(cs.t.close_30)
+  end)
+
   -- Aspect
   hunt.bsp.HawkAspect = cs.Buff:create("Aspect of the Hawk")
   hunt.bsp.MonkeyAspect = cs.Buff:create("Aspect of the Monkey")
@@ -98,6 +103,7 @@ end
 function hunt.main_attack()
   cs.prof.finder:buff()
 
+  hunt.sp.FrostTrap:cast()
   if not cs.check_unit(cs.t.exists, cs.u.pet) then
     hunt.sp.CallPet:cast()
   end
