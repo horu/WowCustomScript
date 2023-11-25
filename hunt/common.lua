@@ -74,6 +74,10 @@ hunt.common.init = function()
             cs.check_unit(cs.t.self, cs.u.targettarget) or
             cs.check_target(cs.t.player)
   end)
+  hunt.sp.BestialWrath = cs.Spell:create("Bestial Wrath", function(spell)
+    return cs.check_combat(cs.c.affect) and
+            (not cs.compare_unit_hp_rate(0.9, cs.u.target) or cs.check_target(cs.t.player))
+  end)
 
   -- Pet
   hunt.sp.FuriousHowl = cs.Spell:create("Furious Howl", function()
@@ -110,6 +114,7 @@ function hunt.main_attack()
 
   hunt.auto_shot()
   PetAttack()
+  hunt.sp.BestialWrath:cast()
   hunt.sp.Charge:cast()
   hunt.sp.FuriousHowl:cast()
   -- hunt.sp.Dash:cast()
