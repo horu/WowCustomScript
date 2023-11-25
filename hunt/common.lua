@@ -56,7 +56,7 @@ hunt.common.init = function()
 
   -- Traps
   hunt.sp.FrostTrap = cs.Spell:create("Frost Trap", function(spell)
-    return not cs.check_target(cs.t.exists) or cs.check_target(cs.t.close_30)
+    return cs.check_target(cs.t.exists) and cs.check_target(cs.t.close_30)
   end)
 
   -- Aspect
@@ -68,6 +68,7 @@ hunt.common.init = function()
   -- For pet
   hunt.sp.CallPet = cs.Spell:create("Call Pet")
   hunt.sp.MendPet = cs.Spell:create("Mend Pet")
+  hunt.sp.FeedPet = cs.Spell:create("Feed Pet")
   hunt.sp.RevivePet = cs.Spell:create("Revive Pet")
   hunt.sp.Intimidation = cs.Spell:create("Intimidation", function(spell)
     return not cs.compare_unit_hp_rate(0.9, cs.u.target) or

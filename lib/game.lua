@@ -528,10 +528,14 @@ cs.c.normal = cs.get_combat_info
 cs.c.aggro = cs.get_aggro_info
 -- common combat state, when mount is not available and other...
 cs.c.affect = cs.get_affect_info
+-- check any combat type
+cs.c.any = "cs.c.any"
 
 -- example: check_combat(2) - check normal + agro + 2 sec after
 -- example: check_combat() - check normal + agro
 -- example: check_combat(cs.c.affect) - check affect only
+
+-- m0or - number sec after
 function cs.check_combat(m0or, m1or, m2or, m3or)
   local to_check
   local time_after
@@ -546,6 +550,9 @@ function cs.check_combat(m0or, m1or, m2or, m3or)
   if not to_check[1] then
     -- default normal + agro
     to_check = { cs.c.normal, cs.c.aggro }
+  elseif to_check[1] == cs.c.any then
+    -- check all
+    to_check = {cs.c.normal, cs.c.aggro, cs.c.affect}
   end
 
   for _, check in pairs(to_check) do
